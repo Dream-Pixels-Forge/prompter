@@ -28,10 +28,10 @@ export function TemplateCard({ template, icon: Icon, onSelect }: Props) {
       </p>
       {/* Meta */}
       <div className="flex items-center gap-1.5 mt-auto pt-1">
-        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/35 uppercase tracking-wider">
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/35 uppercase tracking-wider">
           {template.domain}
         </span>
-        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#4A7FA0]/10 text-[#4A7FA0]/70">
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#4A7FA0]/10 text-[#4A7FA0]/70">
           {template.framework}
         </span>
       </div>

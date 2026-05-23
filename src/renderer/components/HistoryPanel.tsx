@@ -191,7 +191,7 @@ export function HistoryPanel() {
                 </div>
               </div>
               <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }}
-                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
+                className="hover-only-reveal p-1.5 rounded-lg hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
                 title="Delete">
                 <Trash2 className="w-3 h-3 text-white/30 hover:text-red-400" />
               </button>

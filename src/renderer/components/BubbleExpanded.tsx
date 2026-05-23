@@ -24,7 +24,7 @@ export function BubbleExpanded() {
   const cardRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  // Entrance animation
+  // Entrance animation — scale from bubble origin (bottom-right)
   useEffect(() => {
     const card = cardRef.current;
     const body = bodyRef.current;
@@ -32,13 +32,13 @@ export function BubbleExpanded() {
 
     const ctx = gsap.context(() => {
       gsap.fromTo(card,
-        { scale: 0.88, opacity: 0, y: 8 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.3)' }
+        { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
+        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)' }
       );
       if (body) {
         gsap.fromTo(body,
-          { opacity: 0, y: 10 },
-          { opacity: 1, y: 0, duration: 0.2, delay: 0.12, ease: 'power2.out' }
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out' }
         );
       }
     });
@@ -46,14 +46,14 @@ export function BubbleExpanded() {
     return () => ctx.revert();
   }, []);
 
-  // Slide content on tab switch
+  // Fade-only transition on tab switch (no jarring slide between different content)
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;
 
     gsap.fromTo(body,
-      { opacity: 0, x: -6 },
-      { opacity: 1, x: 0, duration: 0.18, ease: 'power1.out' }
+      { opacity: 0 },
+      { opacity: 1, duration: 0.15, ease: 'power1.out' }
     );
   }, [activeTab]);
 

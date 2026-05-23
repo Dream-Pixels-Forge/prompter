@@ -79,23 +79,13 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
   const canInteract = state === 'listening' || (!disabled && state === 'idle');
 
   return (
-    <div className="relative inline-flex flex-col items-center">
-      <style>{`
-        @keyframes pulse-ring {
-          0% { transform: scale(1); opacity: 0.5; }
-          50% { transform: scale(1.2); opacity: 0.2; }
-          100% { transform: scale(1); opacity: 0.5; }
-        }
-        .animate-pulse-ring {
-          animation: pulse-ring 1.5s ease-in-out infinite;
-        }
-      `}</style>
+    <div className="relative inline-flex flex-col items-center overflow-visible">
       <button
         onClick={handleToggle}
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
         className={`
-          relative w-8 h-8 rounded-xl flex items-center justify-center
+          relative w-11 h-11 rounded-xl flex items-center justify-center
           transition-all duration-200
           ${state === 'listening'
             ? 'bg-red-500/15 border border-red-500/25 shadow-sm shadow-red-500/10'
@@ -113,8 +103,10 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
           <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/50'}`} />
         )}
       </button>
+
+      {/* Interim text — positioned below button, clipped to card-safe width */}
       {interimText && (
-        <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-white/30 whitespace-nowrap max-w-[100px] truncate text-center">
+        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-[10px] text-white/30 whitespace-nowrap max-w-[140px] truncate text-center pointer-events-none">
           {interimText}
         </span>
       )}

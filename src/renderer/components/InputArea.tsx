@@ -119,10 +119,11 @@ export function InputArea() {
                    transition-all duration-200 leading-relaxed"
       />
 
-      {/* Error */}
+      {/* Error — more prominent visibility */}
       {error && (
-        <div className="flex items-start gap-2 px-3.5 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl">
-          <span className="text-xs text-red-400/90 leading-relaxed">{error}</span>
+        <div className="flex items-start gap-2.5 px-3.5 py-3 bg-red-500/15 border border-red-500/30 rounded-xl">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-0.5" />
+          <span className="text-xs text-red-300 leading-relaxed">{error}</span>
         </div>
       )}
 
