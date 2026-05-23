@@ -141,3 +141,16 @@
 ### Next Steps
 - Verify all fixes in running app
 - Consider adding automated UI tests
+
+## 2026-05-23 — Session 9 — Layout Bug Fixes Batch 2
+
+### Completed
+- [x] **Issue #16** — Settings API key row grid: unified with FormRow 2-column pattern
+- [x] **Issue #15** — Toast z-index stacking: bumped z-50 → z-60 above card
+- [x] **Issue #14** — TemplateBrowser icon map: added dev console.warn for missing mappings
+- [x] **Issue #13** — Bubble hover scale during drag: conditional via isDragging state
+- [x] **Issue #12** — Content clipping: auto-resolved by prior Issue #6 window width fix
+- [x] **Issue #11** — GSAP will-change GPU hints: added to all animated elements
+- [x] **Issue #10** — HistoryPanel ml-auto+flex-wrap: removed ml-auto from date span
+- [x] **Issue #9** — MicButton size: reduced 44px→36px for visual symmetry
+- [x] **Issue #8** — InputArea textarea max-height: reduced 180px→120px

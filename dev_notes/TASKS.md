@@ -80,6 +80,15 @@
 - [x] **I-B5** (#5) Template grid: added `auto-rows-fr` for equal-height cards
 - [x] **I-B6** (#6) Window width: 360px → 460px for 420px card fit
 - [x] **I-B7** (#7) Bubble dual-positioning: refactored to absolute viewport coordinates with legacy migration
+- [x] **I-B8** (#8) InputArea textarea max-height: 180px → 120px
+- [x] **I-B9** (#9) MicButton size: 44px → 36px for visual symmetry
+- [x] **I-B10** (#10) HistoryPanel ml-auto+flex-wrap: removed ml-auto from date span
+- [x] **I-B11** (#11) GSAP will-change GPU hints: added to all animated elements
+- [x] **I-B12** (#12) Content clipping: auto-resolved by #6
+- [x] **I-B13** (#13) Bubble hover scale during drag: conditional via isDragging
+- [x] **I-B14** (#14) TemplateBrowser icon map: dev warning for missing mappings
+- [x] **I-B15** (#15) Toast z-index: z-50 → z-60 above card
+- [x] **I-B16** (#16) Settings API key row: unified with FormRow 2-column pattern
 
 ## Phase E — Extend
 

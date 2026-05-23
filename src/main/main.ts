@@ -10,6 +10,7 @@ import { IPC_CHANNELS } from '../shared/types';
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('enable-transparent-visuals');
 } else if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
   app.commandLine.appendSwitch('use-gl', 'swiftshader');
 }
 
@@ -21,6 +22,7 @@ function createWindow() {
     height: 480,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
