@@ -9,11 +9,16 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "dist": "npm run build && electron-builder",
-    "dist:mac": "npm run build && electron-builder --mac",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux"
+    "test": "echo 'No tests configured yet' && exit 0",
+    "dist": "pnpm build && electron-builder",
+    "dist:mac": "pnpm build && electron-builder --mac",
+    "dist:win": "pnpm build && electron-builder --win",
+    "dist:linux": "pnpm build && electron-builder --linux"
   },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@11.1.1",
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

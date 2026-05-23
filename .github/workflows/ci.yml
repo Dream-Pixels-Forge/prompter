@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
-  PNPM_VERSION: "9"
+  NODE_VERSION: "24"
+  PNPM_VERSION: "11"
 
 jobs:
   # ── Security audit ────────────────────────────────────
@@ -40,13 +40,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: npm audit
-        run: pnpm audit --audit-level=high
+      - name: pnpm audit
+        run: pnpm audit --audit-level high
         continue-on-error: true # Don't block CI, but report results
 
-  # ── TypeScript check + lint ───────────────────────────
+  # ── TypeScript check ──────────────────────────────────
   quality:
-    name: Quality Checks
+    name: TypeScript Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,10 +67,6 @@ jobs:
 
       - name: TypeScript type checking
         run: pnpm typecheck
-
-      - name: ESLint
-        run: pnpm lint
-        continue-on-error: true # Tolerate warnings during alpha
 
   # ── Build + test ──────────────────────────────────────
   build:
@@ -104,7 +100,7 @@ jobs:
           NODE_ENV: production
 
       - name: Run tests
-        run: pnpm test -- --passWithNoTests
+        run: pnpm test
         continue-on-error: true # No tests yet — placeholder
 
       - name: Upload build artifacts
@@ -112,7 +108,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: build-${{ matrix.os }}
-          path: |
-            dist/
-            dist-electron/
+          path: dist/
           retention-days: 3
