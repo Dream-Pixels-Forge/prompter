@@ -1,4 +1,5 @@
 import { type OllamaStatus } from '../../shared/types';
+import { fetchWithTimeout } from './fetch-with-timeout';
 
 export const OLLAMA_DEFAULT_URL = 'http://localhost:11434';
 
@@ -10,15 +11,11 @@ export async function generateOllama(options: {
   const baseUrl = (options.baseUrl ?? OLLAMA_DEFAULT_URL).replace(/\/+$/, '');
   const url = `${baseUrl}/api/generate`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000);
-
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: options.model, prompt: options.prompt, stream: false }),
-      signal: controller.signal,
     });
 
     if (!res.ok) {
@@ -33,8 +30,6 @@ export async function generateOllama(options: {
       throw new Error('Ollama request timed out after 60 seconds');
     }
     throw err;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
@@ -74,18 +69,14 @@ export async function streamOllama(
 ): Promise<string> {
   const baseUrl = (options.baseUrl ?? OLLAMA_DEFAULT_URL).replace(/\/+$/, '');
   const url = `${baseUrl}/api/generate`;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000);
   const chunks: string[] = [];
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: options.model, prompt: options.prompt, stream: true }),
-      signal: controller.signal,
-    });
+    }) as Response & { body?: ReadableStream };
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
@@ -122,7 +113,6 @@ export async function streamOllama(
       }
     }
 
-    // process remaining buffer
     if (buffer.trim()) {
       try {
         const parsed = JSON.parse(buffer);
@@ -141,7 +131,5 @@ export async function streamOllama(
       throw new Error('Ollama stream request timed out after 60 seconds');
     }
     throw err;
-  } finally {
-    clearTimeout(timeout);
   }
 }

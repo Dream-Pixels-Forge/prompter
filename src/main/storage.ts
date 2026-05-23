@@ -11,12 +11,17 @@ export class StorageService {
   private history: HistoryEntry[] = [];
   private historyPath: string;
   private keysPath: string;
+  private writeQueue: Promise<void> = Promise.resolve();
 
   constructor() {
     this.userDataPath = app.getPath('userData');
     this.historyPath = path.join(this.userDataPath, HISTORY_FILE);
     this.keysPath = path.join(this.userDataPath, KEYS_FILE);
     this.loadHistory();
+  }
+
+  private enqueueWrite(fn: () => void): void {
+    this.writeQueue = this.writeQueue.then(fn, fn);
   }
 
   // ── History Persistence ──────────────────────────────
@@ -34,16 +39,18 @@ export class StorageService {
   }
 
   private persistHistory(): void {
-    try {
-      fs.writeFileSync(this.historyPath, JSON.stringify(this.history, null, 2), 'utf-8');
-    } catch (err) {
-      console.error('[Storage] Failed to save history:', err);
-    }
+    const data = JSON.stringify(this.history, null, 2);
+    this.enqueueWrite(() => {
+      try {
+        fs.writeFileSync(this.historyPath, data, 'utf-8');
+      } catch (err) {
+        console.error('[Storage] Failed to save history:', err);
+      }
+    });
   }
 
   insertHistory(entry: HistoryEntry): void {
     this.history.unshift(entry);
-    // Cap at 500 entries
     if (this.history.length > 500) {
       this.history = this.history.slice(0, 500);
     }

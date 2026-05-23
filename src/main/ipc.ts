@@ -13,6 +13,26 @@ import { setWindowPosition } from './overlay';
 import { transcribeAudio } from './stt/whisper';
 import { StorageService } from './storage';
 
+const VALID_SERVICES = new Set(['openai', 'anthropic']);
+
+function validateId(id: string): void {
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('Invalid id: must be a non-empty string');
+  }
+}
+
+function validateService(service: string): void {
+  if (!VALID_SERVICES.has(service)) {
+    throw new Error(`Invalid service: must be one of [${[...VALID_SERVICES].join(', ')}]`);
+  }
+}
+
+function validateTextLength(text: string, max = 100000): void {
+  if (typeof text !== 'string' || text.length > max) {
+    throw new Error(`Invalid text: must be a string with max ${max} characters`);
+  }
+}
+
 let settings: Partial<AppSettings> = {};
 let storage: StorageService;
 let tray: Tray | null = null;
@@ -20,13 +40,8 @@ let tray: Tray | null = null;
 export function registerIpcHandlers(win: BrowserWindow) {
   storage = new StorageService();
 
-  // ── Load persisted API keys into memory on start ──
-  const savedKeys = storage.getAllApiKeys();
-  if (savedKeys.openai) settings.openaiApiKey = savedKeys.openai;
-  if (savedKeys.anthropic) settings.anthropicApiKey = savedKeys.anthropic;
-  if (Object.keys(savedKeys).length > 0) {
-    updateConfig(settings);
-  }
+  // ── Load non-sensitive settings on start (API keys loaded on demand from storage) ──
+  updateConfig(settings);
 
   // ── System Tray ──
   createTray(win);
@@ -38,6 +53,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Clipboard ──
   ipcMain.handle(IPC_CHANNELS.CLIPBOARD_WRITE, (_event, text: string) => {
+    validateTextLength(text);
     clipboard.writeText(text);
     return true;
   });
@@ -71,13 +87,12 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Ollama ──
   ipcMain.handle(IPC_CHANNELS.OLLAMA_CHECK, async () => {
-    const ollamaEndpoint = (settings as any)?.ollamaEndpoint;
-    return await checkOllamaStatus(ollamaEndpoint);
+    return await checkOllamaStatus(settings.ollamaEndpoint);
   });
 
   // ── STT (Whisper fallback) ──
   ipcMain.handle(IPC_CHANNELS.STT_START, async (_event, audioData: string) => {
-    const openaiApiKey = (settings as any)?.openaiApiKey;
+    const openaiApiKey = storage.getApiKey('openai') || settings.openaiApiKey || '';
     if (!openaiApiKey) throw new Error('OpenAI API key not configured for STT');
     return await transcribeAudio(audioData, openaiApiKey);
   });
@@ -97,6 +112,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
   });
 
   ipcMain.handle(IPC_CHANNELS.HISTORY_DELETE, (_event, id: string) => {
+    validateId(id);
     storage.deleteHistory(id);
     return true;
   });
@@ -108,6 +124,8 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Encrypted API Key Storage ──
   ipcMain.handle(IPC_CHANNELS.STORE_SAVE_API_KEY, (_event, service: string, apiKey: string) => {
+    validateService(service);
+    validateTextLength(apiKey, 4096);
     storage.saveApiKey(service, apiKey);
     return true;
   });

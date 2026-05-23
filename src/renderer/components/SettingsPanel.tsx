@@ -2,16 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Cpu, Key, Globe, Server, ChevronDown } from 'lucide-react';
 import { useSettingsStore } from '@/renderer/stores/settings-store';
 import { useAppStore } from '@/renderer/stores/app-store';
-import { type ProviderType } from '@/shared/types';
-import type { AppSettings } from '@/shared/types';
-
-const OPENAI_MODELS = [
-  'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini',
-];
-
-const ANTHROPIC_MODELS = [
-  'claude-sonnet-4-20250514', 'claude-sonnet-4', 'claude-haiku-3-5-20241022', 'claude-opus-4-20250514',
-];
+import { type ProviderType, type AppSettings, OPENAI_MODELS, ANTHROPIC_MODELS } from '@/shared/types';
 
 function ModelDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);

@@ -81,7 +81,7 @@ export function BubbleExpanded() {
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
           <span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
         </div>
-        <button ref={closeBtnRef} onClick={() => setExpanded(false)}
+        <button ref={closeBtnRef} onClick={() => setExpanded(false)} aria-label="Close"
           className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
           <X className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
         </button>

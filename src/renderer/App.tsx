@@ -42,12 +42,20 @@ export default function App() {
     const el = backdropRef.current;
     if (!el) return;
 
-    if (isExpanded) {
-      gsap.fromTo(el,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.25, ease: 'power2.out' }
-      );
-    }
+    const ctx = gsap.context(() => {
+      if (isExpanded) {
+        gsap.fromTo(el,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25, ease: 'power2.out' }
+        );
+      } else {
+        gsap.to(el,
+          { opacity: 0, duration: 0.2, ease: 'power2.in' }
+        );
+      }
+    });
+
+    return () => ctx.revert();
   }, [isExpanded]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {

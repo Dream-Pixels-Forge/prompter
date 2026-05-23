@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 const STORAGE_KEY = 'prompter-bubble-pos';
 const DEFAULT_POSITION = { bottom: 104, right: 44 };
@@ -45,6 +45,8 @@ export function useBubblePosition() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOrigin, setDragOrigin] = useState<Position>({ bottom: 0, right: 0 });
+  const positionRef = useRef(position);
+  positionRef.current = position;
 
   const startDrag = useCallback((e: React.MouseEvent, currentPos: Position) => {
     e.preventDefault();
@@ -55,7 +57,6 @@ export function useBubblePosition() {
 
   const onDrag = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
-    // Dragging up → larger bottom, dragging left → larger right
     const newPos = {
       bottom: dragOrigin.bottom + (dragStart.y - e.clientY),
       right: dragOrigin.right + (dragStart.x - e.clientX),
@@ -66,9 +67,9 @@ export function useBubblePosition() {
   const stopDrag = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(positionRef.current));
     }
-  }, [isDragging, position]);
+  }, [isDragging]);
 
   useEffect(() => {
     if (isDragging) {

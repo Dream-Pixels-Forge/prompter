@@ -53,9 +53,19 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   saveSettings: async () => {
-    const { loaded, ollamaAvailable, ollamaModels, loadSettings, updateSetting, saveSettings, checkOllamaStatus, getActiveLLMConfig, ...settings } = get();
+    const state = get();
+    const settings: AppSettings = {
+      activeProvider: state.activeProvider,
+      ollamaEndpoint: state.ollamaEndpoint,
+      ollamaModel: state.ollamaModel,
+      openaiModel: state.openaiModel,
+      openaiApiKey: state.openaiApiKey,
+      anthropicModel: state.anthropicModel,
+      anthropicApiKey: state.anthropicApiKey,
+      hotkeyToggle: state.hotkeyToggle,
+      hotkeyMic: state.hotkeyMic,
+    };
     await window.api.settings.set(settings);
-    // Persist API keys to encrypted storage
     if (settings.openaiApiKey) {
       await saveApiKey('openai', settings.openaiApiKey);
     }

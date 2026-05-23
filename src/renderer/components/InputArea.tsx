@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Sparkles } from 'lucide-react';
 import { MicButton } from './MicButton';
 import { useAppStore } from '@/renderer/stores/app-store';
@@ -13,21 +13,35 @@ export function InputArea() {
   const { isProcessing, setProcessing, showToast } = useAppStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
   const currentTemplate = selectedTemplate ? getTemplate(selectedTemplate) : undefined;
   const currentFramework = getFramework(selectedFramework);
 
   const placeholder = currentTemplate?.defaultInput || 'Describe what you want to create...';
 
-  useEffect(() => {
-    if (input.length > 10) {
-      const analysis = analyzeIntent(input);
-      setFramework(analysis.framework.id);
-      if (analysis.template && !selectedTemplate) {
-        setTemplate(analysis.template.id);
+  const analyzeWithDebounce = useCallback((text: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (text.length > 10) {
+        const analysis = analyzeIntent(text);
+        setFramework(analysis.framework.id);
+        if (analysis.template && !selectedTemplate) {
+          setTemplate(analysis.template.id);
+        }
       }
-    }
+    }, 300);
+  }, [selectedTemplate, setFramework, setTemplate]);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     if (error) setError(null);
-  }, [input]);
+    analyzeWithDebounce(input);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [input, error, setError, analyzeWithDebounce]);
 
   useEffect(() => {
     if (textareaRef.current) {

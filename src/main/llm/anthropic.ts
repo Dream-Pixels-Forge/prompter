@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './fetch-with-timeout';
+
 export const ANTHROPIC_DEFAULT_URL = 'https://api.anthropic.com';
 export const ANTHROPIC_DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 
@@ -25,11 +27,8 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
   const { model, prompt, apiKey, baseUrl } = options;
   const url = `${baseUrl ?? ANTHROPIC_DEFAULT_URL}/v1/messages`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000);
-
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +40,6 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       }),
-      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -66,8 +64,6 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
       throw new Error('Anthropic request timed out after 60 seconds');
     }
     throw err;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 

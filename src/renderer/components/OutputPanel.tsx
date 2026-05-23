@@ -34,14 +34,14 @@ export function OutputPanel() {
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-0.5">
-          <button onClick={handleCopy}
+          <button onClick={handleCopy} aria-label={copied ? 'Copied' : 'Copy to clipboard'}
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
             {copied
               ? <Check className="w-3.5 h-3.5 text-green-400" />
               : <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
             }
           </button>
-          <button onClick={clearOutput}
+          <button onClick={clearOutput} aria-label="Clear output"
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
             <RotateCcw className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
           </button>

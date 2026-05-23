@@ -1,9 +1,9 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from '../shared/types';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { IPC_CHANNELS, type GenerateRequest, type AppSettings, type HistoryEntry } from '../shared/types';
 
 contextBridge.exposeInMainWorld('api', {
   llm: {
-    generate: (req: any) => ipcRenderer.invoke(IPC_CHANNELS.LLM_GENERATE, req),
+    generate: (req: GenerateRequest) => ipcRenderer.invoke(IPC_CHANNELS.LLM_GENERATE, req),
   },
   clipboard: {
     write: (text: string) => ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_WRITE, text),
@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   settings: {
     get: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),
-    set: (settings: any) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET, settings),
+    set: (settings: Partial<AppSettings>) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET, settings),
   },
   ollama: {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.OLLAMA_CHECK),
@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('api', {
     transcribe: (audioData: string) => ipcRenderer.invoke(IPC_CHANNELS.STT_START, audioData),
   },
   history: {
-    insert: (entry: any) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_INSERT, entry),
+    insert: (entry: HistoryEntry) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_INSERT, entry),
     list: (limit?: number, offset?: number) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_LIST, limit, offset),
     search: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
     delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id),
@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   hotkey: {
     onTriggered: (callback: (action: string) => void) => {
-      const handler = (_event: any, action: string) => callback(action);
+      const handler = (_event: IpcRendererEvent, action: string) => callback(action);
       ipcRenderer.on(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
       return () => { ipcRenderer.removeListener(IPC_CHANNELS.HOTKEY_TRIGGERED, handler); };
     },

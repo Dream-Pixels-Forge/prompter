@@ -2,11 +2,8 @@
 
 export const IPC_CHANNELS = {
   LLM_GENERATE: 'llm:generate',
-  LLM_GENERATE_STREAM: 'llm:generate:stream',
   CLIPBOARD_WRITE: 'clipboard:write',
   STT_START: 'stt:start',
-  STT_STOP: 'stt:stop',
-  STT_DATA: 'stt:data',
   STORE_GET: 'store:get',
   STORE_SET: 'store:set',
   STORE_GET_API_KEY: 'store:getApiKey',
@@ -30,6 +27,7 @@ export interface FrameworkSection {
   key: string;
   label: string;
   placeholder: string;
+  defaultContent: string;
 }
 
 export interface Framework {
@@ -37,6 +35,7 @@ export interface Framework {
   name: string;
   description: string;
   sections: FrameworkSection[];
+  color: string;
 }
 
 // ── Template Definitions ──────────────────────────────
@@ -140,3 +139,11 @@ export interface WindowBounds {
 
 export type BubbleState = 'dormant' | 'expanded' | 'listening' | 'processing';
 export type AppTab = 'compose' | 'templates' | 'history' | 'settings';
+
+export const OPENAI_MODELS = [
+  'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini',
+];
+
+export const ANTHROPIC_MODELS = [
+  'claude-sonnet-4-20250514', 'claude-sonnet-4', 'claude-haiku-3-5-20241022', 'claude-opus-4-20250514',
+];

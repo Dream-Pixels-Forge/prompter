@@ -1,7 +1,7 @@
 import { generateOllama, checkOllamaStatus } from './ollama';
 import { generateOpenAI } from './openai';
 import { generateAnthropic } from './anthropic';
-import { getFramework } from '../../renderer/lib/frameworks';
+import { getFramework } from '../../shared/frameworks';
 import { type GenerateRequest, type GenerateResponse, type ProviderType } from '../../shared/types';
 
 const DEFAULTS = {
@@ -31,7 +31,7 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
 
   const sections: Record<string, string> = {};
   for (const section of framework.sections) {
-    sections[section.key] = buildSectionContent(section.key, section.label, req.input);
+    sections[section.key] = buildSectionContent(section.key, section.label, req.input, framework.sections);
   }
 
   const structuredPrompt = framework.sections
@@ -76,53 +76,28 @@ async function callLLM(provider: ProviderType, prompt: string): Promise<string> 
 function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of sectionKeys) {
-    const regex = new RegExp(`#{1,3}\\s+${key}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
-    const match = output.match(regex);
-    if (match) {
-      const content = match[0].replace(/^#{1,3}\s+.*$/m, '').trim();
-      result[key] = content;
+    const fuzzyKeys = [key, key.replace(/([A-Z])/g, ' $1').trim(), ...key.split(/(?=[A-Z])/).map(k => k.toLowerCase())];
+    for (const lookup of [...new Set(fuzzyKeys)]) {
+      const regex = new RegExp(`#{1,3}\\s+${lookup}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
+      const match = output.match(regex);
+      if (match) {
+        const content = match[0].replace(/^#{1,3}\s+.*$/m, '').trim();
+        result[key] = content;
+        break;
+      }
     }
   }
   return result;
 }
 
-function buildSectionContent(key: string, _label: string, input: string): string {
-  const _lines = input.split('\n').filter(l => l.trim());
+function buildSectionContent(key: string, _label: string, input: string, sections: { key: string; defaultContent: string }[]): string {
+  const section = sections.find(s => s.key === key);
+  const template = section?.defaultContent || '{goal}';
 
-  switch (key) {
-    case 'role':
-      return `You are an expert ${extractDomain(input)} specialist. Your task is to ${extractGoal(input).toLowerCase()}`;
-    case 'personality':
-      return `Professional, clear, and direct. You communicate with ${extractAudienceTone(input)} and prioritize actionable insights.`;
-    case 'goal':
-      return extractGoal(input);
-    case 'successCriteria':
-      return `- The output addresses: ${extractGoal(input)}\n- All key requirements are covered\n- The result is ready-to-use without further editing`;
-    case 'constraints':
-      return `- Stay within the defined scope\n- Use clear, unambiguous language\n- Follow best practices for the domain`;
-    case 'output':
-      return `A well-structured response that covers all aspects of the request, organized in logical sections`;
-    case 'stopRules':
-      return `- If requirements are unclear, state assumptions\n- If scope is too broad, focus on the core request\n- Complete the response before stopping`;
-    case 'thinkFirst':
-      return `Before responding, consider: what assumptions am I making about this request? What's the simplest approach that solves the problem?`;
-    case 'simplicity':
-      return `Use the minimum necessary complexity. No speculative features, no over-engineering, no abstractions for single-use scenarios.`;
-    case 'surgical':
-      return `Touch only what's needed. Stay within scope. Match existing patterns and conventions.`;
-    case 'goalDriven':
-      return `Define what success looks like. Verify against requirements. Loop until the goal is met.`;
-    case 'guidelines':
-      return `- Analyze the request thoroughly\n- Apply domain best practices\n- Provide structured, actionable output\n- Be transparent about assumptions`;
-    case 'policy':
-      return `- Do not invent facts or specifications\n- Stay within the defined domain\n- Respect user constraints and requirements`;
-    case 'outputContract':
-      return `Provide a complete, structured response that directly addresses the request`;
-    case 'stopSequences':
-      return `Stop when the core request is fully addressed and actionable. Ask for clarification only if critical information is missing.`;
-    default:
-      return extractGoal(input);
-  }
+  return template
+    .replace(/\{goal\}/g, extractGoal(input))
+    .replace(/\{domain\}/g, extractDomain(input))
+    .replace(/\{audience\}/g, extractAudienceTone(input));
 }
 
 function extractDomain(input: string): string {

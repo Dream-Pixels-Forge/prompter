@@ -190,9 +190,8 @@ export function HistoryPanel() {
                   <span className="text-[10px] text-white/25 ml-auto">{formatDate(entry.createdAt)}</span>
                 </div>
               </div>
-              <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }}
-                className="hover-only-reveal p-1 rounded-md hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
-                title="Delete">
+              <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }} aria-label="Delete entry"
+                className="hover-only-reveal p-1 rounded-md hover:bg-red-500/20 transition-all shrink-0 mt-0.5">
                 <Trash2 className="w-3 h-3 text-white/30 hover:text-red-400" />
               </button>
             </div>

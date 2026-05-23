@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './fetch-with-timeout';
+
 export const OPENAI_DEFAULT_URL = 'https://api.openai.com/v1';
 export const OPENAI_DEFAULT_MODEL = 'gpt-4o';
 
@@ -8,15 +10,14 @@ interface OpenAIRequestOptions {
   baseUrl?: string;
 }
 
-async function request(url: string, body: unknown, apiKey: string, signal: AbortSignal): Promise<Response> {
-  const res = await fetch(url, {
+async function request(url: string, body: unknown, apiKey: string): Promise<Response> {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
-    signal,
   });
 
   if (!res.ok) {
@@ -37,15 +38,11 @@ export async function generateOpenAI(options: OpenAIRequestOptions): Promise<str
   const baseUrl = (options.baseUrl || OPENAI_DEFAULT_URL).replace(/\/+$/, '');
   const url = `${baseUrl}/chat/completions`;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), 60_000);
-
   try {
     const res = await request(
       url,
       { model: options.model, messages: [{ role: 'user', content: options.prompt }] },
       options.apiKey,
-      controller.signal,
     );
 
     const data = (await res.json()) as {
@@ -59,12 +56,10 @@ export async function generateOpenAI(options: OpenAIRequestOptions): Promise<str
 
     return content;
   } catch (err: unknown) {
-    if (err instanceof DOMException && err.name === 'TimeoutError') {
+    if (err instanceof DOMException && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
       throw new Error('OpenAI API error: request timed out after 60s');
     }
     throw err;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -75,9 +70,6 @@ export async function streamOpenAI(
   const baseUrl = (options.baseUrl || OPENAI_DEFAULT_URL).replace(/\/+$/, '');
   const url = `${baseUrl}/chat/completions`;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), 60_000);
-
   try {
     const res = await request(
       url,
@@ -87,8 +79,7 @@ export async function streamOpenAI(
         stream: true,
       },
       options.apiKey,
-      controller.signal,
-    );
+    ) as Response & { body?: ReadableStream };
 
     const reader = res.body?.getReader();
     if (!reader) throw new Error('OpenAI API error: response body is not readable');
@@ -131,16 +122,13 @@ export async function streamOpenAI(
       processLines();
     }
 
-    // process remaining buffer
     processLines();
 
     return full;
   } catch (err: unknown) {
-    if (err instanceof DOMException && err.name === 'TimeoutError') {
+    if (err instanceof DOMException && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
       throw new Error('OpenAI API error: request timed out after 60s');
     }
     throw err;
-  } finally {
-    clearTimeout(timer);
   }
 }
