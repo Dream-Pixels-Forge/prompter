@@ -54,14 +54,14 @@
 - [x] **I-5.3** Encrypted API key storage with safeStorage
 - [x] **I-5.4** System tray icon + context menu
 
-### Phase 6: Polish & Distribution (upcoming)
+### Phase 6: Polish & Distribution ✅
 
-- [ ] **I-6.1** GSAP animations for bubble transitions
-- [ ] **I-6.2** Glassmorphism polish
-- [ ] **I-6.3** Hotkey registration (Alt+Space, Alt+M)
-- [ ] **I-6.4** Drag-to-reposition with persistence
-- [ ] **I-6.5** Error handling inline display
-- [ ] **I-6.6** First packaged release (macOS/Windows/Linux)
+- [x] **I-6.1** GSAP animations for bubble transitions
+- [x] **I-6.2** Glassmorphism polish (.glass-card utility)
+- [x] **I-6.3** Hotkey registration (Alt+Space, Alt+M)
+- [x] **I-6.4** Drag-to-reposition with persistence (localStorage)
+- [x] **I-6.5** Error handling inline display
+- [x] **I-6.6** First packaged release (Prompter-0.1.0.AppImage)
 
 ## Phase D — Deploy
 

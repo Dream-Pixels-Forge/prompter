@@ -93,3 +93,17 @@
 - SettingsPanel/SettingsStore: API keys persisted via safeStorage on save, loaded on mount
 - Preload: `history.*` and `store.*` APIs exposed on window.api
 - Verified: zero type errors, full build (renderer 245kB/main 29kB/preload 2kB), app initializes correctly
+
+## [0.6.0] — 2026-05-23
+
+### Added
+- Phase 6 implementation complete (Polish, Animations & First Release)
+- GSAP animations: bubble floating pulse, card scale+fade entrance, content slide on tab switch, toast with entrance/exit
+- Glassmorphism polish: .glass-card utility with saturate, inset glow, layered shadows
+- Alt+M global hotkey to toggle mic recording via IPC
+- Inline error display in InputArea with auto-clear
+- PromptStore error state management
+- First packaged release: Prompter-0.1.0.AppImage (109 MB)
+- Build icons (16x16 to 256x256)
+- Electron-builder config fixes for asset packaging
+- Verified: zero type errors, full build (renderer 317kB/main 29kB/preload 2.5kB)
