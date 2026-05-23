@@ -7,7 +7,7 @@ Prompter is a system-level floating overlay (inspired by Wispr Flow) that accept
 ![Status](https://img.shields.io/badge/status-beta-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
 [![CI](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml/badge.svg)](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/Dream-Pixels-Forge/prompter)](https://github.com/Dream-Pixels-Forge/prompter/releases)
+[![Release](https://img.shields.io/github/v/release/Dream-Pixels-Forge/prompter?include_prereleases)](https://github.com/Dream-Pixels-Forge/prompter/releases)
 
 ## Features
 
@@ -59,14 +59,20 @@ pnpm install
 # Development
 pnpm dev
 
-# Build
+# Build (Vite only, no packaging)
 pnpm build
+
+# Package for distribution
+pnpm dist:linux   # AppImage + .deb
+pnpm dist:mac     # .dmg (ARM64 + x64)
+pnpm dist:win     # NSIS installer (x64)
+pnpm dist         # All platforms
 ```
 
 ## Requirements
 
 - Node.js 18+
-- pnpm 8+
+- pnpm 9+
 - [Ollama](https://ollama.ai) (optional, for local LLM)
 - macOS 12+ / Windows 10+ / Linux (X11/Wayland)
 
@@ -81,3 +87,15 @@ pnpm build
 ## License
 
 MIT © Dream Pixels Forge
+
+---
+
+## Built With
+
+This project was designed and packaged using [Design & Packaging Framework (DPF)](https://dpf.ai) tools:
+- **[dpf-publisher-engineer](https://github.com/org/dpf-publisher-engineer)** — Release automation, CI/CD publishing, and distribution
+- **dpf-electron-engineer** — Electron app architecture, IPC, and native integrations
+- **dpf-frontend-senior** — Production-grade React + TypeScript architecture
+- **dpf-gsap-master** — GSAP animation system for bubble UI and transitions
+- **dpf-movematics** — Motion design system for UI/UX micro-interactions
+- **dpf-senior-tailwindcss-designer** — Tailwind CSS v4 design system with glassmorphism

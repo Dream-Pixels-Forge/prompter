@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "Floating prompt architect widget — transforms raw intent into structured prompts",
+  "author": "Dream Pixels Forge <dev@dream-pixels-forge.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/Dream-Pixels-Forge/prompter",
+  "bugs": {
+    "url": "https://github.com/Dream-Pixels-Forge/prompter/issues"
+  },
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "vite",
