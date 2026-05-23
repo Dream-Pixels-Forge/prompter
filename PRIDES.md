@@ -1,6 +1,6 @@
 # PRIDES Methodology
 
-PromptForge follows the **PRIDES** software development methodology:
+Prompter follows the **PRIDES** software development methodology:
 
 ## Phases
 

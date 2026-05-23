@@ -1,4 +1,4 @@
-# PromptForge — Product Requirements Document
+# Prompter — Product Requirements Document
 
 **Version:** 1.0
 **Status:** Draft
@@ -8,11 +8,11 @@
 
 ## 1. Product Overview
 
-PromptForge is a desktop floating overlay widget that transforms raw user intent into structured, best-practice prompts for large language models. It lives as a small draggable bubble hovering above all windows — always accessible, never in the way. Users type or speak what they want (e.g., "I need a prompt to create a SaaS landing page"), and PromptForge applies proven prompt engineering frameworks to produce a polished, ready-to-use output.
+Prompter is a desktop floating overlay widget that transforms raw user intent into structured, best-practice prompts for large language models. It lives as a small draggable bubble hovering above all windows — always accessible, never in the way. Users type or speak what they want (e.g., "I need a prompt to create a SaaS landing page"), and Prompter applies proven prompt engineering frameworks to produce a polished, ready-to-use output.
 
-The product exists because the gap between a user's intent and a well-crafted prompt is wide. Most users — including developers and AI professionals — write prompts from scratch each time, inconsistently applying best practices across different LLMs and frameworks. PromptForge closes this gap by embedding expert knowledge into the tool itself: five prompt engineering frameworks, a library of pre-built templates, and a hybrid local/cloud LLM pipeline that works offline by default and upgrades quality on demand.
+The product exists because the gap between a user's intent and a well-crafted prompt is wide. Most users — including developers and AI professionals — write prompts from scratch each time, inconsistently applying best practices across different LLMs and frameworks. Prompter closes this gap by embedding expert knowledge into the tool itself: five prompt engineering frameworks, a library of pre-built templates, and a hybrid local/cloud LLM pipeline that works offline by default and upgrades quality on demand.
 
-The result is a tool that makes every interaction with an LLM more effective. Users stop writing prompts and start describing outcomes. PromptForge handles the structure, the framework selection, and the formatting — so the user can focus on what they actually want to achieve.
+The result is a tool that makes every interaction with an LLM more effective. Users stop writing prompts and start describing outcomes. Prompter handles the structure, the framework selection, and the formatting — so the user can focus on what they actually want to achieve.
 
 ---
 
@@ -26,7 +26,7 @@ The result is a tool that makes every interaction with an LLM more effective. Us
 
 **Voice input is underused in prompting.** Speech-to-text for prompt composition is powerful but requires yet another tool. Users who think faster than they type have no ergonomic way to dictate prompts into their LLM workflow.
 
-PromptForge solves all of these by providing a single, always-available surface for prompt construction that sits above every window, understands multiple frameworks, accepts voice input, and produces structured output ready to copy and use.
+Prompter solves all of these by providing a single, always-available surface for prompt construction that sits above every window, understands multiple frameworks, accepts voice input, and produces structured output ready to copy and use.
 
 ---
 
@@ -48,7 +48,7 @@ Sam's entire job is prompt optimization. He iterates on prompts for enterprise c
 1. As a user, I want to click a floating bubble to expand it into the input view, so I can start composing a prompt instantly from any application.
 2. As a user, I want to type my raw intent into a textarea and press Enter to generate a structured prompt, so I don't need to know prompt engineering techniques.
 3. As a user, I want to tap a microphone button and speak my intent, so I can compose prompts hands-free when I'm thinking faster than I can type.
-4. As a user, I want PromptForge to automatically detect the most suitable framework for my intent, so I don't have to choose manually.
+4. As a user, I want Prompter to automatically detect the most suitable framework for my intent, so I don't have to choose manually.
 5. As a user, I want to select from 12+ pre-built templates (e.g., "SaaS Landing Page", "Code Review", "Video Generation"), so I can start from a known structure.
 6. As a user, I want to copy the generated prompt to my clipboard with one click, so I can immediately paste it into my LLM of choice.
 7. As a user, I want to regenerate a prompt with different parameters, so I can explore variations without retyping my intent.
@@ -156,14 +156,14 @@ API keys are encrypted using `safeStorage` from Electron's main process. Decrypt
 | Feature | Detail |
 |---|---|
 | Icon | Custom tray icon matching app state (idle / processing) |
-| Context menu | Open PromptForge, Toggle Mic, Start Quick Capture, Recent History (last 5), Settings, Quit |
+| Context menu | Open Prompter, Toggle Mic, Start Quick Capture, Recent History (last 5), Settings, Quit |
 | Minimize to tray | Closing window minimizes to tray instead of quitting. Configured in settings |
 
 ---
 
 ## 6. User Flow
 
-The user is working in their IDE when they realize they need a well-structured prompt for a code review. They press `Alt+Space` — the global hotkey — and the PromptForge bubble appears at the bottom-right of their screen. They click the bubble, which expands into a clean, minimal panel with a textarea. The bubble's dormant state transitioned to active in under 200ms with a subtle GSAP scale-and-fade animation.
+The user is working in their IDE when they realize they need a well-structured prompt for a code review. They press `Alt+Space` — the global hotkey — and the Prompter bubble appears at the bottom-right of their screen. They click the bubble, which expands into a clean, minimal panel with a textarea. The bubble's dormant state transitioned to active in under 200ms with a subtle GSAP scale-and-fade animation.
 
 The user types "Review a Pull Request for a React component that uses useEffect and useCallback. Focus on memory leaks, unnecessary re-renders, and missing cleanup." They notice the framework badge auto-detected "OpenAI GPT-5.5" — correct. They press Ctrl+Enter. The bubble transitions to its processing state with a gentle spinner animation. In about 800ms (local Ollama), the output panel slides in below the input, showing a structured prompt with Role ("Senior React Reviewer"), Goal, Success Criteria (no memory leaks, correct dependency arrays), Constraints (React 19, functional components), and Output Format (issues grouped by severity).
 
@@ -196,7 +196,7 @@ The user reads through the output, tweaks the Success Criteria section inline, a
 - **Multi-language output** — English only for v1. Framework templates are English-structured
 - **Collaboration** — No sharing, team workspaces, or multi-user features
 - **Custom framework builder** — Users cannot define their own frameworks in v1. Selection is limited to the 5 built-in frameworks
-- **LLM chat interface** — PromptForge is a prompt composer, not a chat client. Users copy output to their preferred LLM
+- **LLM chat interface** — Prompter is a prompt composer, not a chat client. Users copy output to their preferred LLM
 
 ---
 
