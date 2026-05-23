@@ -50,10 +50,25 @@
 - [x] Verified: zero type errors, full build passes, app initializes successfully
 - [x] Pushed to GitHub (`develop` branch) — commit `7a7e932`
 
+## 2026-05-23 — Session 4
+
+### Completed
+- [x] **Phase 3 complete: Voice Input** — all steps delivered
+- [x] SpeechRecognizer class: Web Speech API (webkitSpeechRecognition) with interim/final results
+- [x] MicButton component: idle/listening/processing states, pulsing red ring, interim text, 10s silence timeout
+- [x] InputArea: MicButton integrated into bottom toolbar alongside Generate button
+- [x] Main process whisper.ts: OpenAI Whisper API fallback with multipart/form-data body
+- [x] IPC + preload: STT_START handler, stt.transcribe() bridge
+- [x] App store: isRecording state + listening bubble state transitions
+- [x] Web Speech API type declarations for TypeScript compatibility
+- [x] Cleaned up: removed old separate vite configs (unified in vite.config.ts)
+- [x] Verified: zero type errors, full build, app initializes correctly
+- [x] Pushed to GitHub (`develop` branch)
+
 ### Next Steps
-1. **Phase 3: Voice Input** — Integrate Whisper STT for speech-to-prompt
-2. **Phase 4: History & Settings Persistence** — SQLite, encrypted API keys, system tray
-3. **Phase 5: Polish & Animations** — GSAP, glassmorphism, packaging
+1. **Phase 4: Full Frameworks & Templates** — MPLCT, Context Engineering, 9 more templates
+2. **Phase 5: History & Settings Persistence** — SQLite, encrypted API keys, system tray
+3. **Phase 6: Polish & Animations** — GSAP, glassmorphism, distribution packaging
 
 ### Blockers
 - None

@@ -14,7 +14,7 @@
 - [x] **R-2** Code inspection and quality assessment
 - [x] **R-3** Git repository setup and version control
 
-## Phase I — Implement (Phase 1 complete, continuing)
+## Phase I — Implement
 
 ### Phase 1: Core Foundation ✅
 
@@ -26,26 +26,42 @@
 - [x] **I-1.6** App entry (App.tsx, main.tsx, index.html, globals.css)
 - [x] **I-1.7** Dependency installation + build verification
 
-### Phase 2: LLM Integration (upcoming)
+### Phase 2: LLM Integration ✅
 
-- [ ] **I-2.1** Ollama provider — local LLM integration
-- [ ] **I-2.2** OpenAI provider — cloud fallback
-- [ ] **I-2.3** Anthropic provider — cloud fallback
-- [ ] **I-2.4** Provider selection UI + API key management
-- [ ] **I-2.5** Streaming output display
+- [x] **I-2.1** Ollama provider — local LLM integration
+- [x] **I-2.2** OpenAI provider — cloud fallback
+- [x] **I-2.3** Anthropic provider — cloud fallback
+- [x] **I-2.4** Provider selection UI + API key management
+- [x] **I-2.5** Streaming output display
 
-### Phase 3: Voice Input (upcoming)
+### Phase 3: Voice Input ✅
 
-- [ ] **I-3.1** Whisper (local) STT integration
-- [ ] **I-3.2** Hold-to-speak bubble interaction
-- [ ] **I-3.3** Voice activity detection + waveform
+- [x] **I-3.1** Web Speech API speech recognition
+- [x] **I-3.2** MicButton with recording states + visual feedback
+- [x] **I-3.3** OpenAI Whisper API fallback (main process)
 
-### Phase 4: Polish & Distribution (upcoming)
+### Phase 4: Full Frameworks & Templates (upcoming)
 
-- [ ] **I-4.1** History + search functionality
-- [ ] **I-4.2** GSAP animations for bubble transitions
-- [ ] **I-4.3** Settings panel + system tray
-- [ ] **I-4.4** Template library expansion (12+ templates)
+- [ ] **I-4.1** MPLCT framework (video/3D prompts)
+- [ ] **I-4.2** Context Engineering framework
+- [ ] **I-4.3** 9 additional templates (agent-prompt, code-review, video-gen, blog-post, etc.)
+- [ ] **I-4.4** Template→Framework mapping
+
+### Phase 5: History & Persistence (upcoming)
+
+- [ ] **I-5.1** SQLite database + schema
+- [ ] **I-5.2** History CRUD (save, list, search, delete)
+- [ ] **I-5.3** Encrypted API key storage with safeStorage
+- [ ] **I-5.4** System tray icon + context menu
+
+### Phase 6: Polish & Distribution (upcoming)
+
+- [ ] **I-6.1** GSAP animations for bubble transitions
+- [ ] **I-6.2** Glassmorphism polish
+- [ ] **I-6.3** Hotkey registration (Alt+Space, Alt+M)
+- [ ] **I-6.4** Drag-to-reposition with persistence
+- [ ] **I-6.5** Error handling inline display
+- [ ] **I-6.6** First packaged release (macOS/Windows/Linux)
 
 ## Phase D — Deploy
 

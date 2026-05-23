@@ -42,3 +42,18 @@
 - New shared types: `ProviderType`, `LLMGenerateOptions`, `StreamChunk`, `OllamaStatus`, updated `AppSettings`
 - Preload exposes: `settings.get`, `settings.set`, `ollama.check`
 - Verified: zero type errors, full build passes, app initializes correctly
+
+## [0.3.0] — 2026-05-23
+
+### Added
+- Phase 3 implementation complete (Voice Input)
+- SpeechRecognizer class: Web Speech API (webkitSpeechRecognition) with interim/final results, auto-restart, 10s silence timeout
+- MicButton component: 3 visual states (idle/listening/processing), pulsing red ring animation, interim transcript display
+- InputArea: MicButton wired into bottom toolbar alongside Generate button, appends transcribed text
+- Main process whisper.ts: OpenAI Whisper API fallback with multipart/form-data body (zero external deps)
+- IPC: STT_START handler for cloud Whisper transcription fallback
+- Preload: `stt.transcribe()` bridge exposed on window.api
+- App store: `isRecording` state + `'listening'` bubble state
+- Web Speech API type declarations for TypeScript compatibility
+- Cleaned up: removed old separate vite configs (vite.main/preload/renderer.config.ts)
+- Verified: zero type errors, full build (renderer 228kB/main 20kB/preload 1kB), app initializes correctly

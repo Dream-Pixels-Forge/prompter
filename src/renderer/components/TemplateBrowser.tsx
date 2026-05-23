@@ -1,24 +1,34 @@
-import { Sparkles, ChefHat, BookOpen, type LucideIcon } from 'lucide-react';
+import { Sparkles, ChefHat, BookOpen, Bot, GitPullRequest, Video, PenLine, Headphones, BarChart3, Palette, FileText, Microscope, type LucideIcon } from 'lucide-react';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useAppStore } from '@/renderer/stores/app-store';
-import { templates } from '@/renderer/lib/templates';
+import { templates, getTemplate } from '@/renderer/lib/templates';
 import { TemplateCard } from './TemplateCard';
 
 const iconMap: Record<string, LucideIcon> = {
   Globe: Sparkles,
   ChefHat,
   BookOpen,
+  Bot,
+  GitPullRequest,
+  Video,
+  PenLine,
+  Headphones,
+  BarChart3,
+  Palette,
+  FileText,
+  Microscope,
 };
 
 export function TemplateBrowser() {
-  const { setTemplate, setInput } = usePromptStore();
+  const { setTemplate, setInput, setFramework } = usePromptStore();
   const { setActiveTab } = useAppStore();
 
   const handleSelect = (id: string) => {
-    const tpl = templates.find(t => t.id === id);
+    const tpl = getTemplate(id);
     if (tpl) {
       setTemplate(id);
       setInput(tpl.defaultInput);
+      setFramework(tpl.framework);
       setActiveTab('compose');
     }
   };
