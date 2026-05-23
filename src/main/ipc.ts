@@ -118,7 +118,10 @@ export function registerIpcHandlers(win: BrowserWindow) {
 }
 
 function createTray(win: BrowserWindow) {
-  const iconPath = path.join(app.getAppPath(), 'assets/tray-icon.png');
+  // assets/ path works in dev (project root) and production (extraResources)
+  const devPath = path.join(app.getAppPath(), 'assets/tray-icon.png');
+  const prodPath = path.join(process.resourcesPath, 'assets/tray-icon.png');
+  const iconPath = require('fs').existsSync(devPath) ? devPath : prodPath;
   const icon = nativeImage.createFromPath(iconPath);
   tray = new Tray(icon);
   tray.setToolTip('Prompter');

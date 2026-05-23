@@ -33,4 +33,11 @@ contextBridge.exposeInMainWorld('api', {
     saveApiKey: (service: string, key: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_SAVE_API_KEY, service, key),
     getApiKey: (service: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_GET_API_KEY, service),
   },
+  hotkey: {
+    onTriggered: (callback: (action: string) => void) => {
+      const handler = (_event: any, action: string) => callback(action);
+      ipcRenderer.on(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
+      return () => { ipcRenderer.removeListener(IPC_CHANNELS.HOTKEY_TRIGGERED, handler); };
+    },
+  },
 });

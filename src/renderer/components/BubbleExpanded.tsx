@@ -1,4 +1,6 @@
+import { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import gsap from 'gsap';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { type AppTab } from '@/shared/types';
@@ -19,12 +21,46 @@ const tabs: { key: AppTab; label: string }[] = [
 export function BubbleExpanded() {
   const { setExpanded, isProcessing, activeTab, setActiveTab } = useAppStore();
   const { output } = usePromptStore();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Entrance animation
+  useEffect(() => {
+    const card = cardRef.current;
+    const body = bodyRef.current;
+    if (!card) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(card,
+        { scale: 0.85, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(1.4)' }
+      );
+      if (body) {
+        gsap.fromTo(body,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
+
+  // Slide content on tab switch
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+
+    gsap.fromTo(body,
+      { opacity: 0, x: -8 },
+      { opacity: 1, x: 0, duration: 0.2, ease: 'power1.out' }
+    );
+  }, [activeTab]);
 
   return (
-    <div className="fixed bottom-4 right-4 w-[360px] max-h-[520px]
-                    bg-[#1C1917]/90 backdrop-blur-2xl
-                    border border-white/[0.06] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]
-                    flex flex-col overflow-hidden z-50">
+    <div ref={cardRef}
+      className="fixed bottom-4 right-4 w-[360px] max-h-[520px] glass-card
+                 flex flex-col overflow-hidden z-50">
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
@@ -51,7 +87,7 @@ export function BubbleExpanded() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
+      <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
         {activeTab === 'compose' && (
           <>{output ? <OutputPanel /> : <InputArea />}</>
         )}

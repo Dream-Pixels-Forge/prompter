@@ -69,18 +69,28 @@
 
 ### Completed
 - [x] **Phase 4 complete: Full Frameworks & Templates** — all steps delivered
-- [x] MPLCT framework: 8-section framework for video/3D/cinematic prompts
-- [x] Context Engineering framework: 5-section framework for knowledge-intensive agent tasks
+- [x] MPLCT framework (8 sections) + Context Engineering framework (5 sections)
 - [x] 9 new template files (12 total across all domains)
-- [x] Template→Framework auto-switching in TemplateBrowser
-- [x] detectFramework() expanded to properly resolve mplct and context-eng
-- [x] TemplateBrowser iconMap supports all 12 Lucide icons
-- [x] Verified: zero type errors, full build, app initializes correctly
+- [x] Template→Framework auto-switching + detectFramework fixes
+- [x] TemplateBrowser iconMap expanded to support all 12 icons
+- [x] Verified: zero type errors, full build (renderer 238kB/main 22kB/preload 1kB)
+
+## 2026-05-23 — Session 6
+
+### Completed
+- [x] **Phase 5 complete: History & Persistence** — all steps delivered
+- [x] StorageService: JSON-file history persistence + safeStorage encrypted API keys
+- [x] History CRUD IPC handlers (insert, list, search, delete, clear)
+- [x] Encrypted key IPC handlers (save, get) with Electron safeStorage
+- [x] System tray icon with context menu
+- [x] HistoryPanel UI: search, detail view, reuse, delete, clear
+- [x] InputArea: auto-saves generations to history
+- [x] SettingsPanel: API keys persisted via safeStorage
+- [x] Verified: zero type errors, full build (renderer 245kB/main 29kB/preload 2kB), app initializes
 - [x] Pushed to GitHub (`develop` branch)
 
 ### Next Steps
-1. **Phase 5: History & Settings Persistence** — SQLite (better-sqlite3), encrypted API keys (safeStorage), history browser, system tray, search
-2. **Phase 6: Polish & Animations** — GSAP, glassmorphism, hotkeys, drag persistence, packaging
+1. **Phase 6: Polish & Animations** — GSAP, glassmorphism, hotkeys, drag persistence, error handling inline, packaging
 
 ### Blockers
 - None

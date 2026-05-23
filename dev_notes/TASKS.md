@@ -47,12 +47,12 @@
 - [x] **I-4.3** 9 additional templates (agent-prompt, code-review, video-gen, blog-post, etc.)
 - [x] **I-4.4** Template→Framework mapping
 
-### Phase 5: History & Persistence (upcoming)
+### Phase 5: History & Persistence ✅
 
-- [ ] **I-5.1** SQLite database + schema
-- [ ] **I-5.2** History CRUD (save, list, search, delete)
-- [ ] **I-5.3** Encrypted API key storage with safeStorage
-- [ ] **I-5.4** System tray icon + context menu
+- [x] **I-5.1** History persistence (JSON-file, 500-entry cap)
+- [x] **I-5.2** History CRUD (list, search, delete, clear, insert)
+- [x] **I-5.3** Encrypted API key storage with safeStorage
+- [x] **I-5.4** System tray icon + context menu
 
 ### Phase 6: Polish & Distribution (upcoming)
 

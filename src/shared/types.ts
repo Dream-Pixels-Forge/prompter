@@ -21,6 +21,7 @@ export const IPC_CHANNELS = {
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET: 'settings:set',
   OLLAMA_CHECK: 'ollama:check',
+  HOTKEY_TRIGGERED: 'hotkey:triggered',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────

@@ -9,7 +9,7 @@ import { templates, getTemplate } from '@/renderer/lib/templates';
 import { getFramework } from '@/renderer/lib/frameworks';
 
 export function InputArea() {
-  const { input, setInput, setOutput, setFramework, selectedFramework, selectedTemplate, setTemplate } = usePromptStore();
+  const { input, setInput, setOutput, setFramework, selectedFramework, selectedTemplate, setTemplate, error, setError } = usePromptStore();
   const { isProcessing, setProcessing, showToast } = useAppStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -26,6 +26,7 @@ export function InputArea() {
         setTemplate(analysis.template.id);
       }
     }
+    if (error) setError(null);
   }, [input]);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function InputArea() {
     if (!input.trim()) return;
 
     setProcessing(true);
+    setError(null);
     try {
       const result = await generatePrompt({
         input,
@@ -57,6 +59,7 @@ export function InputArea() {
         createdAt: new Date().toISOString(),
       }).catch(() => {});
     } catch (err: any) {
+      setError(err?.message || 'Generation failed');
       showToast(err?.message || 'Generation failed');
     } finally {
       setProcessing(false);
@@ -107,6 +110,12 @@ export function InputArea() {
                    focus:outline-none focus:border-[#4A7FA0]/40 focus:bg-white/[0.06]
                    transition-colors duration-200"
       />
+
+      {error && (
+        <div className="flex items-start gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <span className="text-xs text-red-400/90 leading-relaxed">{error}</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

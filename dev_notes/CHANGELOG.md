@@ -78,3 +78,18 @@
 - `detectFramework()` expanded: correctly resolves mplct, context-eng matches
 - TemplateBrowser iconMap supports all 12 template icons
 - Verified: zero type errors, full build (renderer 238kB/main 22kB/preload 1kB), app initializes correctly
+
+## [0.5.0] — 2026-05-23
+
+### Added
+- Phase 5 implementation complete (History & Persistence)
+- StorageService: JSON-file history persistence with 500-entry cap
+- Electron safeStorage integration for encrypted API keys (base64 fallback when keyring unavailable)
+- History IPC handlers: insert, list (paginated), search (by input/output/framework), delete, clear
+- Encrypted key IPC handlers: saveApiKey, getApiKey
+- System tray icon with context menu (Show/Hide, Quit)
+- HistoryPanel component: searchable list, detail view with full structured output, reuse button, delete + clear all
+- InputArea: auto-saves every generation result to history
+- SettingsPanel/SettingsStore: API keys persisted via safeStorage on save, loaded on mount
+- Preload: `history.*` and `store.*` APIs exposed on window.api
+- Verified: zero type errors, full build (renderer 245kB/main 29kB/preload 2kB), app initializes correctly

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, globalShortcut } from 'electron';
 import path from 'path';
 import { registerIpcHandlers } from './ipc';
+import { IPC_CHANNELS } from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -42,6 +43,13 @@ app.whenReady().then(() => {
   globalShortcut.register('Alt+Space', () => {
     if (mainWindow) {
       mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    }
+  });
+
+  // Global hotkey: Alt+M to toggle mic
+  globalShortcut.register('Alt+M', () => {
+    if (mainWindow && mainWindow.isVisible()) {
+      mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGERED, 'toggle-mic');
     }
   });
 });

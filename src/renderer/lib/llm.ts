@@ -40,6 +40,9 @@ declare global {
         saveApiKey: (service: string, key: string) => Promise<boolean>;
         getApiKey: (service: string) => Promise<string | null>;
       };
+      hotkey: {
+        onTriggered: (callback: (action: string) => void) => () => void;
+      };
     };
   }
 }
