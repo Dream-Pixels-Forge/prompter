@@ -1,6 +1,27 @@
 # Changelog
 
-## [0.0.1] — 2026-05-23
+## [0.1.0] — 2026-05-23 — First Public Release
+
+### Added
+- Consolidated 6 development phases into first packaged release
+- Full release pipeline: GitHub Actions CI + release workflows, electron-builder packaging
+- Build assets: macOS .icns, Windows .ico, DMG background, Linux AppImage
+- GitHub repo: description, topics, homepage configured
+
+### Fixed
+- CI/CD: removed non-existent lint step, fixed audit syntax, added test placeholder
+- CI/CD: added Linux system dependencies (libwebkit2gtk-4.1-dev) for Electron 34
+- Release: fixed script names (package: → dist:), release body heredoc expansion
+- Dependencies: updated electron-builder 25→26 (fixed 6 tar CVEs via transitive deps)
+- Changelog: internal phase entries (Phase 1–6) preserved below
+
+---
+
+### Phase Development History
+
+The following entries document the internal development phases that built toward this release.
+
+## [0.0.1] — 2026-05-23 — Project Init
 
 ### Added
 - Project initialized with PRIDES methodology
@@ -8,7 +29,7 @@
 - Documentation scaffolding (README, PRIDES, TASKS, PROGRESS, CHANGELOG, ARCHITECTURE)
 - Tech stack defined: Electron + React + TypeScript + Tailwind v4 + GSAP
 
-## [0.1.0] — 2026-05-23
+## [Phase 1] — 2026-05-23 — Core Foundation
 
 ### Added
 - Phase 1 implementation complete (Core Foundation)
@@ -28,7 +49,7 @@
 - Build config: electron-builder.yml for macOS/Windows/Linux
 - Verified: zero type errors, full build passes, app initializes correctly
 
-## [0.2.0] — 2026-05-23
+## [Phase 2] — 2026-05-23 — LLM Integration
 
 ### Added
 - Phase 2 implementation complete (LLM Integration)
@@ -43,7 +64,7 @@
 - Preload exposes: `settings.get`, `settings.set`, `ollama.check`
 - Verified: zero type errors, full build passes, app initializes correctly
 
-## [0.3.0] — 2026-05-23
+## [Phase 3] — 2026-05-23 — Voice Input
 
 ### Added
 - Phase 3 implementation complete (Voice Input)
@@ -58,7 +79,7 @@
 - Cleaned up: removed old separate vite configs (vite.main/preload/renderer.config.ts)
 - Verified: zero type errors, full build (renderer 228kB/main 20kB/preload 1kB), app initializes correctly
 
-## [0.4.0] — 2026-05-23
+## [Phase 4] — 2026-05-23 — Full Frameworks & Templates
 
 ### Added
 - Phase 4 implementation complete (Full Frameworks & Templates)
@@ -79,7 +100,7 @@
 - TemplateBrowser iconMap supports all 12 template icons
 - Verified: zero type errors, full build (renderer 238kB/main 22kB/preload 1kB), app initializes correctly
 
-## [0.5.0] — 2026-05-23
+## [Phase 5] — 2026-05-23 — History & Persistence
 
 ### Added
 - Phase 5 implementation complete (History & Persistence)
@@ -94,7 +115,7 @@
 - Preload: `history.*` and `store.*` APIs exposed on window.api
 - Verified: zero type errors, full build (renderer 245kB/main 29kB/preload 2kB), app initializes correctly
 
-## [0.6.0] — 2026-05-23
+## [Phase 6] — 2026-05-23 — Polish, Animations & First Release
 
 ### Added
 - Phase 6 implementation complete (Polish, Animations & First Release)
