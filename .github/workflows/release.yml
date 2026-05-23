@@ -1,0 +1,311 @@
+# ─────────────────────────────────────────────────────────
+# PromptForge — Release Pipeline
+# Triggered by tagging v*.*.* (e.g. git tag v0.1.0 && git push --tags)
+# Builds for all platforms and creates a GitHub Release.
+# ─────────────────────────────────────────────────────────
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write # Required to create GitHub Releases
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  # ── Verify tag ────────────────────────────────────────
+  verify:
+    name: Verify Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      prerelease: ${{ steps.parse.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse tag
+        id: parse
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate version format
+        run: |
+          if ! echo "${{ steps.parse.outputs.version }}" | grep -qP '^\d+\.\d+\.\d+'; then
+            echo "❌ Invalid version format: ${{ steps.parse.outputs.version }}"
+            exit 1
+          fi
+          echo "✅ Releasing v${{ steps.parse.outputs.version }}"
+
+  # ── Build: macOS ARM64 ────────────────────────────────
+  build-mac-arm:
+    name: Build (macOS ARM64)
+    runs-on: macos-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + Package (macOS ARM64)
+        run: pnpm package:mac --arm64
+        env:
+          NODE_ENV: production
+          # ── Code signing (uncomment when certificates are configured) ──
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+
+      - name: Generate checksums
+        run: |
+          cd release
+          for f in *; do
+            if [ -f "$f" ]; then
+              shasum -a 256 "$f" >> "$f.sha256"
+            fi
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mac-arm64
+          path: release/
+          retention-days: 7
+
+  # ── Build: macOS x64 ──────────────────────────────────
+  build-mac-x64:
+    name: Build (macOS x64)
+    runs-on: macos-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + Package (macOS x64)
+        run: pnpm package:mac --x64
+        env:
+          NODE_ENV: production
+          # ── Code signing (uncomment when certificates are configured) ──
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+
+      - name: Generate checksums
+        run: |
+          cd release
+          for f in *; do
+            if [ -f "$f" ]; then
+              shasum -a 256 "$f" >> "$f.sha256"
+            fi
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mac-x64
+          path: release/
+          retention-days: 7
+
+  # ── Build: Windows x64 ────────────────────────────────
+  build-win:
+    name: Build (Windows x64)
+    runs-on: windows-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + Package (Windows x64)
+        run: pnpm package:win
+        env:
+          NODE_ENV: production
+          # ── Code signing (uncomment when certificates are configured) ──
+          # CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path release -File | ForEach-Object {
+            $hash = Get-FileHash $_.FullName -Algorithm SHA256
+            "$($hash.Hash.ToLower()) *$($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-win-x64
+          path: release/
+          retention-days: 7
+
+  # ── Build: Linux x64 ──────────────────────────────────
+  build-linux:
+    name: Build (Linux x64)
+    runs-on: ubuntu-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2 libdrm-dev libgbm-dev
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + Package (Linux x64)
+        run: pnpm package:linux
+        env:
+          NODE_ENV: production
+
+      - name: Generate checksums
+        run: |
+          cd release
+          for f in *; do
+            if [ -f "$f" ]; then
+              sha256sum "$f" > "$f.sha256"
+            fi
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-x64
+          path: release/
+          retention-days: 7
+
+  # ── Create GitHub Release ─────────────────────────────
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs:
+      - verify
+      - build-mac-arm
+      - build-mac-x64
+      - build-win
+      - build-linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate release body
+        id: release_body
+        run: |
+          VERSION="${{ needs.verify.outputs.version }}"
+          cat > release_body.md << 'EOF'
+          ## PromptForge v${{ needs.verify.outputs.version }}
+
+          ### 📦 Downloads
+
+          | Platform | Architecture | File |
+          |----------|-------------|------|
+          | macOS    | ARM64 (M1+) | `PromptForge-${VERSION}-arm64.dmg` |
+          | macOS    | Intel (x64) | `PromptForge-${VERSION}-x64.dmg` |
+          | Windows  | x64         | `PromptForge-${VERSION}-Setup.exe` |
+          | Linux    | x64         | `PromptForge-${VERSION}.AppImage` |
+
+          ### 🔒 Integrity
+
+          SHA256 checksums are included alongside each artifact. Verify your download:
+
+          ```bash
+          # macOS
+          shasum -a 256 PromptForge-*.dmg
+
+          # Windows
+          certutil -hashfile PromptForge-*-Setup.exe SHA256
+
+          # Linux
+          sha256sum PromptForge-*.AppImage
+          ```
+
+          ### ⚠️ Alpha Notice
+
+          This is an alpha release. Expect breaking changes and incomplete features.
+          Please report issues at https://github.com/Dream-Pixels-Forge/prompter/issues
+          EOF
+
+          echo "body<<DELIM" >> "$GITHUB_OUTPUT"
+          cat release_body.md >> "$GITHUB_OUTPUT"
+          echo "DELIM" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: PromptForge v${{ needs.verify.outputs.version }}
+          body: ${{ steps.release_body.outputs.body }}
+          prerelease: ${{ needs.verify.outputs.prerelease }}
+          generate_release_notes: false
+          files: |
+            artifacts/release-mac-arm64/*
+            artifacts/release-mac-x64/*
+            artifacts/release-win-x64/*
+            artifacts/release-linux-x64/*

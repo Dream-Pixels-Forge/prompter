@@ -1,0 +1,129 @@
+# ─────────────────────────────────────────────────────────
+# PromptForge — electron-builder Configuration
+# ─────────────────────────────────────────────────────────
+
+appId: com.dream-pixels-forge.prompter
+productName: PromptForge
+copyright: Copyright © $CURRENT_YEAR Dream Pixels Forge
+
+# ── Directories ─────────────────────────────────────────
+directories:
+  output: release
+  buildResources: build
+
+# ── Files to include in the app bundle ─────────────────
+files:
+  - dist/**/*
+  - dist-electron/**/*
+
+# ── Extra resources (not in asar) ──────────────────────
+extraResources:
+  - from: public/
+    to: public/
+    filter:
+      - "**/*"
+      - "!**/*.psd"
+      - "!**/*.ai"
+      - "!**/*.sketch"
+
+# ── Compress asar (protects source from casual inspection) ─
+asar: true
+asarUnpack:
+  - "**/*.node" # Native modules need to be unpacked
+  - "public/**"
+
+# ── Compression ─────────────────────────────────────────
+compression: normal
+removePackageScripts: true
+
+# ── macOS ──────────────────────────────────────────────
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # ── Notarization (uncomment when Apple Developer account is configured) ──
+  # notarize:
+  #   teamId: ${APPLE_TEAM_ID}
+
+# ── macOS DMG ──────────────────────────────────────────
+dmg:
+  title: ${productName} ${version}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  background: build/dmg-background.png
+  contents:
+    - x: 130
+      y: 220
+      type: file
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# ── Windows ────────────────────────────────────────────
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-Setup.${ext}
+  icon: build/icon.ico
+  # ── Code signing (uncomment when certificate is configured) ──
+  # certificateFile: ${WIN_CSC_FILE}
+  # certificatePassword: ${WIN_CSC_KEY_PASSWORD}
+
+# ── Windows Installer (NSIS) ───────────────────────────
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName} ${version}
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+
+# ── Linux ──────────────────────────────────────────────
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  icon: build/icons
+  category: Utility
+  synopsis: Transform raw intent into structured prompts
+  description: >-
+    A floating overlay widget that accepts raw user intent
+    and transforms it into structured, production-grade prompts.
+  maintainer: Dream Pixels Forge
+
+# ── AppImage ───────────────────────────────────────────
+appImage:
+  artifactName: ${productName}-${version}.${ext}
+  category: Utility
+  synopsis: ${productName}
+
+# ── Publish (GitHub Releases) ──────────────────────────
+publish:
+  provider: github
+  owner: Dream-Pixels-Forge
+  repo: prompter
+  releaseType: draft
