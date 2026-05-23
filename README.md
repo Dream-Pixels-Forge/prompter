@@ -92,8 +92,8 @@ MIT © Dream Pixels Forge
 
 ## Built With
 
-This project was designed and packaged using [Design & Packaging Framework (DPF)](https://dpf.ai) tools:
-- **[dpf-publisher-engineer](https://github.com/org/dpf-publisher-engineer)** — Release automation, CI/CD publishing, and distribution
+This project was crafted using [Dream Pixels Forge (DPF)](https://github.com/Dream-Pixels-Forge) tools:
+- **[dpf-publisher-engineer](https://github.com/Dream-Pixels-Forge/dpf-publisher-engineer)** — Release automation, CI/CD publishing, and distribution
 - **dpf-electron-engineer** — Electron app architecture, IPC, and native integrations
 - **dpf-frontend-senior** — Production-grade React + TypeScript architecture
 - **dpf-gsap-master** — GSAP animation system for bubble UI and transitions
