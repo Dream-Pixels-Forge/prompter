@@ -5,10 +5,11 @@ import { useAppStore } from '@/renderer/stores/app-store';
 import { getFramework } from '@/renderer/lib/frameworks';
 import { copyText } from '@/renderer/lib/clipboard';
 import { PromptSection } from './PromptSection';
+import { FrameworkBadge } from './FrameworkBadge';
 
 export function OutputPanel() {
   const { output, clearOutput } = usePromptStore();
-  const { showToast } = useAppStore();
+  const showToast = useAppStore((s) => s.showToast);
   const [copied, setCopied] = useState(false);
 
   if (!output) return null;
@@ -19,35 +20,36 @@ export function OutputPanel() {
     const success = await copyText(output.raw);
     if (success) {
       setCopied(true);
-      showToast('Copied!');
+      showToast('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3.5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-white/60">Structured Prompt</span>
-          {framework && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2D4A7A]/20 text-[#4A7FA0]">
-              {framework.name}
-            </span>
-          )}
+          <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">Structured Prompt</span>
+          {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-1">
           <button onClick={handleCopy}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 text-white/60" />}
+            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+            {copied
+              ? <Check className="w-3.5 h-3.5 text-green-400" />
+              : <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
+            }
           </button>
           <button onClick={clearOutput}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-            <RotateCcw className="w-3.5 h-3.5 text-white/60" />
+            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+            <RotateCcw className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
           </button>
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/* Sections */}
+      <div className="space-y-2.5">
         {framework?.sections.map(section => (
           <PromptSection
             key={section.key}

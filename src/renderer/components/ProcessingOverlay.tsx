@@ -1,14 +1,16 @@
 export function ProcessingOverlay() {
   return (
-    <div className="absolute inset-0 bg-[#1C1917]/60 backdrop-blur-sm flex flex-col items-center justify-center z-40">
-      <div className="flex gap-1.5 mb-3">
-        {[0, 1, 2].map(i => (
-          <div key={i}
-            className="w-2 h-2 rounded-full bg-[#4A7FA0] animate-bounce"
-            style={{ animationDelay: `${i * 0.15}s` }} />
-        ))}
+    <div className="absolute inset-0 bg-[#1C1917]/70 backdrop-blur-sm flex flex-col items-center justify-center z-40 rounded-[20px]">
+      {/* Animated rings */}
+      <div className="relative w-12 h-12 mb-4">
+        <div className="absolute inset-0 rounded-full border-2 border-[#4A7FA0]/20 animate-ping" />
+        <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-[#4A7FA0]/60 animate-spin" />
+        <div className="absolute inset-3 rounded-full bg-[#4A7FA0]/10 flex items-center justify-center">
+          <div className="w-2 h-2 rounded-full bg-[#4A7FA0]" />
+        </div>
       </div>
-      <p className="text-xs text-white/50">Structuring your prompt...</p>
+      <p className="text-xs text-white/50 font-medium">Structuring your prompt...</p>
+      <p className="text-[10px] text-white/25 mt-1">Applying framework + template</p>
     </div>
   );
 }

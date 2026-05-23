@@ -10,22 +10,30 @@ interface Props {
 export function TemplateCard({ template, icon: Icon, onSelect }: Props) {
   return (
     <button onClick={onSelect}
-      className="w-full flex items-start gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06]
-                 border border-white/[0.06] hover:border-[#4A7FA0]/30 rounded-xl
-                 transition-all duration-200 text-left group">
-      <div className="w-8 h-8 rounded-lg bg-[#2D4A7A]/20 flex items-center justify-center flex-shrink-0
-                      group-hover:bg-[#2D4A7A]/30 transition-colors">
-        <Icon className="w-4 h-4 text-[#4A7FA0]" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+      className="flex flex-col gap-2 p-3 sub-card hover:border-[#4A7FA0]/30 cursor-pointer
+                 transition-all duration-200 text-left group h-full">
+      {/* Icon row */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-lg bg-[#2D4A7A]/20 flex items-center justify-center shrink-0
+                        group-hover:bg-[#2D4A7A]/30 transition-colors">
+          <Icon className="w-3.5 h-3.5 text-[#4A7FA0]" />
+        </div>
+        <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors truncate">
           {template.name}
-        </div>
-        <div className="text-xs text-white/40 mt-0.5 line-clamp-2">{template.description}</div>
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[10px] text-white/30">{template.domain}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-white/40">{template.framework}</span>
-        </div>
+        </span>
+      </div>
+      {/* Description */}
+      <p className="text-[11px] text-white/40 leading-relaxed line-clamp-2">
+        {template.description}
+      </p>
+      {/* Meta */}
+      <div className="flex items-center gap-1.5 mt-auto pt-1">
+        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.05] text-white/35 uppercase tracking-wider">
+          {template.domain}
+        </span>
+        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#4A7FA0]/10 text-[#4A7FA0]/70">
+          {template.framework}
+        </span>
       </div>
     </button>
   );

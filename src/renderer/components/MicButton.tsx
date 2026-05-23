@@ -82,9 +82,9 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
     <div className="relative inline-flex flex-col items-center">
       <style>{`
         @keyframes pulse-ring {
-          0% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.15); opacity: 0.3; }
-          100% { transform: scale(1); opacity: 0.6; }
+          0% { transform: scale(1); opacity: 0.5; }
+          50% { transform: scale(1.2); opacity: 0.2; }
+          100% { transform: scale(1); opacity: 0.5; }
         }
         .animate-pulse-ring {
           animation: pulse-ring 1.5s ease-in-out infinite;
@@ -95,26 +95,26 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
         className={`
-          relative w-8 h-8 rounded-full flex items-center justify-center
-          transition-colors duration-200
+          relative w-8 h-8 rounded-xl flex items-center justify-center
+          transition-all duration-200
           ${state === 'listening'
-            ? 'bg-red-500/20'
-            : 'bg-white/[0.04] hover:bg-white/[0.08]'
+            ? 'bg-red-500/15 border border-red-500/25 shadow-sm shadow-red-500/10'
+            : 'sub-card hover:bg-white/[0.07]'
           }
           ${!canInteract ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
         {state === 'listening' && (
-          <span className="absolute inset-0 rounded-full animate-pulse-ring border-2 border-red-500/60" />
+          <span className="absolute inset-0 rounded-xl animate-pulse-ring border border-red-500/40" />
         )}
         {state === 'processing' ? (
           <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
         ) : (
-          <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/60'}`} />
+          <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/50'}`} />
         )}
       </button>
       {interimText && (
-        <span className="absolute top-full mt-1.5 text-[10px] text-white/30 whitespace-nowrap max-w-[120px] truncate">
+        <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-white/30 whitespace-nowrap max-w-[100px] truncate text-center">
           {interimText}
         </span>
       )}

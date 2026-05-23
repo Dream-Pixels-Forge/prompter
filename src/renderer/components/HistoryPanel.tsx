@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, Search, Trash2, ChevronLeft, RotateCcw } from 'lucide-react';
+import { Clock, Search, Trash2, ChevronLeft, RotateCcw, MessageSquare, FileText } from 'lucide-react';
 import { type HistoryEntry } from '@/shared/types';
 import { listHistory, searchHistory, deleteHistory, clearHistory } from '@/renderer/lib/llm';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useAppStore } from '@/renderer/stores/app-store';
+import { FrameworkBadge } from './FrameworkBadge';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -67,39 +68,52 @@ export function HistoryPanel() {
   // Detail view
   if (selected) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         <button onClick={() => setSelected(null)}
-          className="flex items-center gap-1 text-xs text-white/40 hover:text-white/60 transition-colors">
-          <ChevronLeft className="w-3 h-3" /> Back
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors group">
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>Back to history</span>
         </button>
 
-        <div className="bg-white/[0.04] rounded-xl p-3 space-y-2">
-          <p className="text-xs text-white/30 uppercase tracking-wide">Input</p>
+        {/* Input block */}
+        <div className="sub-card p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-white/30">
+            <MessageSquare className="w-3 h-3" />
+            <span className="text-[10px] uppercase tracking-wider font-medium">Input</span>
+          </div>
           <p className="text-sm text-white/80 leading-relaxed line-clamp-6">{selected.rawInput}</p>
         </div>
 
-        <div className="flex gap-2 text-xs text-white/40">
-          <span className="bg-white/[0.06] px-2 py-1 rounded">{selected.framework}</span>
+        {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <FrameworkBadge framework={selected.framework} />
           {selected.template && (
-            <span className="bg-white/[0.06] px-2 py-1 rounded">{selected.template}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-white/40">
+              {selected.template}
+            </span>
           )}
-          <span className="ml-auto">{formatDate(selected.createdAt)}</span>
+          <span className="text-[10px] text-white/30 ml-auto">{formatDate(selected.createdAt)}</span>
         </div>
 
-        <div className="bg-white/[0.04] rounded-xl p-3 space-y-2">
-          <p className="text-xs text-white/30 uppercase tracking-wide">Structured Output</p>
-          <pre className="text-xs text-white/60 leading-relaxed whitespace-pre-wrap font-sans line-clamp-[15]">
+        {/* Output block */}
+        <div className="sub-card p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-white/30">
+            <FileText className="w-3 h-3" />
+            <span className="text-[10px] uppercase tracking-wider font-medium">Structured Output</span>
+          </div>
+          <pre className="text-xs text-white/55 leading-relaxed whitespace-pre-wrap font-sans line-clamp-[15]">
             {selected.structuredOutput}
           </pre>
         </div>
 
-        <div className="flex gap-2">
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-1">
           <button onClick={() => handleReuse(selected)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs rounded-lg transition-colors">
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs font-medium rounded-lg transition-colors active:scale-[0.97]">
             <RotateCcw className="w-3 h-3" /> Reuse
           </button>
           <button onClick={() => { handleDelete(selected.id); setSelected(null); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] hover:bg-red-500/20 text-white/60 hover:text-red-400 text-xs rounded-lg transition-colors ml-auto">
+            className="flex items-center gap-1.5 px-3.5 py-2 sub-card hover:bg-red-500/15 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs rounded-lg transition-all ml-auto">
             <Trash2 className="w-3 h-3" /> Delete
           </button>
         </div>
@@ -109,58 +123,75 @@ export function HistoryPanel() {
 
   return (
     <div className="space-y-3">
-      {/* Search */}
-      <div className="flex items-center gap-2 bg-white/[0.04] rounded-lg px-3 py-1.5">
-        <Search className="w-3.5 h-3.5 text-white/30 shrink-0" />
+      {/* Search bar */}
+      <div className="flex items-center gap-2.5 bg-white/[0.04] rounded-xl px-3.5 py-2 border border-white/[0.06] focus-within:border-[#4A7FA0]/30 transition-colors">
+        <Search className="w-3.5 h-3.5 text-white/25 shrink-0" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
           placeholder="Search history..."
-          className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/30 outline-none"
+          className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/25 outline-none"
         />
         {query && (
           <button onClick={() => { setQuery(''); load(); }}
-            className="text-xs text-white/30 hover:text-white/60">Clear</button>
+            className="text-[11px] text-white/30 hover:text-white/60 transition-colors shrink-0">
+            Clear
+          </button>
         )}
       </div>
 
-      {/* Actions */}
+      {/* Count + clear */}
       {entries.length > 0 && (
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-white/30">{entries.length} entries</span>
+        <div className="flex items-center justify-between px-0.5">
+          <span className="text-[11px] text-white/30">{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
           <button onClick={handleClear}
-            className="text-xs text-red-400/60 hover:text-red-400 transition-colors">Clear all</button>
+            className="text-[11px] text-red-400/50 hover:text-red-400 transition-colors">
+            Clear all
+          </button>
         </div>
       )}
 
       {/* List */}
-      <div className="space-y-1.5 max-h-[340px] overflow-y-auto">
+      <div className="space-y-1 max-h-[380px] overflow-y-auto pr-0.5">
         {loading ? (
-          <p className="text-center text-xs text-white/30 py-8">Loading...</p>
+          <div className="flex items-center justify-center py-10">
+            <div className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+          </div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-8">
-            <Clock className="w-8 h-8 text-white/[0.08] mx-auto mb-2" />
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center mb-3">
+              <Clock className="w-5 h-5 text-white/[0.12]" />
+            </div>
             <p className="text-xs text-white/30">
               {query ? 'No matches found' : 'No history yet'}
+            </p>
+            <p className="text-[11px] text-white/20 mt-1">
+              {query ? 'Try a different search term' : 'Generated prompts appear here'}
             </p>
           </div>
         ) : (
           entries.map(entry => (
             <div key={entry.id}
-              className="group flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer"
+              className="group flex items-start gap-3 p-3 rounded-xl sub-card cursor-pointer"
               onClick={() => setSelected(entry)}>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/80 truncate">{entry.rawInput}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] text-[#4A7FA0]/80 px-1.5 py-0.5 bg-[#4A7FA0]/10 rounded">
-                    {entry.framework}
-                  </span>
-                  <span className="text-[10px] text-white/30">{formatDate(entry.createdAt)}</span>
+                <p className="text-sm text-white/80 truncate leading-snug mb-1.5">{entry.rawInput}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <FrameworkBadge framework={entry.framework} />
+                  {entry.template && (
+                    <span className="text-[10px] text-white/30">{entry.template}</span>
+                  )}
+                  <span className="text-[10px] text-white/25 ml-auto">{formatDate(entry.createdAt)}</span>
                 </div>
               </div>
               <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
                 title="Delete">
                 <Trash2 className="w-3 h-3 text-white/30 hover:text-red-400" />
               </button>

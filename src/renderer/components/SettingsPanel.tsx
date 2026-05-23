@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Cpu, Key, Globe, Check, AlertCircle } from 'lucide-react';
+import { Cpu, Key, Globe, Check, AlertCircle, Server, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/renderer/stores/settings-store';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { type ProviderType } from '@/shared/types';
@@ -10,6 +10,15 @@ const PROVIDERS: { type: ProviderType; label: string; description: string }[] = 
   { type: 'openai', label: 'OpenAI', description: 'GPT-4o and GPT models' },
   { type: 'anthropic', label: 'Anthropic', description: 'Claude Sonnet & Haiku' },
 ];
+
+function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+      <span className="text-[11px] text-white/40 font-medium">{label}</span>
+      {children}
+    </div>
+  );
+}
 
 export function SettingsPanel() {
   const store = useSettingsStore();
@@ -38,66 +47,65 @@ export function SettingsPanel() {
   return (
     <div className="space-y-4">
       {/* Provider Selection */}
-      <div>
-        <label className="text-xs text-white/40 mb-2 block">Provider</label>
+      <section>
+        <div className="flex items-center gap-2 mb-3">
+          <Server className="w-3.5 h-3.5 text-white/35" />
+          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Provider</span>
+        </div>
         <div className="space-y-1.5">
           {PROVIDERS.map(({ type, label, description }) => (
             <button
               key={type}
               onClick={() => handleChange('activeProvider', type)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg border transition-colors text-left ${
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all text-left ${
                 store.activeProvider === type
-                  ? 'bg-[#2D4A7A]/20 border-[#4A7FA0]/40'
-                  : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.06]'
+                  ? 'bg-[#2D4A7A]/15 border-[#4A7FA0]/40 shadow-sm'
+                  : 'sub-card hover:border-white/[0.1]'
               }`}
             >
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                store.activeProvider === type ? 'border-[#4A7FA0]' : 'border-white/20'
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                store.activeProvider === type ? 'border-[#4A7FA0]' : 'border-white/15'
               }`}>
-                {store.activeProvider === type && <div className="w-2 h-2 rounded-full bg-[#4A7FA0]" />}
+                {store.activeProvider === type && (
+                  <div className="w-2 h-2 rounded-full bg-[#4A7FA0]" />
+                )}
               </div>
-              <div className="min-w-0">
-                <div className="text-sm text-white/80">{label}</div>
-                <div className="text-xs text-white/40 truncate">{description}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm text-white/80 font-medium">{label}</div>
+                <div className="text-[11px] text-white/35 truncate">{description}</div>
               </div>
+              {store.activeProvider === type && (
+                <ChevronRight className="w-3.5 h-3.5 text-[#4A7FA0]/60 shrink-0" />
+              )}
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
       <div className="border-t border-white/[0.06]" />
 
       {/* Ollama Configuration */}
-      <div className="space-y-2.5">
+      <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <Cpu className="w-3.5 h-3.5 text-white/40" />
-          <span className="text-xs text-white/60 font-medium">Ollama</span>
-          <button
-            onClick={store.checkOllamaStatus}
-            className="ml-auto px-2 py-0.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded transition-colors text-white/50"
-          >
-            Check Status
+          <Cpu className="w-3.5 h-3.5 text-white/35" />
+          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Ollama</span>
+          <button onClick={store.checkOllamaStatus}
+            className="btn-subtle ml-auto text-[10px]">
+            Check
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">Endpoint</span>
-          <input
-            type="text"
-            value={store.ollamaEndpoint}
-            onChange={(e) => handleChange('ollamaEndpoint', e.target.value)}
-            className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">Model</span>
-          <input
-            type="text"
-            value={store.ollamaModel}
-            onChange={(e) => handleChange('ollamaModel', e.target.value)}
-            className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-          />
+        <div className="space-y-2.5">
+          <FormRow label="Endpoint">
+            <input type="text" value={store.ollamaEndpoint}
+              onChange={(e) => handleChange('ollamaEndpoint', e.target.value)}
+              className="input-base w-full text-xs" />
+          </FormRow>
+          <FormRow label="Model">
+            <input type="text" value={store.ollamaModel}
+              onChange={(e) => handleChange('ollamaModel', e.target.value)}
+              className="input-base w-full text-xs" />
+          </FormRow>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -117,91 +125,72 @@ export function SettingsPanel() {
         {store.ollamaAvailable && store.ollamaModels.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {store.ollamaModels.map((model) => (
-              <span key={model} className="px-2 py-0.5 text-[10px] bg-white/[0.06] rounded text-white/50">
+              <span key={model}
+                className="px-2 py-0.5 text-[10px] bg-white/[0.05] rounded-md text-white/45 font-mono">
                 {model}
               </span>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       <div className="border-t border-white/[0.06]" />
 
       {/* OpenAI Configuration */}
-      <div className="space-y-2.5">
+      <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <Globe className="w-3.5 h-3.5 text-white/40" />
-          <span className="text-xs text-white/60 font-medium">OpenAI</span>
+          <Globe className="w-3.5 h-3.5 text-white/35" />
+          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">OpenAI</span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">Model</span>
-          <input
-            type="text"
-            value={store.openaiModel}
-            onChange={(e) => handleChange('openaiModel', e.target.value)}
-            className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">API Key</span>
-          <div className="flex-1 flex items-center gap-2">
-            <input
-              type="password"
-              value={store.openaiApiKey}
+        <div className="space-y-2.5">
+          <FormRow label="Model">
+            <input type="text" value={store.openaiModel}
+              onChange={(e) => handleChange('openaiModel', e.target.value)}
+              className="input-base w-full text-xs" />
+          </FormRow>
+          <div className="grid grid-cols-[80px_1fr_auto] items-center gap-3">
+            <span className="text-[11px] text-white/40 font-medium">API Key</span>
+            <input type="password" value={store.openaiApiKey}
               onChange={(e) => handleChange('openaiApiKey', e.target.value)}
-              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-            />
-            <button
-              onClick={handleSaveKey}
-              className="flex items-center gap-1 px-2 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded transition-colors text-white/50 shrink-0"
-            >
+              className="input-base w-full text-xs" />
+            <button onClick={handleSaveKey}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
               <Key className="w-3 h-3" />
               Save
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="border-t border-white/[0.06]" />
 
       {/* Anthropic Configuration */}
-      <div className="space-y-2.5">
+      <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <Globe className="w-3.5 h-3.5 text-white/40" />
-          <span className="text-xs text-white/60 font-medium">Anthropic</span>
+          <Globe className="w-3.5 h-3.5 text-white/35" />
+          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Anthropic</span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">Model</span>
-          <input
-            type="text"
-            value={store.anthropicModel}
-            onChange={(e) => handleChange('anthropicModel', e.target.value)}
-            className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40 w-16 shrink-0">API Key</span>
-          <div className="flex-1 flex items-center gap-2">
-            <input
-              type="password"
-              value={store.anthropicApiKey}
+        <div className="space-y-2.5">
+          <FormRow label="Model">
+            <input type="text" value={store.anthropicModel}
+              onChange={(e) => handleChange('anthropicModel', e.target.value)}
+              className="input-base w-full text-xs" />
+          </FormRow>
+          <div className="grid grid-cols-[80px_1fr_auto] items-center gap-3">
+            <span className="text-[11px] text-white/40 font-medium">API Key</span>
+            <input type="password" value={store.anthropicApiKey}
               onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
-              className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none focus:border-[#4A7FA0]/40 transition-colors"
-            />
-            <button
-              onClick={handleSaveKey}
-              className="flex items-center gap-1 px-2 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded transition-colors text-white/50 shrink-0"
-            >
+              className="input-base w-full text-xs" />
+            <button onClick={handleSaveKey}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
               <Key className="w-3 h-3" />
               Save
             </button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
