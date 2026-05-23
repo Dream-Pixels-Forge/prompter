@@ -39,6 +39,7 @@ export function Bubble() {
       <button
         ref={bubbleRef}
         onClick={toggleExpanded}
+        aria-label="Open Prompter"
         className={`w-14 h-14 rounded-full bg-gradient-to-br from-[#2D4A7A] to-[#4A7FA0]
                    flex items-center justify-center cursor-pointer shadow-lg shadow-[#2D4A7A]/25
                    hover:shadow-xl hover:shadow-[#2D4A7A]/35 ${isDragging ? '' : 'hover:scale-110'}

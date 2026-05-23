@@ -91,7 +91,7 @@ export function SettingsPanel() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const activeProvider = PROVIDERS.find(p => p.type === store.activeProvider)!;
+  const activeProvider = PROVIDERS.find(p => p.type === store.activeProvider) ?? PROVIDERS[0];
 
   return (
     <div className="space-y-3">

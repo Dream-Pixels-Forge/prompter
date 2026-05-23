@@ -9,7 +9,7 @@ interface Props {
 
 export function TemplateCard({ template, icon: Icon, onSelect }: Props) {
   return (
-    <button onClick={onSelect}
+    <button onClick={onSelect} aria-label={`Select template: ${template.name}`}
       className="flex flex-col gap-1.5 p-2.5 sub-card hover:border-[#4A7FA0]/30 cursor-pointer
                  transition-all duration-200 text-left group h-full">
       {/* Icon row */}

@@ -1,5 +1,5 @@
 import { Copy, Check, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { getFramework } from '@/renderer/lib/frameworks';
@@ -11,17 +11,23 @@ export function OutputPanel() {
   const { output, clearOutput } = usePromptStore();
   const showToast = useAppStore((s) => s.showToast);
   const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   if (!output) return null;
 
   const framework = getFramework(output.framework);
+
+  useEffect(() => {
+    return () => { if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current); };
+  }, []);
 
   const handleCopy = async () => {
     const success = await copyText(output.raw);
     if (success) {
       setCopied(true);
       showToast('Copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
     }
   };
 

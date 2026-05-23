@@ -38,10 +38,14 @@ export function InputArea() {
   }, []);
 
   useEffect(() => {
-    if (error) setError(null);
     analyzeWithDebounce(input);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [input, error, setError, analyzeWithDebounce]);
+  }, [input, analyzeWithDebounce]);
+
+  // Clear error when user starts typing (separate effect — must not react to error being set)
+  useEffect(() => {
+    if (input && error) setError(null);
+  }, [input]);
 
   useEffect(() => {
     if (textareaRef.current) {

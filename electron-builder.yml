@@ -27,7 +27,6 @@ extraResources:
 asar: true
 asarUnpack:
   - "**/*.node" # Native modules need to be unpacked
-  - "public/**"
 
 # ── Compression ─────────────────────────────────────────
 compression: normal

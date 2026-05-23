@@ -33,7 +33,7 @@ export async function transcribeAudio(audioBase64: string, apiKey: string): Prom
         'Content-Type': `multipart/form-data; boundary=${boundary}`,
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: body as any,
+      body,
       signal: controller.signal,
     });
 

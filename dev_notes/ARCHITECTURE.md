@@ -15,7 +15,7 @@ Prompter is a desktop floating overlay widget that accepts raw user intent (text
 | Voice STT | **Whisper** (local via server) / Web Speech API fallback |
 | Local LLM | **Ollama** (`llama3.2`/`deepseek-coder`) |
 | Cloud LLM | **OpenAI** / **Anthropic** API |
-| Storage | **better-sqlite3** (history, settings, templates) |
+| Storage | **JSON files** (history, settings, templates) via `safeStorage` encryption |
 | State Mgmt | **Zustand** |
 | Build | **electron-builder** / **Vite** |
 
@@ -83,15 +83,15 @@ Prompter
 ├── Electron Main Process
 │   ├── main.ts           — Window creation, app lifecycle
 │   ├── overlay.ts        — AlwaysOnTop management, bounds persistence
-│   ├── tray.ts           — System tray icon + menu
-│   ├── ipc.ts            — IPC handlers (LLM, STT, storage)
+│   ├── ipc.ts            — IPC handlers + system tray (LLM, STT, storage)
+│   ├── storage.ts        — JSON file persistence (history, encrypted API keys)
 │   ├── llm/
+│   │   ├── fetch-with-timeout.ts — Shared fetch timeout utility
 │   │   ├── ollama.ts     — Ollama client
 │   │   ├── openai.ts     — OpenAI client
 │   │   └── anthropic.ts  — Anthropic client
 │   ├── stt/
-│   │   └── whisper.ts    — Whisper STT server/client
-│   └── store.ts          — SQLite database
+│   │   └── whisper.ts    — Whisper STT client
 │
 └── Renderer Process (React)
     ├── App.tsx
@@ -103,7 +103,6 @@ Prompter
     │   ├── OutputPanel.tsx     — Structured prompt display
     │   ├── PromptSection.tsx   — Individual framework section
     │   ├── FrameworkBadge.tsx  — Detected framework indicator
-    │   ├── FrameworkSelector.tsx — Framework chooser dropdown
     │   ├── TemplateBrowser.tsx — Template library grid
     │   ├── TemplateCard.tsx    — Individual template
     │   ├── HistoryPanel.tsx    — History list with search
@@ -124,8 +123,7 @@ Prompter
     │   │   ├── agent-prompt.ts
     │   │   └── ... (8 more)
     │   ├── intent-parser.ts    — Raw input → structured data
-    │   ├── llm.ts              — IPC bridge to main process
-    │   └── history.ts          — History CRUD
+    │   ├── llm.ts              — IPC bridge to main process (history CRUD included)
     ├── hooks/
     │   └── useBubblePosition.ts — Drag persistence
     └── styles/
@@ -235,38 +233,35 @@ Stop Rules: [when to stop/ask]
 - **Animation**: GSAP clip-path reveals, elastic bounces, staggered fade-ups
 - **Mode**: Dark-only (premium tool aesthetic)
 
-## Storage Schema (SQLite)
+## Storage Schema (JSON Files)
 
-```sql
--- History of transformations
-CREATE TABLE history (
-  id TEXT PRIMARY KEY,
-  raw_input TEXT NOT NULL,
-  structured_output TEXT NOT NULL,
-  framework TEXT NOT NULL,
-  template TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### Files
 
--- Saved templates
-CREATE TABLE saved_templates (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  content TEXT NOT NULL,
-  framework TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+| File | Location | Contents |
+|------|----------|----------|
+| `prompter-history.json` | `app.getPath('userData')` | Array of `HistoryEntry` — max 500 entries |
+| `prompter-keys.json` | `app.getPath('userData')` | Map of service → encrypted API key |
 
--- Settings (key-value)
-CREATE TABLE settings (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
+### HistoryEntry Shape
+
+```typescript
+interface HistoryEntry {
+  id: string;
+  rawInput: string;
+  structuredOutput: string;
+  framework: string;
+  template?: string;
+  createdAt: string;
+}
 ```
+
+### API Key Storage
+
+Keys are persisted in `prompter-keys.json` using `safeStorage.encryptString()` (Electron's OS-level encryption), base64-encoded. Falls back to base64-only encoding when OS encryption is unavailable.
 
 ## Security Considerations
 
-- API keys stored in SQLite (encrypted at rest via `safeStorage` from Electron)
+- API keys stored in JSON file (encrypted at rest via `safeStorage` from Electron)
 - Mic access only on explicit user action
 - Local-first: audio never leaves machine unless cloud LLM is explicitly chosen
 - All LLM communication over HTTPS when using cloud APIs
