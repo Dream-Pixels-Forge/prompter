@@ -8,6 +8,10 @@
 - Build assets: macOS .icns, Windows .ico, DMG background, Linux AppImage
 - GitHub repo: description, topics, homepage configured
 
+### Built With
+- **LLM Model:** `deepseek-v4-flash-free` — primary reasoning model used for code generation, architecture decisions, and all implementation phases
+- **AI Tool:** `opencode` (OpenCode CLI) — agentic orchestration running the PRIDES methodology across all 6 phases
+
 ### Fixed
 - CI/CD: removed non-existent lint step, fixed audit syntax, added test placeholder
 - CI/CD: added Linux system dependencies (libwebkit2gtk-4.1-dev) for Electron 34
