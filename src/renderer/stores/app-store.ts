@@ -1,0 +1,37 @@
+import { create } from 'zustand';
+import { type BubbleState, type AppTab } from '@/shared/types';
+
+interface AppStore {
+  bubbleState: BubbleState;
+  isExpanded: boolean;
+  activeTab: AppTab;
+  isProcessing: boolean;
+  toastMessage: string | null;
+
+  setBubbleState: (state: BubbleState) => void;
+  setExpanded: (expanded: boolean) => void;
+  setActiveTab: (tab: AppTab) => void;
+  setProcessing: (processing: boolean) => void;
+  showToast: (message: string) => void;
+  hideToast: () => void;
+  toggleExpanded: () => void;
+}
+
+export const useAppStore = create<AppStore>((set) => ({
+  bubbleState: 'dormant',
+  isExpanded: false,
+  activeTab: 'compose',
+  isProcessing: false,
+  toastMessage: null,
+
+  setBubbleState: (state) => set({ bubbleState: state }),
+  setExpanded: (expanded) => set({ isExpanded: expanded, bubbleState: expanded ? 'expanded' : 'dormant' }),
+  setActiveTab: (tab) => set({ activeTab: tab }),
+  setProcessing: (processing) => set({ isProcessing: processing, bubbleState: processing ? 'processing' : 'expanded' }),
+  showToast: (message) => set({ toastMessage: message }),
+  hideToast: () => set({ toastMessage: null }),
+  toggleExpanded: () => set((state) => ({
+    isExpanded: !state.isExpanded,
+    bubbleState: state.isExpanded ? 'dormant' : 'expanded',
+  })),
+}));
