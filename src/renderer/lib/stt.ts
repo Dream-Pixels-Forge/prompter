@@ -16,8 +16,8 @@ export class SpeechRecognizer {
   }
 
   start(): void {
-    const SpeechRecognitionCtor: new () => SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionCtor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognitionCtor) {
       this.callbacks.onError('Speech recognition not supported in this browser');
@@ -95,5 +95,5 @@ export class SpeechRecognizer {
 }
 
 export function isSpeechSupported(): boolean {
-  return !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 }

@@ -29,3 +29,8 @@ interface SpeechRecognitionAlternative {
   transcript: string;
   confidence: number;
 }
+
+interface Window {
+  SpeechRecognition: new () => SpeechRecognition;
+  webkitSpeechRecognition: new () => SpeechRecognition;
+}

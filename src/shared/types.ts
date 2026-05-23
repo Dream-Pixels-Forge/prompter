@@ -4,8 +4,6 @@ export const IPC_CHANNELS = {
   LLM_GENERATE: 'llm:generate',
   CLIPBOARD_WRITE: 'clipboard:write',
   STT_START: 'stt:start',
-  STORE_GET: 'store:get',
-  STORE_SET: 'store:set',
   STORE_GET_API_KEY: 'store:getApiKey',
   STORE_SAVE_API_KEY: 'store:saveApiKey',
   HISTORY_INSERT: 'history:insert',

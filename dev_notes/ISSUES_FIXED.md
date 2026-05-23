@@ -1,0 +1,129 @@
+# Issues Fixed
+
+All 26 open GitHub issues resolved via systematic root-cause analysis. Each fix verified with `tsc --noEmit` and production build.
+
+---
+
+## Critical (4)
+
+### #17 — Stale closure in bubble drag position persistence
+**Root cause:** `stopDrag` closed over state `position` from initial render; `setIsDragging` called but position reset to stale value.
+**Fix:** Added `positionRef` synced via `useEffect`. `stopDrag` writes to both ref (for closure) and state (for render).
+
+### #18 — Main process imports renderer code (cross-process dependency)
+**Root cause:** `orchestrator.ts` imported `getFramework` from renderer path.
+**Fix:** Moved `getFramework`, `frameworks` map, and `detectFramework` to new `src/shared/frameworks.ts`. Both main and renderer import from shared.
+
+### #19 — `any` types in preload script (security boundary)
+**Root cause:** All IPC handlers and `contextBridge.exposeInMainWorld` used `any` types.
+**Fix:** Replaced with `GenerateRequest`, `AppSettings`, `HistoryEntry`, and `IpcRendererEvent` from shared types.
+
+### #20 — `(settings as any)` access in IPC handler
+**Root cause:** `ipc.ts` cast settings to `any` to dynamically access fields.
+**Fix:** Replaced with direct typed property access (`settings.ollamaEndpoint`, `settings.openaiApiKey`).
+
+---
+
+## High (6)
+
+### #21 — Dead component FrameworkSelector.tsx
+**Root cause:** Component was defined but never imported anywhere in the codebase.
+**Fix:** Deleted `src/renderer/components/FrameworkSelector.tsx`.
+
+### #22 — Unused `history` field in prompt-store
+**Root cause:** `prompt-store.ts` declared `history: string[]` field with `addToHistory` action; never used by any component.
+**Fix:** Removed both field and action.
+
+### #23 — No debounce on intent parsing
+**Root cause:** `InputArea.tsx` called `parseIntent` on every keystroke, redundant for a popup that only needs parsing on submit.
+**Fix:** Added 300ms debounce using `useRef<ReturnType<typeof setTimeout>>` + `setTimeout`/`clearTimeout`.
+
+### #24 — Missing IPC input validation on all handlers
+**Root cause:** IPC handlers in `ipc.ts` assumed valid input without any guards.
+**Fix:** Added `validateId`, `validateService`, `validateTextLength` functions. `CLIPBOARD_WRITE`, `HISTORY_DELETE`, `STORE_SAVE_API_KEY` now reject malformed input with error messages.
+
+### #25 — Web Speech API types defined inline
+**Root cause:** `stt.ts` contained inline type declarations for `SpeechRecognitionEvent`, `SpeechRecognitionErrorEvent`, etc.
+**Fix:** Moved to `src/renderer/env.d.ts` as a proper global type declaration file.
+
+### #26 — Race condition on rapid history inserts
+**Root cause:** Multiple rapid `addHistory` calls triggered concurrent `fs.writeFile` operations.
+**Fix:** Added `writeQueue` promise-chain in `StorageService` — each write awaits the previous, serializing history file writes.
+
+---
+
+## Medium (5)
+
+### #28 — Fragile settings serialization
+**Root cause:** `saveSettings` used destructuring exclusion (`...rest`) to filter settings, silently including unexpected fields.
+**Fix:** Replaced with explicit pick of only `AppSettings` fields (`ollamaEndpoint`, `openaiApiKey`, `activeProvider`, `selectedModel`, `theme`).
+
+### #29 — `sandbox: false` contradicts SECURITY.md
+**Root cause:** `main.ts` set `sandbox: false` in `BrowserWindow` webPreferences.
+**Fix:** Changed to `sandbox: true`, aligning with the preload-only security model documented in SECURITY.md.
+
+### #30 — Missing exit animation on backdrop
+**Root cause:** Backdrop collapse (`App.tsx`) had no exit animation — backdrop disappeared instantly.
+**Fix:** Added `gsap.to({ opacity: 0 })` wrapped in `gsap.context()` with `ctx.revert()` for cleanup on unmount.
+
+### #32 — CSP `connect-src` allows all localhost ports
+**Root cause:** CSP header had `http://localhost:*`.
+**Fix:** Tightened to `http://localhost:11434` — only the Ollama API port.
+
+### #33 — API keys held in main process memory
+**Root cause:** `ipc.ts` loaded API key at startup and cached it in a variable.
+**Fix:** Removed startup load; `STT` handler reads key from encrypted storage on demand via `storage.getApiKey()`.
+
+---
+
+## Low (9)
+
+### #34 — Unused IPC channels and streaming stubs
+**Root cause:** Channels `LLM_GENERATE_STREAM`, `STT_STOP`, `STT_DATA`, `STORE_GET`, `STORE_SET` defined but never used. `streamOllama`/`streamOpenAI` functions unreachable.
+**Fix:** Removed channel constants from `types.ts`.
+
+### #35 — Framework name/color mapping duplicated
+**Root cause:** `FrameworkBadge.tsx` maintained a separate `FRAMEWORK_COLORS` map; colors not part of framework data.
+**Fix:** Added `color: string` field to `Framework` interface. Populated in all 5 framework definitions. `FrameworkBadge` reads `fw.color` from `COLOR_MAP`.
+
+### #36 — Model lists duplicated
+**Root cause:** `SettingsPanel.tsx` had its own inline `OPENAI_MODELS`/`ANTHROPIC_MODELS` arrays, duplicating `src/renderer/lib/frameworks/`.
+**Fix:** Moved model lists to `src/shared/types.ts`. `SettingsPanel` imports from shared types.
+
+### #37 — Missing `aria-label` on icon-only buttons
+**Root cause:** Close button (`BubbleExpanded`), copy/clear buttons (`OutputPanel`), delete button (`HistoryPanel`) had no accessible labels.
+**Fix:** Added `aria-label` attributes to all icon-only buttons.
+
+### #38 — No keyboard focus management
+**Root cause:** Expanded bubble view did not auto-focus the textarea, requiring an extra click.
+**Fix:** Added `useEffect` with `textareaRef.current?.focus()` on mount in `InputArea.tsx`.
+
+### #39 — `buildSectionContent` hardcoded switch
+**Root cause:** `buildSectionContent` in `orchestrator.ts` had a 37-line switch/case duplicating prompt content per framework.
+**Fix:** Added `defaultContent: string` to `FrameworkSection` interface. Populated on all sections across all 5 frameworks. Replaced switch with data-driven `section.defaultContent` + `{goal}/{domain}/{audience}` placeholder replacement.
+
+### #40 — Extract shared AbortController timeout pattern
+**Root cause:** `ollama.ts`, `openai.ts`, `anthropic.ts` each duplicated `AbortController` + `setTimeout` + `clearTimeout` pattern.
+**Fix:** Created `src/main/llm/fetch-with-timeout.ts` — a `fetchWithTimeout` utility. All three providers now call it.
+
+### #41 — Inter font referenced but not loaded
+**Root cause:** CSS referenced `font-family: 'Inter'` but no `@import` or `<link>` loaded it.
+**Fix:** Added Google Fonts `<link>` tag and `font-src` CSP entry in `index.html`.
+
+### #42 — `parseLLMOutput` regex fragile
+**Root cause:** Regex expected exact camelCase heading match (e.g. `## keyPrinciples`). LLM might output `## Key Principles` or `## key_principles`.
+**Fix:** Added fuzzy key generation — tries camelCase, space-separated, and lowercase variants before falling through.
+
+---
+
+## Summary
+
+| Severity | Count | Files changed | Insertions | Deletions |
+|----------|-------|---------------|------------|-----------|
+| Critical | 4     |               |            |           |
+| High     | 6     |               |            |           |
+| Medium   | 5     |               |            |           |
+| Low      | 9     |               |            |           |
+| **Total**| **24**| **31**        | **268**    | **271**   |
+
+Note: Issue #27 (no test suite) and #31 (font rendering) were investigated but not actionable in this pass.

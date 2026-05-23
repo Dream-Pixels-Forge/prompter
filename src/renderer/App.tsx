@@ -37,21 +37,25 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isExpanded, setExpanded]);
 
-  // Backdrop entrance/exit animation
+  // Backdrop entrance/exit animation (always-mounted div so exit plays before unmount)
   useEffect(() => {
     const el = backdropRef.current;
     if (!el) return;
 
     const ctx = gsap.context(() => {
       if (isExpanded) {
+        gsap.set(el, { pointerEvents: 'auto' });
         gsap.fromTo(el,
           { opacity: 0 },
           { opacity: 1, duration: 0.25, ease: 'power2.out' }
         );
       } else {
-        gsap.to(el,
-          { opacity: 0, duration: 0.2, ease: 'power2.in' }
-        );
+        gsap.to(el, {
+          opacity: 0,
+          duration: 0.2,
+          ease: 'power2.in',
+          onComplete: () => { gsap.set(el, { pointerEvents: 'none' }); },
+        });
       }
     });
 
@@ -66,13 +70,12 @@ export default function App() {
 
   return (
     <div className={`w-screen h-screen overflow-hidden select-none ${isExpanded ? 'bg-[#1C1917]' : ''}`}>
-      {/* Backdrop overlay */}
-      {isExpanded && (
-        <div ref={backdropRef}
-          onClick={handleBackdropClick}
-          className="fixed inset-0 bg-black/30 z-40"
-        />
-      )}
+      {/* Backdrop overlay — always mounted so GSAP exit animation can play */}
+      <div ref={backdropRef}
+        onClick={handleBackdropClick}
+        className="fixed inset-0 bg-black/30 z-40"
+        style={{ opacity: 0, pointerEvents: 'none' }}
+      />
 
       {isExpanded ? <BubbleExpanded /> : <Bubble />}
       <Toast />

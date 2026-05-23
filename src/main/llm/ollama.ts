@@ -38,8 +38,8 @@ export async function checkOllamaStatus(baseUrl?: string): Promise<OllamaStatus>
 
   try {
     const [tagsRes, versionRes] = await Promise.all([
-      fetch(`${normalized}/api/tags`),
-      fetch(`${normalized}/api/version`),
+      fetchWithTimeout(`${normalized}/api/tags`, { method: 'GET', timeout: 5000 }),
+      fetchWithTimeout(`${normalized}/api/version`, { method: 'GET', timeout: 5000 }),
     ]);
 
     if (!tagsRes.ok || !versionRes.ok) {
