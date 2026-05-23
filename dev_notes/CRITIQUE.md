@@ -93,6 +93,21 @@ No test framework, no test files, no CI test enforcement. Every PR is merged wit
 
 ---
 
+### C6. `insertHistory` Error Silently Swallowed
+
+**Location:** `src/renderer/components/InputArea.tsx:78`
+
+```typescript
+insertHistory({...}).catch(() => {});
+```
+
+History insertion failures are silently discarded. If storage fails (disk full, permissions, corrupt file), the user never knows. At minimum log the error:
+```typescript
+insertHistory({...}).catch(err => console.error('[History] insert failed:', err));
+```
+
+---
+
 ## 🟡 MODERATE
 
 ### M1. Weak CSP — Ollama Endpoint Whitelisted
@@ -153,17 +168,24 @@ Toast renders at `z-60` positioned absolute to the root, but `ProcessingOverlay`
 
 ---
 
-### M6. Unused Export — `copyToClipboard` in llm.ts
+### M6. Multiple Dead Exports (8 symbols)
 
-**Location:** `src/renderer/lib/llm.ts:54`
+**Locations:** Across `storage.ts`, `overlay.ts`, `llm.ts`, `stt.ts`, `templates/index.ts`, `whisper.ts`, `openai.ts`
 
-```typescript
-export async function copyToClipboard(text: string): Promise<boolean> {
-  return window.api.clipboard.write(text);
-}
-```
+These symbols are defined, exported, but imported **nowhere** in the codebase:
 
-Exported but never imported anywhere. Clipboard goes through `clipboard.ts` → `copyText()` instead. Dead code.
+| Symbol | File | Type |
+|--------|------|------|
+| `getAllHistory()` | `src/main/storage.ts:84` | Method |
+| `getAllApiKeys()` | `src/main/storage.ts:125` | Method |
+| `getDefaultPosition()` | `src/main/overlay.ts:15` | Function |
+| `getTemplatesByFramework()` | `src/renderer/lib/templates/index.ts:34` | Function |
+| `copyToClipboard()` | `src/renderer/lib/llm.ts:54` | Function |
+| `WHISPER_DEFAULT_MODEL` | `src/main/stt/whisper.ts:2` | Constant (not used even internally) |
+| `isSpeechSupported()` | `src/renderer/lib/stt.ts:97` | Function |
+| `OPENAI_DEFAULT_MODEL` | `src/main/llm/openai.ts:4` | Constant |
+
+Each adds noise, suggests API surface area that doesn't exist, and hurts maintainability. Remove or add consumers.
 
 ---
 
@@ -175,46 +197,135 @@ Four build jobs (mac-arm64, mac-x64, win-x64, linux-x64) are nearly identical co
 
 ---
 
-### M8. No Linting Configuration
+### M8. Broken Biome Linting Configuration (137 errors)
 
-No ESLint, Prettier, or Biome config present. With 30+ TypeScript/React files, code style drift is inevitable. TypeScript catches type errors but not style, formatting, or import-ordering issues.
+**Location:** `biome.json` + `package.json:45`—Biome is pinned implicitly by version mismatch
+
+A `biome.json` exists targeting v1.9.4 schema, but the project has no `biome` devDependency and `npx` resolves to v2.4.15 which rejects the schema:
+```
+schema version 1.9.4 does not match CLI version 2.4.15
+Found an unknown key `organizeImports`  (removed in Biome v2)
+```
+
+Running `npx @biomejs/biome@1.9.4 check src/` reveals **137 errors**:
+
+| Category | Count | Fixable |
+|----------|-------|---------|
+| Formatting differences | ~125 | Yes |
+| `style/useImportType` | ~7 | Yes |
+| `style/useNodejsImportProtocol` | 3 | Yes |
+| `style/noUnusedTemplateLiteral` | 2 | Yes |
+| `style/noCommaOperator` | 2 | Yes |
+| `style/noNonNullAssertion` | 1 | Yes |
+| `complexity/useOptionalChain` | 1 | Yes |
+
+Additionally, there's no linting script in `package.json`, so no CI job runs it. Fixes:
+- Add `"biome": "^1.9.4"` to devDependencies (pinned version)
+- Fix config schema or migrate to v2
+- Add `"lint": "biome check src/"` and `"lint:fix": "biome check --apply src/"` scripts
+- Run in CI alongside typecheck
 
 ---
 
-### M9. `catch` Silently Swallows Errors
+### M9. Silent Catch Blocks Mask Failures
 
-**Location:** Multiple files — `src/renderer/lib/intent-parser.ts` (no try/catch needed), `src/renderer/components/HistoryPanel.tsx:47`:
+**Locations:** `src/renderer/components/HistoryPanel.tsx:47`, `src/renderer/components/InputArea.tsx:78`, `src/main/storage.ts:24`
 
+Three patterns of error swallowing:
+
+**a) HistoryPanel empty catch:**
 ```typescript
 } catch {
   // offline fallback
 }
 ```
+No logging, no user feedback, no toast. If the IPC handler throws, the user just sees an empty list.
 
-Error is swallowed completely. No user feedback, no console log, no retry. Silent failures are the hardest to debug.
+**b) InputArea `insertHistory` catch:**
+```typescript
+}).catch(() => {});
+```
+Critical persistence failure silently discarded. User thinks history was saved but it wasn't.
+
+**c) StorageService write queue swallows errors:**
+```typescript
+this.writeQueue = this.writeQueue.then(fn, fn);
+```
+The second `fn` in `.then(fn, fn)` IS the rejection handler—it calls the same function which catches errors internally—but the error path depends entirely on the function remembering to catch. Any uncaught error in a write silently terminates the chain.
+
+**Fix:** At minimum log errors. For user-facing operations (history insert), toast the failure.
 
 ---
 
-### M10. `env.d.ts` Declares Global `SpeechRecognition` Types but They're Never Loaded by tsconfig
+### M10. `env.d.ts` Declares Global `SpeechRecognition` Types
 
 **Location:** `src/renderer/env.d.ts`
 
-The file declares `Window.SpeechRecognition` etc. but `tsconfig.json` only includes `src/**/*.ts` and `src/**/*.tsx`. The `.d.ts` extension **is** included, so this works. However, the declarations duplicate TypeScript's built-in `@types/dom-speech-recognition` — using the community types would be more maintainable.
+The file re-declares the entire `SpeechRecognition` API as global types. TypeScript ships `@types/dom-speech-recognition` via DOM lib, but the DOM lib is not enabled in `tsconfig.json` (no `"lib"` specified—defaults to `"target": "ESNext"` which includes the DOM). Actually, with `target: ESNext`, the DOM lib IS included, making `env.d.ts` entirely redundant. Remove the file.
+
+---
+
+### M11. No `node:` Protocol on Node.js Builtin Imports
+
+**Locations:** `src/main/*.ts` — 3 occurrences
+
+```typescript
+import path from 'path';              // should be import path from 'node:path'
+import * as fs from 'fs';              // should be import * as fs from 'node:fs'
+require('fs')                          // should be require('node:fs')
+```
+
+Using bare module names for Node.js builtins is a historical practice. The `node:` prefix is explicit, avoids ambiguity, and is enforced by Biome.
+
+---
+
+### M12. Inconsistent `import type` Syntax (7 occurrences)
+
+**Locations:** All LLM provider files + shared types
+
+Mixed use of inline `type` keyword (should be `import type`):
+```typescript
+import { type OllamaStatus } from '../shared/types';   // inline — inconsistent
+import type { OllamaStatus } from '../shared/types';    // import-type — preferred
+```
+
+The inline form leaves the import in the runtime module graph even though only types are used. Biome flags all 7 occurrences as `useImportType`.
+
+---
+
+### M13. `HistoryPanel.tsx` Load Effect Has Stale Closure on `isMounted` Ref
+
+**Location:** `src/renderer/components/HistoryPanel.tsx:33-51`
+
+```typescript
+const isMounted = useRef(true);
+useEffect(() => { return () => { isMounted.current = false; }; }, []);
+// ...
+const load = useCallback(async (q?: string) => {
+  // ...
+  if (isMounted.current) setEntries(data);
+}, []);
+```
+
+The `isMounted` pattern is an anti-pattern in React 18+. With Strict Mode, effects run twice in development. React 18+ already handles unmounted-component state updates gracefully. The ref adds complexity for no benefit—remove the `isMounted` guard and handle cancellation via AbortController instead.
+
+---
+
+### M14. Bubble Position Not Persisted Across App Restarts
+
+**Location:** `src/renderer/hooks/useBubblePosition.ts:70`
+
+Position is saved to `localStorage` (per-origin browser storage). In an Electron app, this means the position resets if the renderer context is destroyed (e.g., on `app.quit()` vs `BrowserWindow.close()`). Use `electron-store` or `settings.get/set` IPC to persist position durably.
 
 ---
 
 ## 🔵 MINOR
 
-### m1. Shared Code Imports from Renderer
+### m1. Migrated Framework Files Left Orphaned in Renderer
 
-**Location:** `src/shared/frameworks.ts:2-6`
+**Location:** `src/renderer/lib/frameworks/`
 
-```typescript
-import { openaiFramework } from '../renderer/lib/frameworks/openai';
-import { anthropicFramework } from '../renderer/lib/frameworks/anthropic';
-```
-
-The `shared` directory is supposed to be framework-agnostic code shared between main and renderer. Importing from renderer into shared creates a **reverse dependency** that breaks the architectural layering. Move framework definitions to `shared/` or keep them in renderer and duplicate detection logic.
+The `src/shared/frameworks/` directory has all 5 framework definitions. `src/renderer/lib/frameworks/` has only `index.ts` which re-exports from shared. The parent `src/shared/frameworks.ts` also imports correctly from `./frameworks/`. However, the renderer directory is vestigial—it's 1 file that just re-exports. Either remove the renderer wrapper and have consumers import directly from `@/shared/frameworks`, or keep it for backward compat. Either is fine, but maintainers need to know why this layer exists.
 
 ---
 
@@ -305,23 +416,82 @@ The `_label` parameter is never used in the function body. The underscore prefix
 
 ---
 
+### m11. Release Pipeline SHA Generation Inconsistency (macOS vs Linux)
+
+**Location:** `.github/workflows/release.yml:88,227-231`
+
+macOS jobs use `shasum -a 256` (BSD/macOS command) while the Linux job uses `sha256sum` (GNU). Both are **correct for their runner**, but the macOS commands contain a subtle bug:
+```bash
+shasum -a 256 "$f" >> "$f.sha256"
+```
+After the loop, each binary has a `.sha256` file appended to it. On the Linux side, `sha256sum "$f" > "$f.sha256"` overwrites (correctly). The `>>` on macOS means repeated runs append duplicates. Use `>` consistently.
+
+---
+
+### m12. `parseLLMOutput` Regex Is Brittle — No Escape for Special Regex Chars in Section Keys
+
+**Location:** `src/main/llm/orchestrator.ts:77-90`
+
+```typescript
+const regex = new RegExp(`#{1,3}\\s+${lookup}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
+```
+
+If a framework section key contained characters special to regex (e.g., `[status]`, `(output)`), this would silently fail or match incorrectly. Section keys are currently safe (lowercase camelCase), but this is a fragility that future changes could trigger. Use `escapeRegex()` on the lookup value.
+
+---
+
+### m13. `Process.env.NODE_ENV` Used in Renderer Without Define Plugin Config
+
+**Location:** `src/renderer/components/TemplateBrowser.tsx:46`
+
+```typescript
+if (process.env.NODE_ENV === 'development') {
+```
+
+This works because `vite-plugin-electron-renderer` shims Node.js globals, but it's fragile. Vite's recommended pattern is `import.meta.env.DEV`. If the renderer plugin configuration changes, this will throw at runtime (`process is not defined`).
+
+---
+
+### m14. React StrictMode Compatibility — `useEffect` Cleanup Race in BubbleExpanded
+
+**Location:** `src/renderer/components/BubbleExpanded.tsx:36-55`
+
+GSAP context is created inside `useEffect` with `gsap.context()`. In React StrictMode (development), effects run twice (mount → unmount → mount). The `ctx.revert()` cleanup runs between the two mounts. This is correct, but the entrance animation will play twice in development, which can mask animation bugs that only appear in production (single mount). Test without StrictMode before shipping.
+
+---
+
+### m15. `useBubblePosition` Does Not Handle Touch Events for Dragging
+
+**Location:** `src/renderer/hooks/useBubblePosition.ts:50-83`
+
+Only `mousedown`/`mousemove`/`mouseup` events are tracked. Touch devices (Surface, iPad with Sidecar, touchscreen monitors) cannot drag the bubble. Add `touchstart`/`touchmove`/`touchend` handlers.
+
+---
+
 ## SUMMARY
 
 | Severity | Count |
 |----------|-------|
-| 🔴 Critical | 5 |
-| 🟡 Moderate | 10 |
-| 🔵 Minor | 10 |
-| **Total** | **25** |
+| 🔴 Critical | 6 |
+| 🟡 Moderate | 14 |
+| 🔵 Minor | 15 |
+| **Total** | **35** |
 
-### Top 5 Actions (Highest ROI)
+### Top 7 Actions (Highest ROI)
 
 1. **Upgrade Electron** (🔴 C1) — Fix all 4 high + 11 moderate CVEs in one change
 2. **Remove unused `uuid` dependencies** (🔴 C2) — Clean up package.json
 3. **Fix `err: any` type escape** (🔴 C3) — One-line fix for type safety
 4. **Harden API key storage** (🔴 C4) — Fail closed instead of base64 encoding
 5. **Add test infrastructure** (🔴 C5) — Vitest + basic unit tests for business logic
+6. **Fix Biome config + run linter** (🟡 M8) — 137 errors, mostly auto-fixable
+7. **Remove 8 dead exports** (🟡 M6) — Reduce noise and maintenance surface
 
 > *"Would a senior engineer say this is overcomplicated? If yes, simplify."*
 > The codebase is well-structured, clean, and follows good patterns overall.
 > The issues are concentrated in security, testing, and configuration — not architecture.
+>
+> **Round 1 → Round 2 delta:** 25 → 35 total findings (+10). Deeper analysis revealed
+> dead exports, Biome breakage, error-swallowing patterns, missing touch support,
+> React StrictMode concerns, and brittle regex. Architecture is sound; discipline
+> around testing, linting, and error handling needs attention.
