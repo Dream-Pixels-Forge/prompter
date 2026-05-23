@@ -117,3 +117,27 @@
 - Voice: Whisper (local) for STT
 - Security: Electron safeStorage for API keys, contextIsolation enforced
 - CI/CD: GitHub Actions with matrix builds, electron-builder for packaging
+
+## 2026-05-23 — Session 8 — Layout Bug Fixes
+
+### Completed
+- [x] **Issue #7** — Bubble dual-positioning (bottom/right + transform → absolute viewport coords)
+  - Refactored `useBubblePosition` from `{x,y}` translate offsets to `{bottom,right}` absolute coordinates
+  - Added auto-migration for legacy localStorage data
+  - Removed dual positioning source from Bubble.tsx
+- [x] **Issue #6** — Expanded card width (420px) exceeds window width (360px)
+  - Changed window width from 360 → 460 in main.ts
+- [x] **Issue #5** — Template grid lacks auto-rows-fr for equal-height cards
+  - Added `auto-rows-fr` to grid container in TemplateBrowser.tsx
+- [x] **Issue #4** — Toast positioning overlaps with expanded card
+  - Made toast position dynamic: `top-4` when expanded, `bottom-24` when collapsed
+- [x] **Issue #3** — ProcessingOverlay and backdrop use same z-index (40)
+  - Changed ProcessingOverlay z-index from 40 → 50
+- [x] **Issue #2** — No drag region for frameless Electron window
+  - Added `-webkit-app-region: drag` to header, `no-drag` to close button
+- [x] **Issue #1** — History Panel scrollable list max-h (380px) exceeds available space
+  - Replaced hardcoded `max-h-[380px]` with `flex-1 min-h-0` flex-based layout
+
+### Next Steps
+- Verify all fixes in running app
+- Consider adding automated UI tests

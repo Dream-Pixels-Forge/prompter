@@ -33,7 +33,7 @@ export function Bubble() {
       ref={wrapperRef}
       onMouseDown={(e) => startDrag(e, position)}
       className="fixed z-50"
-      style={{ transform: `translate(${position.x}px, ${position.y}px)`, bottom: '24px', right: '24px' }}
+      style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
     >
       <button
         ref={bubbleRef}

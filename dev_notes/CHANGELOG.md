@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.1] — 2026-05-23 — Layout Bug Fixes
+
+### Fixed
+- **#7** Bubble dual-positioning: refactored `useBubblePosition` from translate offsets to absolute viewport coordinates with auto-migration of legacy localStorage data
+- **#6** Window width mismatch: changed window width from 360px → 460px to accommodate 420px expanded card
+- **#5** Template grid equal heights: added `auto-rows-fr` to grid container
+- **#4** Toast overlap: made toast position dynamic — top-right when card expanded, bottom-right when collapsed
+- **#3** z-index collision: bumped ProcessingOverlay z-index from 40 → 50
+- **#2** Frameless window drag: added `-webkit-app-region: drag` to header, `no-drag` to close button
+- **#1** History panel overflow: replaced hardcoded `max-h-[380px]` with flex-based dynamic sizing
+
 ## [0.1.0] — 2026-05-23 — First Public Release
 
 ### Added

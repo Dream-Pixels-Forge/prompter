@@ -23,6 +23,14 @@ export function BubbleExpanded() {
   const { output } = usePromptStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Apply frameless window drag regions (Electron-specific CSS)
+  useEffect(() => {
+    headerRef.current?.style.setProperty('-webkit-app-region', 'drag');
+    closeBtnRef.current?.style.setProperty('-webkit-app-region', 'no-drag');
+  }, []);
 
   // Entrance animation — scale from bubble origin (bottom-right)
   useEffect(() => {
@@ -62,8 +70,8 @@ export function BubbleExpanded() {
       className="fixed bottom-4 right-4 w-[420px] max-h-[580px] glass-card
                  flex flex-col overflow-hidden z-50">
 
-      {/* Header */}
-      <div className="relative flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
+      {/* Header — draggable for frameless window */}
+      <div ref={headerRef} className="relative flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
         {/* Gradient accent line */}
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#4A7FA0]/40 to-transparent" />
         <div className="flex items-center gap-2.5">
@@ -73,7 +81,7 @@ export function BubbleExpanded() {
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
           <span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded-md">v0.1</span>
         </div>
-        <button onClick={() => setExpanded(false)}
+        <button ref={closeBtnRef} onClick={() => setExpanded(false)}
           className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
           <X className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
         </button>

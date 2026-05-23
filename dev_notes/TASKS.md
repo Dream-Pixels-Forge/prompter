@@ -69,6 +69,18 @@
 - [x] **D-2** Build configuration for macOS/Windows/Linux
 - [ ] **D-3** First packaged release
 
+## Phase I — Implement (Bug Fixes)
+
+### Layout Bug Fixes ✅
+
+- [x] **I-B1** (#1) History Panel max-h overflow: replaced `max-h-[380px]` with flex-based dynamic sizing
+- [x] **I-B2** (#2) Frameless window drag: added `-webkit-app-region: drag` to header
+- [x] **I-B3** (#3) z-index collision: ProcessingOverlay 40 → 50
+- [x] **I-B4** (#4) Toast overlap: dynamic position based on card expanded state
+- [x] **I-B5** (#5) Template grid: added `auto-rows-fr` for equal-height cards
+- [x] **I-B6** (#6) Window width: 360px → 460px for 420px card fit
+- [x] **I-B7** (#7) Bubble dual-positioning: refactored to absolute viewport coordinates with legacy migration
+
 ## Phase E — Extend
 
 - [ ] **E-1** Plugin system for custom frameworks

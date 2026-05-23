@@ -122,7 +122,7 @@ export function HistoryPanel() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col flex-1 min-h-0 space-y-3">
       {/* Search bar */}
       <div className="flex items-center gap-2.5 bg-white/[0.04] rounded-xl px-3.5 py-2 border border-white/[0.06] focus-within:border-[#4A7FA0]/30 transition-colors">
         <Search className="w-3.5 h-3.5 text-white/25 shrink-0" />
@@ -153,7 +153,7 @@ export function HistoryPanel() {
       )}
 
       {/* List */}
-      <div className="space-y-1 max-h-[380px] overflow-y-auto pr-0.5">
+      <div className="space-y-1 flex-1 overflow-y-auto min-h-0 pr-0.5">
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <div className="flex gap-1">

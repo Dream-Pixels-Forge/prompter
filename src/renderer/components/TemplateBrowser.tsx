@@ -36,7 +36,7 @@ export function TemplateBrowser() {
   return (
     <div className="space-y-3">
       <p className="text-xs text-white/35">Choose a template to get started</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 auto-rows-fr">
         {templates.map(tpl => (
           <TemplateCard
             key={tpl.id}

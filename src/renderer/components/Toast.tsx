@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useAppStore } from '@/renderer/stores/app-store';
 
 export function Toast() {
-  const { toastMessage, hideToast } = useAppStore();
+  const { toastMessage, hideToast, isExpanded } = useAppStore();
   const toastRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function Toast() {
   if (!toastMessage) return null;
 
   return (
-    <div ref={toastRef} className="fixed bottom-24 right-6 z-50">
+    <div ref={toastRef} className={`fixed z-50 right-6 ${isExpanded ? 'top-4' : 'bottom-24'}`}>
       <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2D4A7A] rounded-xl shadow-lg shadow-black/20">
         <Check className="w-3.5 h-3.5 text-white" />
         <span className="text-xs text-white font-medium">{toastMessage}</span>
