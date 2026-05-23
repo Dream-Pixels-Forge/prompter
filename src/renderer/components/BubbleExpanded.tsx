@@ -41,12 +41,12 @@ export function BubbleExpanded() {
     const ctx = gsap.context(() => {
       gsap.fromTo(card,
         { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
-        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)' }
+        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' }
       );
       if (body) {
         gsap.fromTo(body,
           { opacity: 0 },
-          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out' }
+          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' }
         );
       }
     });
@@ -61,7 +61,7 @@ export function BubbleExpanded() {
 
     gsap.fromTo(body,
       { opacity: 0 },
-      { opacity: 1, duration: 0.15, ease: 'power1.out' }
+      { opacity: 1, duration: 0.15, ease: 'power1.out', willChange: 'opacity' }
     );
   }, [activeTab]);
 

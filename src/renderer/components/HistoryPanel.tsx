@@ -92,7 +92,7 @@ export function HistoryPanel() {
               {selected.template}
             </span>
           )}
-          <span className="text-[10px] text-white/30 ml-auto">{formatDate(selected.createdAt)}</span>
+          <span className="text-[10px] text-white/30">{formatDate(selected.createdAt)}</span>
         </div>
 
         {/* Output block */}

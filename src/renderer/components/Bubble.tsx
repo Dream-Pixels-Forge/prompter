@@ -6,7 +6,7 @@ import { useBubblePosition } from '@/renderer/hooks/useBubblePosition';
 
 export function Bubble() {
   const { toggleExpanded } = useAppStore();
-  const { position, startDrag } = useBubblePosition();
+  const { position, isDragging, startDrag } = useBubblePosition();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
 
@@ -22,6 +22,7 @@ export function Bubble() {
         repeat: -1,
         yoyo: true,
         ease: 'power1.inOut',
+        willChange: 'transform',
       });
     });
 
@@ -38,11 +39,11 @@ export function Bubble() {
       <button
         ref={bubbleRef}
         onClick={toggleExpanded}
-        className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2D4A7A] to-[#4A7FA0]
+        className={`w-14 h-14 rounded-full bg-gradient-to-br from-[#2D4A7A] to-[#4A7FA0]
                    flex items-center justify-center cursor-pointer shadow-lg shadow-[#2D4A7A]/25
-                   hover:shadow-xl hover:shadow-[#2D4A7A]/35 hover:scale-110
+                   hover:shadow-xl hover:shadow-[#2D4A7A]/35 ${isDragging ? '' : 'hover:scale-110'}
                    transition-all duration-300 ease-out
-                   backdrop-blur-sm border border-white/[0.12]"
+                   backdrop-blur-sm border border-white/[0.12]`}
       >
         {/* Inner glow */}
         <div className="absolute inset-1 rounded-full bg-white/[0.06]" />

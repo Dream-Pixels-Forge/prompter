@@ -33,6 +33,15 @@ export function TemplateBrowser() {
     }
   };
 
+  // Dev warning for missing icon mappings
+  if (process.env.NODE_ENV === 'development') {
+    templates.forEach(tpl => {
+      if (!iconMap[tpl.icon] && tpl.icon !== 'Sparkles') {
+        console.warn(`[TemplateBrowser] No icon mapping for "${tpl.icon}" — using Sparkles fallback`);
+      }
+    });
+  }
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-white/35">Choose a template to get started</p>

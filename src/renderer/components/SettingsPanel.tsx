@@ -149,17 +149,18 @@ export function SettingsPanel() {
               onChange={(e) => handleChange('openaiModel', e.target.value)}
               className="input-base w-full text-xs" />
           </FormRow>
-          <div className="grid grid-cols-[80px_1fr_auto] items-center gap-3">
-            <span className="text-[11px] text-white/40 font-medium">API Key</span>
-            <input type="password" value={store.openaiApiKey}
-              onChange={(e) => handleChange('openaiApiKey', e.target.value)}
-              className="input-base w-full text-xs" />
-            <button onClick={handleSaveKey}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
-              <Key className="w-3 h-3" />
-              Save
-            </button>
-          </div>
+          <FormRow label="API Key">
+            <div className="flex items-center gap-2">
+              <input type="password" value={store.openaiApiKey}
+                onChange={(e) => handleChange('openaiApiKey', e.target.value)}
+                className="input-base flex-1 text-xs" />
+              <button onClick={handleSaveKey}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
+                <Key className="w-3 h-3" />
+                Save
+              </button>
+            </div>
+          </FormRow>
         </div>
       </section>
 
@@ -178,17 +179,18 @@ export function SettingsPanel() {
               onChange={(e) => handleChange('anthropicModel', e.target.value)}
               className="input-base w-full text-xs" />
           </FormRow>
-          <div className="grid grid-cols-[80px_1fr_auto] items-center gap-3">
-            <span className="text-[11px] text-white/40 font-medium">API Key</span>
-            <input type="password" value={store.anthropicApiKey}
-              onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
-              className="input-base w-full text-xs" />
-            <button onClick={handleSaveKey}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
-              <Key className="w-3 h-3" />
-              Save
-            </button>
-          </div>
+          <FormRow label="API Key">
+            <div className="flex items-center gap-2">
+              <input type="password" value={store.anthropicApiKey}
+                onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
+                className="input-base flex-1 text-xs" />
+              <button onClick={handleSaveKey}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
+                <Key className="w-3 h-3" />
+                Save
+              </button>
+            </div>
+          </FormRow>
         </div>
       </section>
     </div>
