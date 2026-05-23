@@ -116,6 +116,28 @@ All 26 open GitHub issues resolved via systematic root-cause analysis. Each fix 
 
 ---
 
+---
+
+## Second Pass — Systematic-Debugging Audit
+
+After the initial fixes, a full re-read of every changed file revealed 4 remaining issues:
+
+### #34 (revisited) — `STORE_GET` and `STORE_SET` still defined but handlerless
+**Root cause:** Removal missed these two entries in `IPC_CHANNELS`; no handler was ever registered for them.
+**Fix:** Removed both from `src/shared/types.ts`.
+
+### Backdrop exit animation broken (related to #30)
+**Root cause:** The backdrop div was conditionally rendered (`{isExpanded && <div.../>}`). When `isExpanded` became `false`, React unmounted the element *before* GSAP could play the exit animation — the animation ran on a removed DOM node.
+**Fix:** Always mount the backdrop div, starting at `opacity: 0` and `pointerEvents: 'none'`. GSAP now controls both in/out states, sets `pointerEvents: 'auto'` on entrance, and restores `pointerEvents: 'none'` on exit via `onComplete`.
+
+### `checkOllamaStatus` missing timeout (related to #40)
+**Root cause:** The health-check function used raw `fetch()` without `AbortController`, potentially hanging forever if the Ollama server is unreachable.
+**Fix:** Replaced both `fetch()` calls with `fetchWithTimeout(url, { method: 'GET', timeout: 5000 })`.
+
+### `(window as any)` casts in `stt.ts` (related to #25)
+**Root cause:** `env.d.ts` declared Web Speech API types but never augmented the `Window` interface, so `window.SpeechRecognition` and `window.webkitSpeechRecognition` remained implicitly `any`.
+**Fix:** Added `interface Window { SpeechRecognition: ...; webkitSpeechRecognition: ... }` to `env.d.ts`. Replaced `(window as any).SpeechRecognition` with `window.SpeechRecognition` in both `start()` and `isSpeechSupported()`.
+
 ## Summary
 
 | Severity | Count | Files changed | Insertions | Deletions |
@@ -124,6 +146,6 @@ All 26 open GitHub issues resolved via systematic root-cause analysis. Each fix 
 | High     | 6     |               |            |           |
 | Medium   | 5     |               |            |           |
 | Low      | 9     |               |            |           |
-| **Total**| **24**| **31**        | **268**    | **271**   |
+| **Total**| **28**| **34**        | **421**    | **289**   |
 
 Note: Issue #27 (no test suite) and #31 (font rendering) were investigated but not actionable in this pass.
