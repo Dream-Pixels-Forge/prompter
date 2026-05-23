@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Clock, Search, Trash2, ChevronLeft, RotateCcw, MessageSquare, FileText } from 'lucide-react';
 import { type HistoryEntry } from '@/shared/types';
 import { listHistory, searchHistory, deleteHistory, clearHistory } from '@/renderer/lib/llm';
@@ -28,19 +28,26 @@ export function HistoryPanel() {
   const [selected, setSelected] = useState<HistoryEntry | null>(null);
   const { setInput, setFramework, setTemplate } = usePromptStore();
   const { setActiveTab } = useAppStore();
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => { isMounted.current = false; };
+  }, []);
 
   const load = useCallback(async (q?: string) => {
     setLoading(true);
     try {
       if (q && q.trim()) {
-        setEntries(await searchHistory(q.trim()));
+        const data = await searchHistory(q.trim());
+        if (isMounted.current) setEntries(data);
       } else {
-        setEntries(await listHistory(50, 0));
+        const data = await listHistory(50, 0);
+        if (isMounted.current) setEntries(data);
       }
     } catch {
       // offline fallback
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, []);
 

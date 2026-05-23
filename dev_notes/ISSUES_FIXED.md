@@ -180,16 +180,49 @@ After the initial fixes, a full re-read of every changed file revealed 4 remaini
 **Root cause:** `env.d.ts` declared Web Speech API types but never augmented the `Window` interface, so `window.SpeechRecognition` and `window.webkitSpeechRecognition` remained implicitly `any`.
 **Fix:** Added `interface Window { SpeechRecognition: ...; webkitSpeechRecognition: ... }` to `env.d.ts`. Replaced `(window as any).SpeechRecognition` with `window.SpeechRecognition` in both `start()` and `isSpeechSupported()`.
 
+---
+
+## Fourth Pass — Audit Verification + New Issues
+
+7 new verification issues (#50–#56) found after re-auditing all files against ISSUES_FIXED.md claims:
+
+### #50 — OutputPanel: useEffect placed after conditional early return
+**Root cause:** `useEffect(() => { ... cleanup timer }, [])` was placed on line 20, after `if (!output) return null` on line 16. This is a React rules-of-hooks violation — hooks must be called unconditionally at the top level.
+**Fix:** Moved the `useEffect` before the early return (now line 14, before line 18 return).
+
+### #51 — PromptSection: missing setTimeout cleanup
+**Root cause:** `setTimeout(() => setCopied(false), 1500)` had no ref tracking. If the component unmounted before the timeout fired, `setCopied` would execute on unmounted state.
+**Fix:** Added `timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)`. Timer is cleared in `useEffect` cleanup and before setting each new timeout.
+
+### #52 — HistoryPanel: no unmount guard on async data loading
+**Root cause:** The `load` function is async — it awaits `searchHistory`/`listHistory`, then calls `setEntries`/`setLoading`. If the component unmounts during the async gap, state is set on an unmounted component (React leak warning).
+**Fix:** Added `isMounted = useRef(true)` with `useEffect` cleanup setting it to `false`. All state setters in `load` are guarded by `if (isMounted.current)`.
+
+### #53 — whisper.ts: `body as any` still present (verification)
+**Status: Verified fixed.** Code reads `body` without cast. The `as any` was removed in the first third-pass commit. The audit issue was created against a stale checkout.
+
+### #54 — Dead stream functions still present (verification)
+**Status: Verified fixed.** `grep` shows zero stream functions. The 428 lines were removed in the first third-pass commit. The audit issue was created against a stale checkout.
+
+### #55 — Bubble.tsx missing aria-label (verification)
+**Status: Verified fixed.** `aria-label="Open Prompter"` is present on line 42 of Bubble.tsx, added in the third pass.
+
+### #56 — TemplateBrowser: console.warn runs on every render
+**Root cause:** The dev warning loop (`templates.forEach(... console.warn(...))`) was in the component body, executing on every render instead of only once on mount.
+**Fix:** Wrapped in `useEffect(() => { ... }, [])` so it only runs once.
+
+---
+
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | Critical | 4     |
 | High     | 6     |
-| Medium   | 6     |
-| Low      | 16    |
-| **Total**| **32**|
+| Medium   | 7     |
+| Low      | 19    |
+| **Total**| **36**|
 
-**GitHub issues:** 33 created total, 32 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
+**GitHub issues:** 37 created total, 36 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
 
-**Stats across all passes:** 45 files changed, 467 insertions, 562 deletions across 5 commits on `develop`.
+**Stats across all passes:** 49 files changed, 495 insertions, 570 deletions across 6 commits on `develop`.

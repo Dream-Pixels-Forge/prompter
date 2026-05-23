@@ -13,13 +13,13 @@ export function OutputPanel() {
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  if (!output) return null;
-
-  const framework = getFramework(output.framework);
-
   useEffect(() => {
     return () => { if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current); };
   }, []);
+
+  if (!output) return null;
+
+  const framework = getFramework(output.framework);
 
   const handleCopy = async () => {
     const success = await copyText(output.raw);

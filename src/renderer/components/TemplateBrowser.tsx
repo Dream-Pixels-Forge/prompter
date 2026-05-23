@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, ChefHat, BookOpen, Bot, GitPullRequest, Video, PenLine, Headphones, BarChart3, Palette, FileText, Microscope, type LucideIcon } from 'lucide-react';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useAppStore } from '@/renderer/stores/app-store';
@@ -42,14 +42,15 @@ export function TemplateBrowser() {
     }
   };
 
-  // Dev warning for missing icon mappings
-  if (process.env.NODE_ENV === 'development') {
-    templates.forEach(tpl => {
-      if (!iconMap[tpl.icon] && tpl.icon !== 'Sparkles') {
-        console.warn(`[TemplateBrowser] No icon mapping for "${tpl.icon}" — using Sparkles fallback`);
-      }
-    });
-  }
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      templates.forEach(tpl => {
+        if (!iconMap[tpl.icon] && tpl.icon !== 'Sparkles') {
+          console.warn(`[TemplateBrowser] No icon mapping for "${tpl.icon}" — using Sparkles fallback`);
+        }
+      });
+    }
+  }, []);
 
   const cat = CATEGORIES.find(c => c.id === activeCategory)!;
   const visible = templates.filter(t => cat.ids.includes(t.id));
