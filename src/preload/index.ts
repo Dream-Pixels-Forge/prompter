@@ -22,4 +22,15 @@ contextBridge.exposeInMainWorld('api', {
   stt: {
     transcribe: (audioData: string) => ipcRenderer.invoke(IPC_CHANNELS.STT_START, audioData),
   },
+  history: {
+    insert: (entry: any) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_INSERT, entry),
+    list: (limit?: number, offset?: number) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_LIST, limit, offset),
+    search: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
+    delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id),
+    clear: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
+  },
+  store: {
+    saveApiKey: (service: string, key: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_SAVE_API_KEY, service, key),
+    getApiKey: (service: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_GET_API_KEY, service),
+  },
 });

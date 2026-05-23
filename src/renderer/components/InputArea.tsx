@@ -3,7 +3,7 @@ import { Send, Sparkles } from 'lucide-react';
 import { MicButton } from './MicButton';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { generatePrompt } from '@/renderer/lib/llm';
+import { generatePrompt, insertHistory } from '@/renderer/lib/llm';
 import { analyzeIntent } from '@/renderer/lib/intent-parser';
 import { templates, getTemplate } from '@/renderer/lib/templates';
 import { getFramework } from '@/renderer/lib/frameworks';
@@ -46,6 +46,16 @@ export function InputArea() {
         template: selectedTemplate || undefined,
       });
       setOutput(result);
+
+      // Auto-save to history
+      insertHistory({
+        id: crypto.randomUUID(),
+        rawInput: input,
+        structuredOutput: result.raw,
+        framework: selectedFramework,
+        template: selectedTemplate || undefined,
+        createdAt: new Date().toISOString(),
+      }).catch(() => {});
     } catch (err: any) {
       showToast(err?.message || 'Generation failed');
     } finally {

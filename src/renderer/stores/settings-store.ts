@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { type AppSettings, type ProviderType } from '@/shared/types';
+import { saveApiKey, getApiKey } from '@/renderer/lib/llm';
 
 interface SettingsStore extends AppSettings {
   loaded: boolean;
@@ -33,7 +34,18 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   loadSettings: async () => {
     const saved = await window.api.settings.get();
-    set({ ...defaults, ...saved, loaded: true });
+    // Also load persisted API keys from encrypted storage
+    const [openaiKey, anthropicKey] = await Promise.all([
+      getApiKey('openai'),
+      getApiKey('anthropic'),
+    ]);
+    set({
+      ...defaults,
+      ...saved,
+      openaiApiKey: openaiKey || saved.openaiApiKey || '',
+      anthropicApiKey: anthropicKey || saved.anthropicApiKey || '',
+      loaded: true,
+    });
   },
 
   updateSetting: (key, value) => {
@@ -43,6 +55,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   saveSettings: async () => {
     const { loaded, ollamaAvailable, ollamaModels, loadSettings, updateSetting, saveSettings, checkOllamaStatus, getActiveLLMConfig, ...settings } = get();
     await window.api.settings.set(settings);
+    // Persist API keys to encrypted storage
+    if (settings.openaiApiKey) {
+      await saveApiKey('openai', settings.openaiApiKey);
+    }
+    if (settings.anthropicApiKey) {
+      await saveApiKey('anthropic', settings.anthropicApiKey);
+    }
   },
 
   checkOllamaStatus: async () => {

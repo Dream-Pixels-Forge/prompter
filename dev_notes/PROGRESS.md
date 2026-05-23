@@ -65,10 +65,22 @@
 - [x] Verified: zero type errors, full build, app initializes correctly
 - [x] Pushed to GitHub (`develop` branch)
 
+## 2026-05-23 — Session 5
+
+### Completed
+- [x] **Phase 4 complete: Full Frameworks & Templates** — all steps delivered
+- [x] MPLCT framework: 8-section framework for video/3D/cinematic prompts
+- [x] Context Engineering framework: 5-section framework for knowledge-intensive agent tasks
+- [x] 9 new template files (12 total across all domains)
+- [x] Template→Framework auto-switching in TemplateBrowser
+- [x] detectFramework() expanded to properly resolve mplct and context-eng
+- [x] TemplateBrowser iconMap supports all 12 Lucide icons
+- [x] Verified: zero type errors, full build, app initializes correctly
+- [x] Pushed to GitHub (`develop` branch)
+
 ### Next Steps
-1. **Phase 4: Full Frameworks & Templates** — MPLCT, Context Engineering, 9 more templates
-2. **Phase 5: History & Settings Persistence** — SQLite, encrypted API keys, system tray
-3. **Phase 6: Polish & Animations** — GSAP, glassmorphism, distribution packaging
+1. **Phase 5: History & Settings Persistence** — SQLite (better-sqlite3), encrypted API keys (safeStorage), history browser, system tray, search
+2. **Phase 6: Polish & Animations** — GSAP, glassmorphism, hotkeys, drag persistence, packaging
 
 ### Blockers
 - None

@@ -57,3 +57,24 @@
 - Web Speech API type declarations for TypeScript compatibility
 - Cleaned up: removed old separate vite configs (vite.main/preload/renderer.config.ts)
 - Verified: zero type errors, full build (renderer 228kB/main 20kB/preload 1kB), app initializes correctly
+
+## [0.4.0] — 2026-05-23
+
+### Added
+- Phase 4 implementation complete (Full Frameworks & Templates)
+- MPLCT framework (`mplct`): 8 sections — Subject, Environment, Lighting, Camera, Action, Style, Negative Space, Meta — for video/3D/cinematic prompts
+- Context Engineering framework (`context-eng`): 5 sections — Context, Memory, Skills & SOPs, Tools & Resources, Output Contract — for knowledge-intensive agent tasks
+- 9 new templates (12 total):
+  - Agent Instructions → Karpathy Principles
+  - Code Review Prompt → Karpathy Principles
+  - Video Generation → MPLCT
+  - Blog Post / Article → OpenAI GPT-5.5
+  - Customer Support Agent → Anthropic Playbook
+  - Data Analysis / Report → OpenAI GPT-5.5
+  - UI/UX Design Brief → Anthropic Playbook
+  - Product Requirements Doc → OpenAI GPT-5.5
+  - Scientific Research Paper → Karpathy Principles
+- Template→Framework auto-switch: selecting a template now switches the active framework
+- `detectFramework()` expanded: correctly resolves mplct, context-eng matches
+- TemplateBrowser iconMap supports all 12 template icons
+- Verified: zero type errors, full build (renderer 238kB/main 22kB/preload 1kB), app initializes correctly

@@ -6,6 +6,7 @@ import { InputArea } from './InputArea';
 import { OutputPanel } from './OutputPanel';
 import { ProcessingOverlay } from './ProcessingOverlay';
 import { TemplateBrowser } from './TemplateBrowser';
+import { HistoryPanel } from './HistoryPanel';
 import { SettingsPanel } from './SettingsPanel';
 
 const tabs: { key: AppTab; label: string }[] = [
@@ -55,9 +56,7 @@ export function BubbleExpanded() {
           <>{output ? <OutputPanel /> : <InputArea />}</>
         )}
         {activeTab === 'templates' && <TemplateBrowser />}
-        {activeTab === 'history' && (
-          <div className="text-center text-white/30 text-sm py-8">History coming soon</div>
-        )}
+        {activeTab === 'history' && <HistoryPanel />}
         {activeTab === 'settings' && <SettingsPanel />}
       </div>
 

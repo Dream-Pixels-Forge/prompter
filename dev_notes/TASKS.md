@@ -40,12 +40,12 @@
 - [x] **I-3.2** MicButton with recording states + visual feedback
 - [x] **I-3.3** OpenAI Whisper API fallback (main process)
 
-### Phase 4: Full Frameworks & Templates (upcoming)
+### Phase 4: Full Frameworks & Templates ✅
 
-- [ ] **I-4.1** MPLCT framework (video/3D prompts)
-- [ ] **I-4.2** Context Engineering framework
-- [ ] **I-4.3** 9 additional templates (agent-prompt, code-review, video-gen, blog-post, etc.)
-- [ ] **I-4.4** Template→Framework mapping
+- [x] **I-4.1** MPLCT framework (video/3D prompts)
+- [x] **I-4.2** Context Engineering framework
+- [x] **I-4.3** 9 additional templates (agent-prompt, code-review, video-gen, blog-post, etc.)
+- [x] **I-4.4** Template→Framework mapping
 
 ### Phase 5: History & Persistence (upcoming)
 
