@@ -14,17 +14,14 @@ directories:
 # ── Files to include in the app bundle ─────────────────
 files:
   - dist/**/*
-  - dist-electron/**/*
+  - assets/**/*
 
 # ── Extra resources (not in asar) ──────────────────────
 extraResources:
-  - from: public/
-    to: public/
+  - from: assets/
+    to: assets/
     filter:
       - "**/*"
-      - "!**/*.psd"
-      - "!**/*.ai"
-      - "!**/*.sketch"
 
 # ── Compress asar (protects source from casual inspection) ─
 asar: true

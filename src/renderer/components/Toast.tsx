@@ -1,0 +1,34 @@
+import { useEffect, useRef } from 'react';
+import { Check } from 'lucide-react';
+import gsap from 'gsap';
+import { useAppStore } from '@/renderer/stores/app-store';
+
+export function Toast() {
+  const { toastMessage, hideToast } = useAppStore();
+  const toastRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (toastMessage && toastRef.current) {
+      const el = toastRef.current;
+      gsap.fromTo(el,
+        { y: 12, opacity: 0, scale: 0.95 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out' }
+      );
+      const timer = setTimeout(() => {
+        gsap.to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in' }).then(hideToast);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage, hideToast]);
+
+  if (!toastMessage) return null;
+
+  return (
+    <div ref={toastRef} className="fixed bottom-24 right-6 z-50">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2D4A7A] rounded-xl shadow-lg shadow-black/20">
+        <Check className="w-3.5 h-3.5 text-white" />
+        <span className="text-xs text-white font-medium">{toastMessage}</span>
+      </div>
+    </div>
+  );
+}
