@@ -118,7 +118,49 @@ All 26 open GitHub issues resolved via systematic root-cause analysis. Each fix 
 
 ---
 
-## Second Pass — Systematic-Debugging Audit
+## Third Pass — Full Issue Closure
+
+After closing the initial 26 issues, 17 remained open on GitHub (10 from the first batch never closed + 7 new). Systematic audit of every open issue:
+
+### #43 — InputArea error-clearing effect prevents error from displaying
+**Root cause:** A single `useEffect` depended on both `input` and `error`. When `setError('msg')` was called (generation failure), the effect re-ran and immediately called `setError(null)`, clearing the error before the UI could render it.
+**Fix:** Split into two effects — one for debounce on `[input, analyzeWithDebounce]`, one for error clearing on `[input]`. The error-clearing effect no longer reacts to `error` being set, so it only fires when `input` actually changes.
+
+### #44 — Missing `setTimeout` cleanup in OutputPanel
+**Root cause:** `setTimeout(() => setCopied(false), 2000)` had no cleanup — if the component unmounted before the timeout, the callback would run on unmounted state.
+**Fix:** Added `copiedTimerRef` (tracked via `useRef`). `useEffect` cleanup clears the timer on unmount. Existing timer cleared before setting new one.
+
+### #45 — SettingsPanel non-null assertion crash on invalid `activeProvider`
+**Root cause:** `PROVIDERS.find(p => p.type === store.activeProvider)!` — the `!` assertion assumes a match always exists. If `activeProvider` is set to an unexpected value (e.g., migration artifact), `find()` returns `undefined` and `activeProvider.label` throws `Cannot read properties of undefined`.
+**Fix:** Replaced `!` with `?? PROVIDERS[0]` so any invalid provider gracefully falls back to the first known provider.
+
+### #46 — `whisper.ts` uses `body as any`
+**Root cause:** `body: body as any` where `body` is `Uint8Array`. TypeScript accepts `Uint8Array` as valid `BodyInit` (via `BufferSource`), so the `as any` escape was unnecessary and suppressed type checking.
+**Fix:** Changed to `body` — no cast needed.
+
+### #47 — `asarUnpack` references non-existent `public/` directory
+**Root cause:** `electron-builder.yml` contained `"public/**"` in `asarUnpack` but the project has no `public/` directory — just `assets/` and `build/`.
+**Fix:** Removed `"public/**"` from `asarUnpack`.
+
+### #48 — Dead code: 428 lines of stream functions never called
+**Root cause:** `streamOllama`, `streamOpenAI`, and `streamAnthropic` were defined and exported but unreachable — the `LLM_GENERATE_STREAM` IPC channel was removed in the first pass, and no other code calls them.
+**Fix:** Removed all three stream functions (~120 lines, plus dropped the `AnthropicStreamChunk` interface). The non-stream `generateOllama`/`generateOpenAI`/`generateAnthropic` functions remain.
+
+### #49 — ARCHITECTURE.md references non-existent files
+**Root cause:** The document referenced `tray.ts` (code moved into `ipc.ts`), `store.ts` (now `storage.ts`), `history.ts` (CRUD lives in `llm.ts`), and `FrameworkSelector.tsx` (deleted in pass 1).
+**Fix:** Updated all file references to match actual project structure.
+
+### #31 — ARCHITECTURE.md mentions SQLite but actual impl uses JSON files
+**Root cause:** Documentation claimed `better-sqlite3` with SQL schema, but the implementation stores history and encrypted keys in JSON files via `safeStorage`.
+**Fix:** Replaced SQLite references with JSON file storage documentation. Added storage schema table and `HistoryEntry` type shape.
+
+### #37 (revisited) — Missing aria-labels on Bubble and TemplateCard
+**Root cause:** First pass added `aria-label` to BubbleExpanded close, OutputPanel copy/clear, and HistoryPanel delete buttons. Bubble.tsx trigger button and TemplateCard.tsx select button were missed.
+**Fix:** Added `aria-label="Open Prompter"` to Bubble button and `aria-label="Select template: ${template.name}"` to TemplateCard button.
+
+---
+
+## Summary
 
 After the initial fixes, a full re-read of every changed file revealed 4 remaining issues:
 
@@ -140,12 +182,14 @@ After the initial fixes, a full re-read of every changed file revealed 4 remaini
 
 ## Summary
 
-| Severity | Count | Files changed | Insertions | Deletions |
-|----------|-------|---------------|------------|-----------|
-| Critical | 4     |               |            |           |
-| High     | 6     |               |            |           |
-| Medium   | 5     |               |            |           |
-| Low      | 9     |               |            |           |
-| **Total**| **28**| **34**        | **421**    | **289**   |
+| Severity | Count |
+|----------|-------|
+| Critical | 4     |
+| High     | 6     |
+| Medium   | 6     |
+| Low      | 16    |
+| **Total**| **32**|
 
-Note: Issue #27 (no test suite) and #31 (font rendering) were investigated but not actionable in this pass.
+**GitHub issues:** 33 created total, 32 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
+
+**Stats across all passes:** 45 files changed, 467 insertions, 562 deletions across 5 commits on `develop`.
