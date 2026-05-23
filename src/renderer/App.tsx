@@ -57,12 +57,12 @@ export default function App() {
   }, [setExpanded]);
 
   return (
-    <div className="w-screen h-screen overflow-hidden select-none">
+    <div className={`w-screen h-screen overflow-hidden select-none ${isExpanded ? 'bg-[#1C1917]' : ''}`}>
       {/* Backdrop overlay */}
       {isExpanded && (
         <div ref={backdropRef}
           onClick={handleBackdropClick}
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+          className="fixed inset-0 bg-black/30 z-40"
         />
       )}
 

@@ -76,7 +76,7 @@ export function HistoryPanel() {
         </button>
 
         {/* Input block */}
-        <div className="sub-card p-3.5 space-y-2">
+        <div className="sub-card p-3 space-y-1.5">
           <div className="flex items-center gap-1.5 text-white/30">
             <MessageSquare className="w-3 h-3" />
             <span className="text-[10px] uppercase tracking-wider font-medium">Input</span>
@@ -96,7 +96,7 @@ export function HistoryPanel() {
         </div>
 
         {/* Output block */}
-        <div className="sub-card p-3.5 space-y-2">
+        <div className="sub-card p-3 space-y-1.5">
           <div className="flex items-center gap-1.5 text-white/30">
             <FileText className="w-3 h-3" />
             <span className="text-[10px] uppercase tracking-wider font-medium">Structured Output</span>
@@ -109,11 +109,11 @@ export function HistoryPanel() {
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
           <button onClick={() => handleReuse(selected)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs font-medium rounded-lg transition-colors active:scale-[0.97]">
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs font-medium rounded-md transition-colors active:scale-[0.97]">
             <RotateCcw className="w-3 h-3" /> Reuse
           </button>
           <button onClick={() => { handleDelete(selected.id); setSelected(null); }}
-            className="flex items-center gap-1.5 px-3.5 py-2 sub-card hover:bg-red-500/15 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs rounded-lg transition-all ml-auto">
+            className="flex items-center gap-1.5 px-3 py-1.5 sub-card hover:bg-red-500/15 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs rounded-md transition-all ml-auto">
             <Trash2 className="w-3 h-3" /> Delete
           </button>
         </div>
@@ -122,9 +122,9 @@ export function HistoryPanel() {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 space-y-3">
+    <div className="flex flex-col flex-1 min-h-0 space-y-2">
       {/* Search bar */}
-      <div className="flex items-center gap-2.5 bg-white/[0.04] rounded-xl px-3.5 py-2 border border-white/[0.06] focus-within:border-[#4A7FA0]/30 transition-colors">
+      <div className="flex items-center gap-2 bg-white/[0.04] rounded-lg px-3 py-1.5 border border-white/[0.06] focus-within:border-[#4A7FA0]/30 transition-colors">
         <Search className="w-3.5 h-3.5 text-white/25 shrink-0" />
         <input
           value={query}
@@ -165,7 +165,7 @@ export function HistoryPanel() {
           </div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center mb-3">
+            <div className="w-10 h-10 rounded-lg bg-white/[0.04] flex items-center justify-center mb-2">
               <Clock className="w-5 h-5 text-white/[0.12]" />
             </div>
             <p className="text-xs text-white/30">
@@ -178,10 +178,10 @@ export function HistoryPanel() {
         ) : (
           entries.map(entry => (
             <div key={entry.id}
-              className="group flex items-start gap-3 p-3 rounded-xl sub-card cursor-pointer"
+              className="group flex items-start gap-2.5 p-2.5 rounded-lg sub-card cursor-pointer"
               onClick={() => setSelected(entry)}>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/80 truncate leading-snug mb-1.5">{entry.rawInput}</p>
+                <p className="text-sm text-white/80 truncate leading-snug mb-1">{entry.rawInput}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <FrameworkBadge framework={entry.framework} />
                   {entry.template && (
@@ -191,7 +191,7 @@ export function HistoryPanel() {
                 </div>
               </div>
               <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }}
-                className="hover-only-reveal p-1.5 rounded-lg hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
+                className="hover-only-reveal p-1 rounded-md hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
                 title="Delete">
                 <Trash2 className="w-3 h-3 text-white/30 hover:text-red-400" />
               </button>

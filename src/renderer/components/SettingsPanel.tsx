@@ -1,9 +1,53 @@
-import { useEffect, useRef } from 'react';
-import { Cpu, Key, Globe, Check, AlertCircle, Server, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Cpu, Key, Globe, Server, ChevronDown } from 'lucide-react';
 import { useSettingsStore } from '@/renderer/stores/settings-store';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { type ProviderType } from '@/shared/types';
 import type { AppSettings } from '@/shared/types';
+
+const OPENAI_MODELS = [
+  'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini',
+];
+
+const ANTHROPIC_MODELS = [
+  'claude-sonnet-4-20250514', 'claude-sonnet-4', 'claude-haiku-3-5-20241022', 'claude-opus-4-20250514',
+];
+
+function ModelDropdown({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="input-base w-full flex items-center justify-between gap-1.5 text-xs">
+        <span className="truncate text-white/80">{value}</span>
+        <ChevronDown className={`w-3 h-3 text-white/30 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1C1917] border border-white/[0.08] rounded-lg shadow-xl z-50 max-h-[160px] overflow-y-auto">
+          {options.map(opt => (
+            <button key={opt} type="button"
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
+                opt === value ? 'bg-[#2D4A7A]/15 text-white' : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+              }`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const PROVIDERS: { type: ProviderType; label: string; description: string }[] = [
   { type: 'ollama', label: 'Ollama', description: 'Local LLM via Ollama server' },
@@ -13,7 +57,7 @@ const PROVIDERS: { type: ProviderType; label: string; description: string }[] = 
 
 function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[80px_1fr] items-center gap-3">
+    <div className="grid grid-cols-[70px_1fr] items-center gap-2">
       <span className="text-[11px] text-white/40 font-medium">{label}</span>
       {children}
     </div>
@@ -24,6 +68,8 @@ export function SettingsPanel() {
   const store = useSettingsStore();
   const showToast = useAppStore((s) => s.showToast);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [providerOpen, setProviderOpen] = useState(false);
+  const providerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     store.loadSettings();
@@ -44,41 +90,61 @@ export function SettingsPanel() {
     showToast('Saved');
   };
 
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (providerRef.current && !providerRef.current.contains(e.target as Node)) {
+        setProviderOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const activeProvider = PROVIDERS.find(p => p.type === store.activeProvider)!;
+
   return (
-    <div className="space-y-4">
-      {/* Provider Selection */}
+    <div className="space-y-3">
+      {/* Provider Selection — compact dropdown */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-2">
           <Server className="w-3.5 h-3.5 text-white/35" />
           <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Provider</span>
         </div>
-        <div className="space-y-1.5">
-          {PROVIDERS.map(({ type, label, description }) => (
-            <button
-              key={type}
-              onClick={() => handleChange('activeProvider', type)}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all text-left ${
-                store.activeProvider === type
-                  ? 'bg-[#2D4A7A]/15 border-[#4A7FA0]/40 shadow-sm'
-                  : 'sub-card hover:border-white/[0.1]'
-              }`}
-            >
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                store.activeProvider === type ? 'border-[#4A7FA0]' : 'border-white/15'
-              }`}>
-                {store.activeProvider === type && (
-                  <div className="w-2 h-2 rounded-full bg-[#4A7FA0]" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-white/80 font-medium">{label}</div>
-                <div className="text-[11px] text-white/35 truncate">{description}</div>
-              </div>
-              {store.activeProvider === type && (
-                <ChevronRight className="w-3.5 h-3.5 text-[#4A7FA0]/60 shrink-0" />
-              )}
-            </button>
-          ))}
+        <div ref={providerRef} className="relative">
+          <button onClick={() => setProviderOpen(!providerOpen)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 sub-card hover:border-white/[0.1] transition-all text-left">
+            <div className="w-4 h-4 rounded-full border-2 border-[#4A7FA0] flex items-center justify-center shrink-0">
+              <div className="w-2 h-2 rounded-full bg-[#4A7FA0]" />
+            </div>
+            <span className="text-sm text-white/80 font-medium flex-1">{activeProvider.label}</span>
+            <span className="text-[11px] text-white/35">{activeProvider.description}</span>
+            <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform ${providerOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {providerOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-[#1C1917] border border-white/[0.08] rounded-lg shadow-xl overflow-hidden z-50">
+              {PROVIDERS.map(({ type, label, description }) => (
+                <button key={type}
+                  onClick={() => { handleChange('activeProvider', type); setProviderOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${
+                    type === store.activeProvider
+                      ? 'bg-[#2D4A7A]/15 text-white'
+                      : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                  }`}>
+                  <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    type === store.activeProvider ? 'border-[#4A7FA0]' : 'border-white/15'
+                  }`}>
+                    {type === store.activeProvider && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#4A7FA0]" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium">{label}</div>
+                    <div className="text-[10px] text-white/35 truncate">{description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -95,59 +161,42 @@ export function SettingsPanel() {
           </button>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <FormRow label="Endpoint">
             <input type="text" value={store.ollamaEndpoint}
               onChange={(e) => handleChange('ollamaEndpoint', e.target.value)}
               className="input-base w-full text-xs" />
           </FormRow>
           <FormRow label="Model">
-            <input type="text" value={store.ollamaModel}
-              onChange={(e) => handleChange('ollamaModel', e.target.value)}
-              className="input-base w-full text-xs" />
+            {store.ollamaModels.length > 0 ? (
+              <ModelDropdown value={store.ollamaModel}
+                options={store.ollamaModels}
+                onChange={(v) => handleChange('ollamaModel', v)} />
+            ) : (
+              <input type="text" value={store.ollamaModel}
+                onChange={(e) => handleChange('ollamaModel', e.target.value)}
+                className="input-base w-full text-xs" />
+            )}
           </FormRow>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {store.ollamaAvailable ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs text-green-400/80">Ollama available</span>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="w-3.5 h-3.5 text-red-400" />
-              <span className="text-xs text-red-400/80">Ollama not available</span>
-            </>
-          )}
-        </div>
 
-        {store.ollamaAvailable && store.ollamaModels.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {store.ollamaModels.map((model) => (
-              <span key={model}
-                className="px-2 py-0.5 text-[10px] bg-white/[0.05] rounded-md text-white/45 font-mono">
-                {model}
-              </span>
-            ))}
-          </div>
-        )}
       </section>
 
       <div className="border-t border-white/[0.06]" />
 
       {/* OpenAI Configuration */}
-      <section className="space-y-3">
+      <section className="space-y-2.5">
         <div className="flex items-center gap-2">
           <Globe className="w-3.5 h-3.5 text-white/35" />
           <span className="text-xs font-medium text-white/60 uppercase tracking-wider">OpenAI</span>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <FormRow label="Model">
-            <input type="text" value={store.openaiModel}
-              onChange={(e) => handleChange('openaiModel', e.target.value)}
-              className="input-base w-full text-xs" />
+            <ModelDropdown value={store.openaiModel}
+              options={OPENAI_MODELS}
+              onChange={(v) => handleChange('openaiModel', v)} />
           </FormRow>
           <FormRow label="API Key">
             <div className="flex items-center gap-2">
@@ -155,7 +204,7 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('openaiApiKey', e.target.value)}
                 className="input-base flex-1 text-xs" />
               <button onClick={handleSaveKey}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/50 shrink-0">
                 <Key className="w-3 h-3" />
                 Save
               </button>
@@ -167,17 +216,17 @@ export function SettingsPanel() {
       <div className="border-t border-white/[0.06]" />
 
       {/* Anthropic Configuration */}
-      <section className="space-y-3">
+      <section className="space-y-2.5">
         <div className="flex items-center gap-2">
           <Globe className="w-3.5 h-3.5 text-white/35" />
           <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Anthropic</span>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <FormRow label="Model">
-            <input type="text" value={store.anthropicModel}
-              onChange={(e) => handleChange('anthropicModel', e.target.value)}
-              className="input-base w-full text-xs" />
+            <ModelDropdown value={store.anthropicModel}
+              options={ANTHROPIC_MODELS}
+              onChange={(v) => handleChange('anthropicModel', v)} />
           </FormRow>
           <FormRow label="API Key">
             <div className="flex items-center gap-2">
@@ -185,7 +234,7 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
                 className="input-base flex-1 text-xs" />
               <button onClick={handleSaveKey}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-lg transition-colors text-white/50 shrink-0">
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/50 shrink-0">
                 <Key className="w-3 h-3" />
                 Save
               </button>

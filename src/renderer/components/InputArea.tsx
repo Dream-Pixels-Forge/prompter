@@ -81,10 +81,10 @@ export function InputArea() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Active template badge */}
       {currentTemplate && (
-        <div className="flex items-center gap-2 px-3 py-2 sub-card">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 sub-card">
           <Sparkles className="w-3 h-3 text-[#4A7FA0] shrink-0" />
           <span className="text-xs text-white/60 truncate">{currentTemplate.name}</span>
           <button onClick={() => setTemplate(null)}
@@ -113,7 +113,7 @@ export function InputArea() {
         placeholder={placeholder}
         rows={3}
         maxLength={5000}
-        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5
                    text-sm text-white/85 placeholder-white/25 resize-none
                    focus:outline-none focus:border-[#4A7FA0]/40 focus:bg-white/[0.06]
                    transition-all duration-200 leading-relaxed"
@@ -121,24 +121,24 @@ export function InputArea() {
 
       {/* Error — more prominent visibility */}
       {error && (
-        <div className="flex items-start gap-2.5 px-3.5 py-3 bg-red-500/15 border border-red-500/30 rounded-xl">
+        <div className="flex items-start gap-2 px-3 py-2.5 bg-red-500/15 border border-red-500/30 rounded-lg">
           <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-0.5" />
           <span className="text-xs text-red-300 leading-relaxed">{error}</span>
         </div>
       )}
 
       {/* Bottom bar */}
-      <div className="flex items-center justify-between pt-0.5">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
           <MicButton onTranscript={handleTranscript} disabled={isProcessing} />
           <span className="text-[11px] text-white/25 font-mono">{input.length}/5000</span>
         </div>
         <button onClick={handleGenerate}
           disabled={!input.trim()}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#2D4A7A] to-[#3A5A8A]
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#2D4A7A] to-[#3A5A8A]
                      hover:from-[#345585] hover:to-[#4A6A9A]
                      disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-[#2D4A7A] disabled:hover:to-[#3A5A8A]
-                     text-white text-sm font-medium rounded-lg transition-all duration-200
+                     text-white text-xs font-medium rounded-md transition-all duration-200
                      shadow-sm shadow-[#2D4A7A]/20 active:scale-[0.97]">
           <Send className="w-3.5 h-3.5" />
           Generate Prompt

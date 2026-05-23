@@ -24,13 +24,13 @@ export function FrameworkSelector() {
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors text-xs text-white/60">
+        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.04] hover:bg-white/[0.08] transition-colors text-xs text-white/60">
         {current?.name || 'Framework'}
         <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-48 bg-[#1C1917] border border-white/[0.08] rounded-xl shadow-xl overflow-hidden z-50">
+        <div className="absolute top-full left-0 mt-1 w-48 bg-[#1C1917] border border-white/[0.08] rounded-lg shadow-xl overflow-hidden z-50">
           {frameworks.map(fw => (
             <button key={fw.id}
               onClick={() => { setFramework(fw.id); setIsOpen(false); }}

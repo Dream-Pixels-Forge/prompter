@@ -1,6 +1,6 @@
 export function ProcessingOverlay() {
   return (
-    <div className="absolute inset-0 bg-[#1C1917]/70 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-[20px]">
+    <div className="absolute inset-0 bg-[#1C1917]/70 backdrop-blur-sm flex flex-col items-center justify-center z-50 rounded-[12px]">
       {/* Animated rings */}
       <div className="relative w-12 h-12 mb-4">
         <div className="absolute inset-0 rounded-full border-2 border-[#4A7FA0]/20 animate-ping" />

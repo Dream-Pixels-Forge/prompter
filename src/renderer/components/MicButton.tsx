@@ -85,7 +85,7 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
         className={`
-          relative w-9 h-9 rounded-lg flex items-center justify-center
+          relative w-9 h-9 rounded-md flex items-center justify-center
           transition-all duration-200
           ${state === 'listening'
             ? 'bg-red-500/15 border border-red-500/25 shadow-sm shadow-red-500/10'
@@ -95,7 +95,7 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         `}
       >
         {state === 'listening' && (
-          <span className="absolute inset-0 rounded-xl animate-pulse-ring border border-red-500/40" />
+          <span className="absolute inset-0 rounded-md animate-pulse-ring border border-red-500/40" />
         )}
         {state === 'processing' ? (
           <Loader2 className="w-4 h-4 text-white/40 animate-spin" />

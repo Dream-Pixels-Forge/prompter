@@ -3,6 +3,16 @@ import path from 'path';
 import { registerIpcHandlers } from './ipc';
 import { IPC_CHANNELS } from '../shared/types';
 
+// Transparent window fixes per platform:
+// - Windows: enable-transparent-visuals enables DWM alpha channel
+// - Linux: GPU drivers often don't produce correct alpha in window surfaces.
+//          SwiftShader (bundled software GL renderer) handles transparency correctly.
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+} else if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('use-gl', 'swiftshader');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
@@ -15,7 +25,6 @@ function createWindow() {
     skipTaskbar: true,
     resizable: false,
     hasShadow: false,
-    type: 'panel',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -24,9 +33,10 @@ function createWindow() {
     },
   });
 
-  // In dev, load from Vite dev server. In prod, load built files.
-  if (process.env.NODE_ENV === 'development' || process.env.VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL!);
+  // In dev, load from Vite dev server (vite-plugin-electron injects VITE_DEV_SERVER_URL).
+  // In prod, load built files.
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));

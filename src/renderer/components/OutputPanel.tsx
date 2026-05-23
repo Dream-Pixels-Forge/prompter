@@ -26,30 +26,30 @@ export function OutputPanel() {
   };
 
   return (
-    <div className="space-y-3.5">
+    <div className="space-y-2.5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">Structured Prompt</span>
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <button onClick={handleCopy}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
             {copied
               ? <Check className="w-3.5 h-3.5 text-green-400" />
               : <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
             }
           </button>
           <button onClick={clearOutput}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
             <RotateCcw className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
           </button>
         </div>
       </div>
 
       {/* Sections */}
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {framework?.sections.map(section => (
           <PromptSection
             key={section.key}

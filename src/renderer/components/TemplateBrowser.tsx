@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Sparkles, ChefHat, BookOpen, Bot, GitPullRequest, Video, PenLine, Headphones, BarChart3, Palette, FileText, Microscope, type LucideIcon } from 'lucide-react';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useAppStore } from '@/renderer/stores/app-store';
@@ -19,9 +20,17 @@ const iconMap: Record<string, LucideIcon> = {
   Microscope,
 };
 
+const CATEGORIES = [
+  { id: 'dev', label: 'Dev', ids: ['api-docs', 'code-review', 'agent-prompt'] },
+  { id: 'content', label: 'Content', ids: ['blog-post', 'cooking-book', 'video-gen'] },
+  { id: 'business', label: 'Business', ids: ['saas-landing', 'data-analysis', 'prd', 'support-agent'] },
+  { id: 'misc', label: 'Misc', ids: ['ux-brief', 'research-paper'] },
+];
+
 export function TemplateBrowser() {
   const { setTemplate, setInput, setFramework } = usePromptStore();
   const { setActiveTab } = useAppStore();
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
 
   const handleSelect = (id: string) => {
     const tpl = getTemplate(id);
@@ -42,11 +51,28 @@ export function TemplateBrowser() {
     });
   }
 
+  const cat = CATEGORIES.find(c => c.id === activeCategory)!;
+  const visible = templates.filter(t => cat.ids.includes(t.id));
+
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-white/35">Choose a template to get started</p>
-      <div className="grid grid-cols-2 gap-2 auto-rows-fr">
-        {templates.map(tpl => (
+    <div className="space-y-2">
+      {/* Tabs */}
+      <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
+        {CATEGORIES.map(c => (
+          <button key={c.id} onClick={() => setActiveCategory(c.id)}
+            className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${
+              c.id === activeCategory
+                ? 'bg-[#2D4A7A]/25 text-white/90'
+                : 'text-white/40 hover:text-white/70'
+            }`}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-2 gap-1.5 auto-rows-fr">
+        {visible.map(tpl => (
           <TemplateCard
             key={tpl.id}
             template={tpl}
