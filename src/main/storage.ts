@@ -94,13 +94,12 @@ export class StorageService {
         keys = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
       }
 
-      if (safeStorage.isEncryptionAvailable()) {
-        const encrypted = safeStorage.encryptString(apiKey);
-        keys[service] = encrypted.toString('base64');
-      } else {
-        // Fallback: base64 encode (not truly secure, but avoids plaintext on disk)
-        keys[service] = Buffer.from(apiKey, 'utf-8').toString('base64');
+      if (!safeStorage.isEncryptionAvailable()) {
+        throw new Error('System encryption unavailable — cannot securely store API key. ' +
+          'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).');
       }
+      const encrypted = safeStorage.encryptString(apiKey);
+      keys[service] = encrypted.toString('base64');
 
       fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
     } catch (err) {
@@ -115,11 +114,8 @@ export class StorageService {
       const stored = keys[service];
       if (!stored) return null;
 
-      if (safeStorage.isEncryptionAvailable()) {
-        return safeStorage.decryptString(Buffer.from(stored, 'base64'));
-      } else {
-        return Buffer.from(stored, 'base64').toString('utf-8');
-      }
+      if (!safeStorage.isEncryptionAvailable()) return null;
+      return safeStorage.decryptString(Buffer.from(stored, 'base64'));
     } catch (err) {
       console.error('[Storage] Failed to read API key:', err);
       return null;

@@ -51,10 +51,6 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   return window.api.llm.generate(req);
 }
 
-export async function copyToClipboard(text: string): Promise<boolean> {
-  return window.api.clipboard.write(text);
-}
-
 // ── History API ──────────────────────────────────────
 
 export async function insertHistory(entry: HistoryEntry): Promise<boolean> {

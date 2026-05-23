@@ -31,7 +31,7 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
 
   const sections: Record<string, string> = {};
   for (const section of framework.sections) {
-    sections[section.key] = buildSectionContent(section.key, section.label, req.input, framework.sections);
+    sections[section.key] = buildSectionContent(section.key, req.input, framework.sections);
   }
 
   const structuredPrompt = framework.sections
@@ -90,7 +90,7 @@ function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, s
   return result;
 }
 
-function buildSectionContent(key: string, _label: string, input: string, sections: { key: string; defaultContent: string }[]): string {
+function buildSectionContent(key: string, input: string, sections: { key: string; defaultContent: string }[]): string {
   const section = sections.find(s => s.key === key);
   const template = section?.defaultContent || '{goal}';
 

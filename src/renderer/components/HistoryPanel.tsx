@@ -44,14 +44,19 @@ export function HistoryPanel() {
         const data = await listHistory(50, 0);
         if (isMounted.current) setEntries(data);
       }
-    } catch {
-      // offline fallback
+    } catch (err) {
+      console.warn('[HistoryPanel] Failed to load history:', err);
     } finally {
       if (isMounted.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => load(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const handleSearch = () => load(query);
 

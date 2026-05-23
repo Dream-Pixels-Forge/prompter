@@ -19,32 +19,7 @@ env:
   PNPM_VERSION: "11"
 
 jobs:
-  # ── Security audit ────────────────────────────────────
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: pnpm audit
-        run: pnpm audit --audit-level high
-        continue-on-error: true # Don't block CI, but report results
-
-  # ── TypeScript check ──────────────────────────────────
+  # ── TypeScript check + security audit ─────────────────
   quality:
     name: TypeScript Check
     runs-on: ubuntu-latest
@@ -67,6 +42,10 @@ jobs:
 
       - name: TypeScript type checking
         run: pnpm typecheck
+
+      - name: pnpm audit
+        run: pnpm audit --audit-level high
+        continue-on-error: true
 
   # ── Build + test ──────────────────────────────────────
   build:

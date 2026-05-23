@@ -76,9 +76,10 @@ export function InputArea() {
         template: selectedTemplate || undefined,
         createdAt: new Date().toISOString(),
       }).catch(() => {});
-    } catch (err: any) {
-      setError(err?.message || 'Generation failed');
-      showToast(err?.message || 'Generation failed');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Generation failed';
+      setError(message);
+      showToast(message);
     } finally {
       setProcessing(false);
     }

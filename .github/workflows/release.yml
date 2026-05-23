@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────
 # Prompter — Release Pipeline
 # Triggered by tagging v*.*.* (e.g. git tag v0.1.0 && git push --tags)
-# Builds for all platforms and creates a GitHub Release.
+# Builds for all platforms via matrix strategy and creates a GitHub Release.
 # ─────────────────────────────────────────────────────────
 name: Release
 
@@ -11,14 +11,13 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: write # Required to create GitHub Releases
+  contents: write
 
 env:
   NODE_VERSION: "24"
   PNPM_VERSION: "11"
 
 jobs:
-  # ── Verify tag ────────────────────────────────────────
   verify:
     name: Verify Tag
     runs-on: ubuntu-latest
@@ -42,163 +41,49 @@ jobs:
       - name: Validate version format
         run: |
           if ! echo "${{ steps.parse.outputs.version }}" | grep -qP '^\d+\.\d+\.\d+'; then
-            echo "❌ Invalid version format: ${{ steps.parse.outputs.version }}"
+            echo "Invalid version: ${{ steps.parse.outputs.version }}"
             exit 1
           fi
-          echo "✅ Releasing v${{ steps.parse.outputs.version }}"
+          echo "Releasing v${{ steps.parse.outputs.version }}"
 
-  # ── Build: macOS ARM64 ────────────────────────────────
-  build-mac-arm:
-    name: Build (macOS ARM64)
-    runs-on: macos-latest
+  build:
+    name: Build (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
     needs: [verify]
+    strategy:
+      matrix:
+        include:
+          - label: macOS ARM64
+            os: macos-latest
+            cmd: pnpm dist:mac --arm64
+            checksum: shasum -a 256
+            artifact: release-mac-arm64
+            shell: bash
+          - label: macOS x64
+            os: macos-latest
+            cmd: pnpm dist:mac --x64
+            checksum: shasum -a 256
+            artifact: release-mac-x64
+            shell: bash
+          - label: Windows x64
+            os: windows-latest
+            cmd: pnpm dist:win
+            checksum: pwsh
+            artifact: release-win-x64
+            shell: pwsh
+          - label: Linux x64
+            os: ubuntu-latest
+            cmd: pnpm dist:linux
+            checksum: sha256sum
+            artifact: release-linux-x64
+            shell: bash
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build + Package (macOS ARM64)
-        run: pnpm dist:mac --arm64
-        env:
-          NODE_ENV: production
-          # ── Code signing (uncomment when certificates are configured) ──
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-
-      - name: Generate checksums
-        run: |
-          cd release
-          for f in *; do
-            if [ -f "$f" ]; then
-              shasum -a 256 "$f" >> "$f.sha256"
-            fi
-          done
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-mac-arm64
-          path: release/
-          retention-days: 7
-
-  # ── Build: macOS x64 ──────────────────────────────────
-  build-mac-x64:
-    name: Build (macOS x64)
-    runs-on: macos-latest
-    needs: [verify]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build + Package (macOS x64)
-        run: pnpm dist:mac --x64
-        env:
-          NODE_ENV: production
-          # ── Code signing (uncomment when certificates are configured) ──
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-
-      - name: Generate checksums
-        run: |
-          cd release
-          for f in *; do
-            if [ -f "$f" ]; then
-              shasum -a 256 "$f" >> "$f.sha256"
-            fi
-          done
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-mac-x64
-          path: release/
-          retention-days: 7
-
-  # ── Build: Windows x64 ────────────────────────────────
-  build-win:
-    name: Build (Windows x64)
-    runs-on: windows-latest
-    needs: [verify]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build + Package (Windows x64)
-        run: pnpm dist:win
-        env:
-          NODE_ENV: production
-          # ── Code signing (uncomment when certificates are configured) ──
-          # CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-
-      - name: Generate checksums
-        shell: pwsh
-        run: |
-          Get-ChildItem -Path release -File | ForEach-Object {
-            $hash = Get-FileHash $_.FullName -Algorithm SHA256
-            "$($hash.Hash.ToLower()) *$($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
-          }
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-win-x64
-          path: release/
-          retention-days: 7
-
-  # ── Build: Linux x64 ──────────────────────────────────
-  build-linux:
-    name: Build (Linux x64)
-    runs-on: ubuntu-latest
-    needs: [verify]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2 libdrm-dev libgbm-dev libwebkit2gtk-4.1-dev
@@ -217,37 +102,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build + Package (Linux x64)
-        run: pnpm dist:linux
+      - name: Build + Package
+        run: ${{ matrix.cmd }}
         env:
           NODE_ENV: production
 
+      - name: Generate checksums
+        shell: ${{ matrix.shell }}
+        run: |
+          cd release
+          Get-ChildItem -Path . -File | ForEach-Object {
+            $hash = Get-FileHash $_.FullName -Algorithm SHA256
+            "$($hash.Hash.ToLower()) *$($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
+          }
+        if: runner.os == 'Windows'
       - name: Generate checksums
         run: |
           cd release
           for f in *; do
             if [ -f "$f" ]; then
-              sha256sum "$f" > "$f.sha256"
+              ${{ matrix.checksum }} "$f" > "$f.sha256"
             fi
           done
+        if: runner.os != 'Windows'
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-linux-x64
+          name: ${{ matrix.artifact }}
           path: release/
           retention-days: 7
 
-  # ── Create GitHub Release ─────────────────────────────
   release:
     name: Create Release
     runs-on: ubuntu-latest
     needs:
       - verify
-      - build-mac-arm
-      - build-mac-x64
-      - build-win
-      - build-linux
+      - build
     steps:
       - uses: actions/checkout@v4
 
@@ -263,7 +154,7 @@ jobs:
           cat > release_body.md << EOF
           ## Prompter v${{ needs.verify.outputs.version }}
 
-          ### 📦 Downloads
+          ### Downloads
 
           | Platform | Architecture | File |
           |----------|-------------|------|
@@ -272,22 +163,17 @@ jobs:
           | Windows  | x64         | \`Prompter-${VERSION}-Setup.exe\` |
           | Linux    | x64         | \`Prompter-${VERSION}.AppImage\` |
 
-          ### 🔒 Integrity
+          ### Integrity
 
           SHA256 checksums are included alongside each artifact. Verify your download:
 
           \`\`\`bash
-          # macOS
-          shasum -a 256 Prompter-*.dmg
-
-          # Windows
-          certutil -hashfile Prompter-*-Setup.exe SHA256
-
-          # Linux
-          sha256sum Prompter-*.AppImage
+          shasum -a 256 Prompter-*.dmg        # macOS
+          certutil -hashfile Prompter-*-Setup.exe SHA256  # Windows
+          sha256sum Prompter-*.AppImage        # Linux
           \`\`\`
 
-          ### ⚠️ Alpha Notice
+          ### Alpha Notice
 
           This is an alpha release. Expect breaking changes and incomplete features.
           Please report issues at https://github.com/Dream-Pixels-Forge/prompter/issues

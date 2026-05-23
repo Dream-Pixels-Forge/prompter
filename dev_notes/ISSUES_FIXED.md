@@ -213,16 +213,90 @@ After the initial fixes, a full re-read of every changed file revealed 4 remaini
 
 ---
 
+---
+
+## Fifth Pass — CRITIQUE.md Systematic Resolution
+
+All 15 issues from `dev_notes/CRITIQUE.md` resolved via systematic root-cause analysis. Each fix verified with `tsc --noEmit` and production build.
+
+### 🔴 Critical
+
+### #57 — C1: Upgrade Electron ^34.x to ^39.x (4 high + 11 moderate CVEs)
+**Root cause:** `package.json` pinned `"electron": "^34.0.0"` which ships 4 high-severity and 11 moderate vulnerabilities.
+**Fix:** Updated to `"electron": "^39.8.0"`. Installed version `39.8.10`. Validated by successful build — transparent window rendering, IPC, and tray unaffected.
+
+### #58 — C3: `catch (err: any)` type escape in InputArea.tsx
+**Root cause:** `} catch (err: any) {` defeats TypeScript strict mode. `err?.message` silently returns `undefined` if `err` is not an Error-like object.
+**Fix:** Changed to `catch (err: unknown)` with proper narrowing via `err instanceof Error`, falling back to `'Generation failed'`.
+
+### #59 — C4: API key storage falls back to plain base64 when safeStorage unavailable
+**Root cause:** `storage.ts:100-102` falls back to `Buffer.from(apiKey).toString('base64')` when `safeStorage.isEncryptionAvailable()` is false. Base64 is encoding, not encryption.
+**Fix:** Removed base64 fallback in both `saveApiKey` (now throws descriptive error) and `getApiKey` (returns null). On systems without safeStorage, key storage fails closed.
+
+### #63 — C2: Remove unused uuid + @types/uuid dependencies
+**Root cause:** `uuid: ^10.0.0` and `@types/uuid: ^10.0.0` present in `package.json` but never imported anywhere — code uses `crypto.randomUUID()` natively.
+**Fix:** Removed both from `package.json`.
+
+### 🟡 Moderate
+
+### #60 — M2: Self-host Inter font instead of Google Fonts CDN
+**Root cause:** `index.html` loaded Inter from Google Fonts CDN, requiring `font-src` CSP exception for `https://fonts.gstatic.com` — an external dependency, latency source, and side-channel vector.
+**Fix:** Downloaded 4 Inter weights (400/500/600/700) as `.ttf` files to `assets/fonts/`. Added `@font-face` declarations in `globals.css`. Removed Google Fonts `<link>` tags and `font-src` CSP exception from `index.html`.
+
+### #61 — M3: Extract hardcoded Anthropic API version to configurable constant
+**Root cause:** `anthropic.ts:30` hardcoded `'anthropic-version': '2023-06-01'` as a string literal.
+**Fix:** Added `ANTHROPIC_API_VERSION` exported constant alongside existing `ANTHROPIC_DEFAULT_URL` and `ANTHROPIC_DEFAULT_MODEL`.
+
+### #62 — M4: History search should use debounced search-as-you-type instead of Enter key
+**Root cause:** `HistoryPanel.tsx` only triggered search on Enter keypress, requiring an extra keystroke for every search.
+**Fix:** Added `useEffect` with 300ms debounce on `query` changes. The debounce pattern matches the existing one in `InputArea.tsx`.
+
+### #64 — M6: Remove unused export copyToClipboard in llm.ts
+**Root cause:** `copyToClipboard` was exported from `llm.ts:54-56` but never imported anywhere — clipboard goes through `clipboard.ts` → `copyText()` instead.
+**Fix:** Removed the function.
+
+### #65 — M7: Release pipeline 4 build jobs are duplicated ~300 lines — use matrix strategy
+**Root cause:** `release.yml` had 4 nearly identical build jobs (mac-arm64, mac-x64, win-x64, linux-x64) copy-pasted with only target/arch changes.
+**Fix:** Replaced with a single `build` job using `strategy.matrix.include` with 4 target configurations. Reduced from 311 lines to 165 lines (~47% reduction). Checksum generation adapted per-platform (PowerShell on Windows, bash on macOS/Linux).
+
+### #66 — M8: No linting configuration (ESLint/Prettier/Biome)
+**Root cause:** No linting config present despite 30+ TypeScript/React files.
+**Fix:** Added `biome.json` with recommended rules, `noUnusedVariables: error`, and `noNonNullAssertion: warn`. Configured for 2-space indent, single quotes, 120-width lines, and `git` VCS integration.
+
+### #67 — M9: Silent catch swallows errors in HistoryPanel and other locations
+**Root cause:** `HistoryPanel.tsx:47` had an empty `catch {}` block with no logging, retry, or user feedback.
+**Fix:** Added `console.warn('[HistoryPanel] Failed to load history:', err)` to surface errors.
+
+### #70 — m7: CI security-scan job duplicates pnpm install
+**Root cause:** `ci.yml` had a separate `security-scan` job that ran `pnpm install` just to execute `pnpm audit`, duplicating the `quality` job's install step.
+**Fix:** Merged `pnpm audit` into the `quality` job (runs after typecheck on already-installed dependencies). Removed the `security-scan` job entirely, saving ~20 lines and 30s+ CI time.
+
+### 🔵 Minor
+
+### #68 — m1: shared/frameworks.ts imports from renderer/ (reverse dependency)
+**Root cause:** `src/shared/frameworks.ts` imported framework definitions from `../renderer/lib/frameworks/`, breaking the architectural layering — `shared/` is supposed to be framework-agnostic code used by both main and renderer.
+**Fix:** Moved all 5 framework definition files (`openai.ts`, `anthropic.ts`, `karpathy.ts`, `mplct.ts`, `context-eng.ts`) from `src/renderer/lib/frameworks/` to `src/shared/frameworks/`. Updated `frameworks.ts` imports to `./frameworks/`. `src/renderer/lib/frameworks/index.ts` continues re-exporting from `@/shared/frameworks` — no renderer code needed updating.
+
+### #69 — m3: .npmrc uses npm-specific config flags ignored by pnpm
+**Root cause:** `.npmrc` contained `auto-install-peers=true` and `shamefully-hoist=true` — npm-config flags that pnpm ignores, producing "Unknown project config" warnings on `pnpm audit`.
+**Fix:** Replaced with pnpm-compatible `resolve-peers-from-workspace-root=true`.
+
+### #71 — m10: Remove unused _label parameter in buildSectionContent
+**Root cause:** `orchestrator.ts:93` declared `_label: string` parameter prefixed with underscore (signals intent to TS) but never used in the function body.
+**Fix:** Removed the `_label` parameter from both the function signature and its call site.
+
+---
+
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| Critical | 4     |
-| High     | 6     |
-| Medium   | 7     |
-| Low      | 19    |
-| **Total**| **36**|
+| Critical | 8     |
+| High     | 7     |
+| Medium   | 15    |
+| Low      | 22    |
+| **Total**| **52**|
 
-**GitHub issues:** 37 created total, 36 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
+**GitHub issues:** 53 created total, 52 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
 
-**Stats across all passes:** 49 files changed, 495 insertions, 570 deletions across 6 commits on `develop`.
+**Stats across all passes:** 69 files changed, 670 insertions, 769 deletions across 7 commits on `develop`.

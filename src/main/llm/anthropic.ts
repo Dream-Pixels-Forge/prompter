@@ -2,6 +2,7 @@ import { fetchWithTimeout } from './fetch-with-timeout';
 
 export const ANTHROPIC_DEFAULT_URL = 'https://api.anthropic.com';
 export const ANTHROPIC_DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+export const ANTHROPIC_API_VERSION = '2023-06-01';
 
 interface AnthropicOptions {
   model: string;
@@ -27,7 +28,7 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': ANTHROPIC_API_VERSION,
       },
       body: JSON.stringify({
         model,
