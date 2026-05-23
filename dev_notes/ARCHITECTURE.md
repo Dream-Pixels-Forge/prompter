@@ -1,8 +1,8 @@
-# PromptForge Architecture
+# Prompter Architecture
 
 ## Overview
 
-PromptForge is a desktop floating overlay widget that accepts raw user intent (text or voice) and transforms it into structured, production-grade prompts using LLMs and established prompt engineering frameworks.
+Prompter is a desktop floating overlay widget that accepts raw user intent (text or voice) and transforms it into structured, production-grade prompts using LLMs and established prompt engineering frameworks.
 
 ## Tech Stack
 
@@ -79,7 +79,7 @@ PromptForge is a desktop floating overlay widget that accepts raw user intent (t
 ## Component Tree
 
 ```
-PromptForge
+Prompter
 ├── Electron Main Process
 │   ├── main.ts           — Window creation, app lifecycle
 │   ├── overlay.ts        — AlwaysOnTop management, bounds persistence

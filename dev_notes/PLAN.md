@@ -1,4 +1,4 @@
-# PromptForge — Implementation Plan
+# Prompter — Implementation Plan
 
 ## File Tree
 
@@ -166,7 +166,7 @@ prompter/
 ### electron-builder.yml
 ```yaml
 appId: com.promptforge.app
-productName: PromptForge
+productName: Prompter
 directories:
   output: dist-electron
   buildResources: public
@@ -177,13 +177,13 @@ files:
 mac:
   category: public.app-category.productivity
   target: [dmg, zip]
-  artifactName: PromptForge-${version}-mac.${ext}
+  artifactName: Prompter-${version}-mac.${ext}
 win:
   target: [nsis, portable]
-  artifactName: PromptForge-${version}-win.${ext}
+  artifactName: Prompter-${version}-win.${ext}
 linux:
   target: [AppImage, deb]
-  artifactName: PromptForge-${version}-linux.${ext}
+  artifactName: Prompter-${version}-linux.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

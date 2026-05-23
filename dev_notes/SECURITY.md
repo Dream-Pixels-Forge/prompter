@@ -1,4 +1,4 @@
-# PromptForge — Security Architecture
+# Prompter — Security Architecture
 
 **Version:** 1.0
 **Status:** Draft
@@ -408,7 +408,7 @@ const mainWindow = new BrowserWindow({
     navigateOnDragDrop: false,         // no file drag → navigation
     enableRemoteModule: false,         // @electron/remote is disabled
     safeDialogs: true,                 // prevent dialog abuse
-    safeDialogsMessage: 'PromptForge — Dialog blocked for security',
+    safeDialogsMessage: 'Prompter — Dialog blocked for security',
   }
 });
 
@@ -562,7 +562,7 @@ function validateApiKey(provider: string, key: string): boolean {
 
 ## 6. Privacy Guarantees
 
-### 6.1 What PromptForge Does NOT Do
+### 6.1 What Prompter Does NOT Do
 
 | Activity | Status | Guarantee |
 |---|---|---|
@@ -576,7 +576,7 @@ function validateApiKey(provider: string, key: string): boolean {
 | Auto-update with user data | ❌ NONE | Update check only sends app version (no user info) |
 | License validation | ❌ NONE | No phone-home license checks (v1 — open source) |
 
-### 6.2 What PromptForge Does
+### 6.2 What Prompter Does
 
 | Activity | Detail | Privacy Implication |
 |---|---|---|
@@ -590,14 +590,14 @@ function validateApiKey(provider: string, key: string): boolean {
 A one-time privacy notice should be shown on first launch:
 
 ```
-PromptForge Privacy Notice
+Prompter Privacy Notice
 
 • Your API keys are encrypted at rest using your operating system's keychain
 • Your prompt history is stored locally and never uploaded
 • Voice recordings are processed entirely on your machine
 • When using cloud LLMs (OpenAI/Anthropic), your input text is sent to
   those services. Configure API keys and provider selection in Settings.
-• PromptForge contains no analytics, telemetry, or crash reporting
+• Prompter contains no analytics, telemetry, or crash reporting
 • Auto-update checks send only your app version number
 
 [Got it] [View Security Documentation]
@@ -780,15 +780,15 @@ Users should verify downloaded releases:
 ```bash
 # User verification (published in release notes)
 # macOS
-shasum -a 256 PromptForge-1.0.0.dmg
+shasum -a 256 Prompter-1.0.0.dmg
 # Compare with published checksum
 
 # Windows
-certutil -hashfile PromptForge-Setup-1.0.0.exe SHA256
+certutil -hashfile Prompter-Setup-1.0.0.exe SHA256
 # Compare with published checksum
 
 # Linux
-sha256sum PromptForge-1.0.0.AppImage
+sha256sum Prompter-1.0.0.AppImage
 # Compare with published checksum
 ```
 

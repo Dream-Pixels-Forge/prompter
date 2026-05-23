@@ -1,9 +1,9 @@
 # ─────────────────────────────────────────────────────────
-# PromptForge — electron-builder Configuration
+# Prompter — electron-builder Configuration
 # ─────────────────────────────────────────────────────────
 
 appId: com.dream-pixels-forge.prompter
-productName: PromptForge
+productName: Prompter
 copyright: Copyright © $CURRENT_YEAR Dream Pixels Forge
 
 # ── Directories ─────────────────────────────────────────

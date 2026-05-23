@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────
-# PromptForge — Release Pipeline
+# Prompter — Release Pipeline
 # Triggered by tagging v*.*.* (e.g. git tag v0.1.0 && git push --tags)
 # Builds for all platforms and creates a GitHub Release.
 # ─────────────────────────────────────────────────────────
@@ -261,16 +261,16 @@ jobs:
         run: |
           VERSION="${{ needs.verify.outputs.version }}"
           cat > release_body.md << 'EOF'
-          ## PromptForge v${{ needs.verify.outputs.version }}
+          ## Prompter v${{ needs.verify.outputs.version }}
 
           ### 📦 Downloads
 
           | Platform | Architecture | File |
           |----------|-------------|------|
-          | macOS    | ARM64 (M1+) | `PromptForge-${VERSION}-arm64.dmg` |
-          | macOS    | Intel (x64) | `PromptForge-${VERSION}-x64.dmg` |
-          | Windows  | x64         | `PromptForge-${VERSION}-Setup.exe` |
-          | Linux    | x64         | `PromptForge-${VERSION}.AppImage` |
+          | macOS    | ARM64 (M1+) | `Prompter-${VERSION}-arm64.dmg` |
+          | macOS    | Intel (x64) | `Prompter-${VERSION}-x64.dmg` |
+          | Windows  | x64         | `Prompter-${VERSION}-Setup.exe` |
+          | Linux    | x64         | `Prompter-${VERSION}.AppImage` |
 
           ### 🔒 Integrity
 
@@ -278,13 +278,13 @@ jobs:
 
           ```bash
           # macOS
-          shasum -a 256 PromptForge-*.dmg
+          shasum -a 256 Prompter-*.dmg
 
           # Windows
-          certutil -hashfile PromptForge-*-Setup.exe SHA256
+          certutil -hashfile Prompter-*-Setup.exe SHA256
 
           # Linux
-          sha256sum PromptForge-*.AppImage
+          sha256sum Prompter-*.AppImage
           ```
 
           ### ⚠️ Alpha Notice
@@ -300,7 +300,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: PromptForge v${{ needs.verify.outputs.version }}
+          name: Prompter v${{ needs.verify.outputs.version }}
           body: ${{ steps.release_body.outputs.body }}
           prerelease: ${{ needs.verify.outputs.prerelease }}
           generate_release_notes: false

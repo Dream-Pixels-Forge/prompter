@@ -1,8 +1,8 @@
-# PromptForge
+# Prompter
 
 **A floating desktop widget that transforms raw user intent into production-grade, structured prompts following best practices in prompt engineering.**
 
-PromptForge is a system-level floating overlay (inspired by Wispr Flow) that accepts text or voice input and uses an LLM to restructure it into clean, structured prompts using proven frameworks from OpenAI, Anthropic, and more.
+Prompter is a system-level floating overlay (inspired by Wispr Flow) that accepts text or voice input and uses an LLM to restructure it into clean, structured prompts using proven frameworks from OpenAI, Anthropic, and more.
 
 ![Status](https://img.shields.io/badge/status-alpha-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)

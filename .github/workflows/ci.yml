@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────
-# PromptForge — CI Pipeline
+# Prompter — CI Pipeline
 # Runs on push / pull_request to main and develop branches.
 # ─────────────────────────────────────────────────────────
 name: CI
