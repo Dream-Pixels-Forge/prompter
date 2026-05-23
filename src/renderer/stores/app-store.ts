@@ -7,8 +7,10 @@ interface AppStore {
   activeTab: AppTab;
   isProcessing: boolean;
   toastMessage: string | null;
+  isRecording: boolean;
 
   setBubbleState: (state: BubbleState) => void;
+  setRecording: (recording: boolean) => void;
   setExpanded: (expanded: boolean) => void;
   setActiveTab: (tab: AppTab) => void;
   setProcessing: (processing: boolean) => void;
@@ -23,8 +25,10 @@ export const useAppStore = create<AppStore>((set) => ({
   activeTab: 'compose',
   isProcessing: false,
   toastMessage: null,
+  isRecording: false,
 
   setBubbleState: (state) => set({ bubbleState: state }),
+  setRecording: (recording) => set({ isRecording: recording, bubbleState: recording ? 'listening' : 'expanded' }),
   setExpanded: (expanded) => set({ isExpanded: expanded, bubbleState: expanded ? 'expanded' : 'dormant' }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setProcessing: (processing) => set({ isProcessing: processing, bubbleState: processing ? 'processing' : 'expanded' }),

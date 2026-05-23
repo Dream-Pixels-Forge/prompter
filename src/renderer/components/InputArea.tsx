@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles } from 'lucide-react';
+import { MicButton } from './MicButton';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { generatePrompt } from '@/renderer/lib/llm';
@@ -9,7 +10,7 @@ import { getFramework } from '@/renderer/lib/frameworks';
 
 export function InputArea() {
   const { input, setInput, setOutput, setFramework, selectedFramework, selectedTemplate, setTemplate } = usePromptStore();
-  const { setProcessing, showToast } = useAppStore();
+  const { isProcessing, setProcessing, showToast } = useAppStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const currentTemplate = selectedTemplate ? getTemplate(selectedTemplate) : undefined;
@@ -59,6 +60,13 @@ export function InputArea() {
     }
   };
 
+  const handleTranscript = (text: string) => {
+    const currentInput = usePromptStore.getState().input;
+    const separator = currentInput && !currentInput.endsWith(' ') ? ' ' : '';
+    setInput(currentInput + separator + text);
+    showToast('Speech transcribed');
+  };
+
   return (
     <div className="space-y-3">
       {currentTemplate && (
@@ -91,7 +99,10 @@ export function InputArea() {
       />
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/30">{input.length}/5000</span>
+        <div className="flex items-center gap-2">
+          <MicButton onTranscript={handleTranscript} disabled={isProcessing} />
+          <span className="text-xs text-white/30">{input.length}/5000</span>
+        </div>
         <button onClick={handleGenerate}
           disabled={!input.trim()}
           className="flex items-center gap-2 px-4 py-2 bg-[#2D4A7A] hover:bg-[#3A5A8A]

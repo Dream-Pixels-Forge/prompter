@@ -3,6 +3,7 @@ import { IPC_CHANNELS, type GenerateRequest, type GenerateResponse, type AppSett
 import { generatePrompt, updateConfig } from './llm/orchestrator';
 import { checkOllamaStatus } from './llm/ollama';
 import { setWindowPosition } from './overlay';
+import { transcribeAudio } from './stt/whisper';
 
 let settings: Partial<AppSettings> = {};
 
@@ -44,5 +45,13 @@ export function registerIpcHandlers(win: BrowserWindow) {
   ipcMain.handle(IPC_CHANNELS.OLLAMA_CHECK, async () => {
     const ollamaEndpoint = (settings as any)?.ollamaEndpoint;
     return await checkOllamaStatus(ollamaEndpoint);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.STT_START, async (_event, audioData: string) => {
+    const openaiApiKey = (settings as any)?.openaiApiKey;
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured for STT');
+    }
+    return await transcribeAudio(audioData, openaiApiKey);
   });
 }

@@ -19,4 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   ollama: {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.OLLAMA_CHECK),
   },
+  stt: {
+    transcribe: (audioData: string) => ipcRenderer.invoke(IPC_CHANNELS.STT_START, audioData),
+  },
 });

@@ -20,6 +20,9 @@ declare global {
       ollama: {
         check: () => Promise<OllamaStatus>;
       };
+      stt: {
+        transcribe: (audioData: string) => Promise<string>;
+      };
     };
   }
 }
