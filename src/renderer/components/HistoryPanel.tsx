@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Clock, Search, Trash2, ChevronLeft, RotateCcw, MessageSquare, FileText } from 'lucide-react';
-import { type HistoryEntry } from '@/shared/types';
-import { listHistory, searchHistory, deleteHistory, clearHistory } from '@/renderer/lib/llm';
-import { usePromptStore } from '@/renderer/stores/prompt-store';
+import { clearHistory, deleteHistory, listHistory, searchHistory } from '@/renderer/lib/llm';
 import { useAppStore } from '@/renderer/stores/app-store';
+import { usePromptStore } from '@/renderer/stores/prompt-store';
+import type { HistoryEntry } from '@/shared/types';
+import { ChevronLeft, Clock, FileText, MessageSquare, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { FrameworkBadge } from './FrameworkBadge';
 
 function formatDate(iso: string): string {
@@ -28,30 +28,26 @@ export function HistoryPanel() {
   const [selected, setSelected] = useState<HistoryEntry | null>(null);
   const { setInput, setFramework, setTemplate } = usePromptStore();
   const { setActiveTab } = useAppStore();
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => { isMounted.current = false; };
-  }, []);
-
   const load = useCallback(async (q?: string) => {
     setLoading(true);
     try {
-      if (q && q.trim()) {
+      if (q?.trim()) {
         const data = await searchHistory(q.trim());
-        if (isMounted.current) setEntries(data);
+        setEntries(data);
       } else {
         const data = await listHistory(50, 0);
-        if (isMounted.current) setEntries(data);
+        setEntries(data);
       }
     } catch (err) {
       console.warn('[HistoryPanel] Failed to load history:', err);
     } finally {
-      if (isMounted.current) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
     const timer = setTimeout(() => load(query), 300);
@@ -81,8 +77,10 @@ export function HistoryPanel() {
   if (selected) {
     return (
       <div className="space-y-3.5">
-        <button onClick={() => setSelected(null)}
-          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors group">
+        <button
+          onClick={() => setSelected(null)}
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors group"
+        >
           <ChevronLeft className="w-3.5 h-3.5" />
           <span>Back to history</span>
         </button>
@@ -100,9 +98,7 @@ export function HistoryPanel() {
         <div className="flex flex-wrap items-center gap-2">
           <FrameworkBadge framework={selected.framework} />
           {selected.template && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-white/40">
-              {selected.template}
-            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-white/40">{selected.template}</span>
           )}
           <span className="text-[10px] text-white/30">{formatDate(selected.createdAt)}</span>
         </div>
@@ -120,12 +116,19 @@ export function HistoryPanel() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
-          <button onClick={() => handleReuse(selected)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs font-medium rounded-md transition-colors active:scale-[0.97]">
+          <button
+            onClick={() => handleReuse(selected)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2D4A7A] hover:bg-[#3A5A8A] text-white text-xs font-medium rounded-md transition-colors active:scale-[0.97]"
+          >
             <RotateCcw className="w-3 h-3" /> Reuse
           </button>
-          <button onClick={() => { handleDelete(selected.id); setSelected(null); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 sub-card hover:bg-red-500/15 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs rounded-md transition-all ml-auto">
+          <button
+            onClick={() => {
+              handleDelete(selected.id);
+              setSelected(null);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 sub-card hover:bg-red-500/15 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs rounded-md transition-all ml-auto"
+          >
             <Trash2 className="w-3 h-3" /> Delete
           </button>
         </div>
@@ -140,14 +143,19 @@ export function HistoryPanel() {
         <Search className="w-3.5 h-3.5 text-white/25 shrink-0" />
         <input
           value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSearch()}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search history..."
           className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/25 outline-none"
         />
         {query && (
-          <button onClick={() => { setQuery(''); load(); }}
-            className="text-[11px] text-white/30 hover:text-white/60 transition-colors shrink-0">
+          <button
+            onClick={() => {
+              setQuery('');
+              load();
+            }}
+            className="text-[11px] text-white/30 hover:text-white/60 transition-colors shrink-0"
+          >
             Clear
           </button>
         )}
@@ -156,9 +164,10 @@ export function HistoryPanel() {
       {/* Count + clear */}
       {entries.length > 0 && (
         <div className="flex items-center justify-between px-0.5">
-          <span className="text-[11px] text-white/30">{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
-          <button onClick={handleClear}
-            className="text-[11px] text-red-400/50 hover:text-red-400 transition-colors">
+          <span className="text-[11px] text-white/30">
+            {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+          </span>
+          <button onClick={handleClear} className="text-[11px] text-red-400/50 hover:text-red-400 transition-colors">
             Clear all
           </button>
         </div>
@@ -169,9 +178,12 @@ export function HistoryPanel() {
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <div className="flex gap-1">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }} />
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
               ))}
             </div>
           </div>
@@ -180,30 +192,34 @@ export function HistoryPanel() {
             <div className="w-10 h-10 rounded-lg bg-white/[0.04] flex items-center justify-center mb-2">
               <Clock className="w-5 h-5 text-white/[0.12]" />
             </div>
-            <p className="text-xs text-white/30">
-              {query ? 'No matches found' : 'No history yet'}
-            </p>
+            <p className="text-xs text-white/30">{query ? 'No matches found' : 'No history yet'}</p>
             <p className="text-[11px] text-white/20 mt-1">
               {query ? 'Try a different search term' : 'Generated prompts appear here'}
             </p>
           </div>
         ) : (
-          entries.map(entry => (
-            <div key={entry.id}
+          entries.map((entry) => (
+            <div
+              key={entry.id}
               className="group flex items-start gap-2.5 p-2.5 rounded-lg sub-card cursor-pointer"
-              onClick={() => setSelected(entry)}>
+              onClick={() => setSelected(entry)}
+            >
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white/80 truncate leading-snug mb-1">{entry.rawInput}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <FrameworkBadge framework={entry.framework} />
-                  {entry.template && (
-                    <span className="text-[10px] text-white/30">{entry.template}</span>
-                  )}
+                  {entry.template && <span className="text-[10px] text-white/30">{entry.template}</span>}
                   <span className="text-[10px] text-white/25 ml-auto">{formatDate(entry.createdAt)}</span>
                 </div>
               </div>
-              <button onClick={e => { e.stopPropagation(); handleDelete(entry.id); }} aria-label="Delete entry"
-                className="hover-only-reveal p-1 rounded-md hover:bg-red-500/20 transition-all shrink-0 mt-0.5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(entry.id);
+                }}
+                aria-label="Delete entry"
+                className="hover-only-reveal p-1 rounded-md hover:bg-red-500/20 transition-all shrink-0 mt-0.5"
+              >
                 <Trash2 className="w-3 h-3 text-white/30 hover:text-red-400" />
               </button>
             </div>

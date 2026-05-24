@@ -1,66 +1,66 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/Inter-Regular.ttf') format('truetype');
+  src: url("/assets/fonts/Inter-Regular.ttf") format("truetype");
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-weight: 500;
   font-display: swap;
-  src: url('/assets/fonts/Inter-Medium.ttf') format('truetype');
+  src: url("/assets/fonts/Inter-Medium.ttf") format("truetype");
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-weight: 600;
   font-display: swap;
-  src: url('/assets/fonts/Inter-SemiBold.ttf') format('truetype');
+  src: url("/assets/fonts/Inter-SemiBold.ttf") format("truetype");
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-weight: 700;
   font-display: swap;
-  src: url('/assets/fonts/Inter-Bold.ttf') format('truetype');
+  src: url("/assets/fonts/Inter-Bold.ttf") format("truetype");
 }
 
 @theme {
-  --color-brand-50: #EFF6FF;
-  --color-brand-100: #D9E8F5;
-  --color-brand-200: #B3D1EB;
-  --color-brand-300: #8DB9E0;
-  --color-brand-400: #6AA2D6;
-  --color-brand-500: #2D4A7A;
-  --color-brand-600: #243D63;
-  --color-brand-700: #1B2F4C;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #d9e8f5;
+  --color-brand-200: #b3d1eb;
+  --color-brand-300: #8db9e0;
+  --color-brand-400: #6aa2d6;
+  --color-brand-500: #2d4a7a;
+  --color-brand-600: #243d63;
+  --color-brand-700: #1b2f4c;
   --color-brand-800: #122235;
-  --color-brand-900: #0A152D;
+  --color-brand-900: #0a152d;
 
-  --color-surface: #1C1917;
-  --color-surface-light: #2A2725;
-  --color-surface-lighter: #322F2D;
+  --color-surface: #1c1917;
+  --color-surface-light: #2a2725;
+  --color-surface-lighter: #322f2d;
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-hover: rgba(255, 255, 255, 0.12);
   --color-text: rgba(255, 255, 255, 0.92);
   --color-text-secondary: rgba(255, 255, 255, 0.65);
   --color-text-muted: rgba(255, 255, 255, 0.38);
-  --color-accent: #4A7FA0;
+  --color-accent: #4a7fa0;
   --color-accent-dim: rgba(74, 127, 160, 0.15);
 
   /* Unified typography scale */
-  --text-tiny: 0.625rem;    /* 10px — badges, meta */
-  --text-small: 0.6875rem;  /* 11px — labels, secondary */
-  --text-body: 0.75rem;     /* 12px — body text (Tailwind xs) */
-  --text-base: 0.8125rem;   /* 13px — content reading */
-  --text-md: 0.875rem;      /* 14px — headings (Tailwind sm) */
+  --text-tiny: 0.625rem; /* 10px — badges, meta */
+  --text-small: 0.6875rem; /* 11px — labels, secondary */
+  --text-body: 0.75rem; /* 12px — body text (Tailwind xs) */
+  --text-base: 0.8125rem; /* 13px — content reading */
+  --text-md: 0.875rem; /* 14px — headings (Tailwind sm) */
 
   /* Unified text opacity layers */
   --opacity-high: 0.85;
-  --opacity-medium: 0.60;
+  --opacity-medium: 0.6;
   --opacity-low: 0.38;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 /* Base styles */
@@ -70,7 +70,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -91,18 +92,11 @@ html, body {
 
 /* Glassmorphism card */
 .glass-card {
-  background: linear-gradient(
-    135deg,
-    rgb(28, 25, 23) 0%,
-    rgb(38, 34, 30) 100%
-  );
+  background: linear-gradient(135deg, rgb(28, 25, 23) 0%, rgb(38, 34, 30) 100%);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Sub-card for nested grouping */
@@ -153,9 +147,18 @@ html, body {
 
 /* Mic pulse ring animation */
 @keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.2); opacity: 0.2; }
-  100% { transform: scale(1); opacity: 0.5; }
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
 }
 .animate-pulse-ring {
   animation: pulse-ring 1.5s ease-in-out infinite;
@@ -178,13 +181,23 @@ html, body {
 
 /* Animations */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 
 /* Utility: hover-only interactions (hide delete buttons on touch devices) */

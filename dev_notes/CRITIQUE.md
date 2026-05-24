@@ -3,12 +3,13 @@
 > **Severity scale:** 🔴 Critical | 🟡 Moderate | 🔵 Minor
 > **Goal:** Zero issues, zero warnings, zero vulnerabilities, maximum code quality.
 > **Date:** 2026-05-24
+> **Verdict legend:** [✅ Agreed] [⚠️ Debatable — low impact for local app] [❌ Retracted]
 
 ---
 
 ## 🔴 CRITICAL
 
-### C1. High-Severity CVEs in Electron (4 high, 11 moderate)
+### C1. High-Severity CVEs in Electron (4 high, 11 moderate) [✅ Agreed]
 
 **Location:** `package.json:42` → `"electron": "^34.0.0"`
 
@@ -24,7 +25,7 @@ Upgrade Electron to `^39.8.0` and validate transparent window behavior, IPC, and
 
 ---
 
-### C2. Unused Dependencies (`uuid` + `@types/uuid`)
+### C2. Unused Dependencies (`uuid` + `@types/uuid`) [✅ Agreed]
 
 **Location:** `package.json:33,40`
 
@@ -39,7 +40,7 @@ Zero imports of `uuid` anywhere in source. Code uses `crypto.randomUUID()` nativ
 
 ---
 
-### C3. Type Escape — `catch (err: any)`
+### C3. Type Escape — `catch (err: any)` [✅ Agreed]
 
 **Location:** `src/renderer/components/InputArea.tsx:79`
 
@@ -59,7 +60,7 @@ The `any` type bypass defeats TypeScript strict mode. Use `unknown` + proper nar
 
 ---
 
-### C4. API Key Storage Falls Back to Plain Base64
+### C4. API Key Storage Falls Back to Plain Base64 [✅ Agreed]
 
 **Location:** `src/main/storage.ts:97-103`
 
@@ -79,7 +80,7 @@ Base64 is **encoding, not encryption**. A user with filesystem access trivially 
 
 ---
 
-### C5. Zero Test Coverage
+### C5. Zero Test Coverage [✅ Agreed]
 
 **Location:** `package.json:18`
 
@@ -93,7 +94,7 @@ No test framework, no test files, no CI test enforcement. Every PR is merged wit
 
 ---
 
-### C6. `insertHistory` Error Silently Swallowed
+### C6. `insertHistory` Error Silently Swallowed [✅ Agreed]
 
 **Location:** `src/renderer/components/InputArea.tsx:78`
 
@@ -110,7 +111,7 @@ insertHistory({...}).catch(err => console.error('[History] insert failed:', err)
 
 ## 🟡 MODERATE
 
-### M1. Weak CSP — Ollama Endpoint Whitelisted
+### M1. Weak CSP — Ollama Endpoint Whitelisted [⚠️ Debatable]
 
 **Location:** `index.html:6`
 
@@ -118,11 +119,11 @@ insertHistory({...}).catch(err => console.error('[History] insert failed:', err)
 connect-src 'self' http://localhost:11434;
 ```
 
-The CSP allows plain HTTP connections to a local server. While intentional for Ollama, any XSS in the renderer can exfiltrate data to this endpoint. Should be hardened with a runtime nonce or hash-based approach where the user confirms the endpoint.
+The CSP allows plain HTTP connections to a local server. Already tightened from `http://localhost:*` to port 11434. Acceptable for a local dev tool — the XSS+exfiltration scenario requires the attacker to already have renderer code execution, at which point CSP is a defense-in-depth layer, not a primary control. Low practical risk.
 
 ---
 
-### M2. CSP Font Side-Channel Vector
+### M2. CSP Font Side-Channel Vector [✅ Agreed]
 
 **Location:** `index.html:9`
 
@@ -130,11 +131,11 @@ The CSP allows plain HTTP connections to a local server. While intentional for O
 <link href="https://fonts.googleapis.com/css2?family=Inter:...">
 ```
 
-Google Fonts CDN is whitelisted in CSP (`font-src 'self' https://fonts.gstatic.com`). Self-host the Inter font to eliminate the external dependency, reduce latency, and close the side-channel.
+Google Fonts CDN is whitelisted in CSP (`font-src 'self' https://fonts.gstatic.com`). Self-host the Inter font to eliminate the external dependency, reduce latency, and close the side-channel. Low practical risk for a local app, but self-hosting is trivial and removes a dependency.
 
 ---
 
-### M3. Hardcoded Anthropic API Version
+### M3. Hardcoded Anthropic API Version [⚠️ Debatable]
 
 **Location:** `src/main/llm/anthropic.ts:30`
 
@@ -142,11 +143,11 @@ Google Fonts CDN is whitelisted in CSP (`font-src 'self' https://fonts.gstatic.c
 'anthropic-version': '2023-06-01',
 ```
 
-This header pins to an old API version (2023). Current Anthropic API version is `2023-06-01` — actually this is still valid, but it should be a configurable constant, not hardcoded. Note that this version may be deprecated as Anthropic releases newer API versions.
+`2023-06-01` is still the current Anthropic API version. Making it a constant is cleanup, not a bug. Low urgency — if Anthropic ever deprecates this version, it'll break regardless of being hardcoded or constant.
 
 ---
 
-### M4. No Debounced Search-as-You-Type in History
+### M4. No Debounced Search-as-You-Type in History [✅ Agreed]
 
 **Location:** `src/renderer/components/HistoryPanel.tsx:56,139`
 
@@ -160,15 +161,15 @@ Search only triggers on Enter keypress. Modern UX expects debounced search-as-yo
 
 ---
 
-### M5. Toast Can Appear Under Processing Overlay
+### M5. Toast Can Appear Under Processing Overlay [⚠️ Debatable]
 
 **Location:** `Toast.tsx:27` vs `ProcessingOverlay.tsx:3`
 
-Toast renders at `z-60` positioned absolute to the root, but `ProcessingOverlay` covers the card at `z-50` with `bg-[#1C1917]/70 backdrop-blur-sm`. When processing is active, the toast can render behind the opaque overlay, making it invisible.
+Toast renders at `fixed z-60`, overlay at `absolute z-50`. Toast is fixed to viewport — it renders correctly above the overlay. Stacking is correct in practice.
 
 ---
 
-### M6. Multiple Dead Exports (8 symbols)
+### M6. Multiple Dead Exports (8 symbols) [✅ Agreed]
 
 **Locations:** Across `storage.ts`, `overlay.ts`, `llm.ts`, `stt.ts`, `templates/index.ts`, `whisper.ts`, `openai.ts`
 
@@ -189,7 +190,7 @@ Each adds noise, suggests API surface area that doesn't exist, and hurts maintai
 
 ---
 
-### M7. Release Pipeline Excessive Duplication (~300 lines)
+### M7. Release Pipeline Excessive Duplication (~300 lines) [✅ Agreed]
 
 **Location:** `.github/workflows/release.yml`
 
@@ -197,9 +198,9 @@ Four build jobs (mac-arm64, mac-x64, win-x64, linux-x64) are nearly identical co
 
 ---
 
-### M8. Broken Biome Linting Configuration (137 errors)
+### M8. Broken Biome Linting Configuration (137 errors) [✅ Agreed]
 
-**Location:** `biome.json` + `package.json:45`—Biome is pinned implicitly by version mismatch
+**Location:** `biome.json` + `package.json:45` — Biome is pinned implicitly by version mismatch
 
 A `biome.json` exists targeting v1.9.4 schema, but the project has no `biome` devDependency and `npx` resolves to v2.4.15 which rejects the schema:
 ```
@@ -227,7 +228,7 @@ Additionally, there's no linting script in `package.json`, so no CI job runs it.
 
 ---
 
-### M9. Silent Catch Blocks Mask Failures
+### M9. Silent Catch Blocks Mask Failures [✅ Agreed]
 
 **Locations:** `src/renderer/components/HistoryPanel.tsx:47`, `src/renderer/components/InputArea.tsx:78`, `src/main/storage.ts:24`
 
@@ -251,21 +252,21 @@ Critical persistence failure silently discarded. User thinks history was saved b
 ```typescript
 this.writeQueue = this.writeQueue.then(fn, fn);
 ```
-The second `fn` in `.then(fn, fn)` IS the rejection handler—it calls the same function which catches errors internally—but the error path depends entirely on the function remembering to catch. Any uncaught error in a write silently terminates the chain.
+The second `fn` in `.then(fn, fn)` IS the rejection handler — it calls the same function which catches errors internally — but the error path depends entirely on the function remembering to catch. Any uncaught error in a write silently terminates the chain.
 
 **Fix:** At minimum log errors. For user-facing operations (history insert), toast the failure.
 
 ---
 
-### M10. `env.d.ts` Declares Global `SpeechRecognition` Types
+### M10. `env.d.ts` Declares Global `SpeechRecognition` Types [⚠️ Debatable]
 
 **Location:** `src/renderer/env.d.ts`
 
-The file re-declares the entire `SpeechRecognition` API as global types. TypeScript ships `@types/dom-speech-recognition` via DOM lib, but the DOM lib is not enabled in `tsconfig.json` (no `"lib"` specified—defaults to `"target": "ESNext"` which includes the DOM). Actually, with `target: ESNext`, the DOM lib IS included, making `env.d.ts` entirely redundant. Remove the file.
+The file re-declares the entire `SpeechRecognition` API as global types. Even if technically redundant with DOM lib, it explicitly types an experimental browser API that TypeScript's DOM declarations may lag behind on. Harmless documentation — removing it saves nothing and risks losing clarity on what APIs the app expects.
 
 ---
 
-### M11. No `node:` Protocol on Node.js Builtin Imports
+### M11. No `node:` Protocol on Node.js Builtin Imports [✅ Agreed]
 
 **Locations:** `src/main/*.ts` — 3 occurrences
 
@@ -279,7 +280,7 @@ Using bare module names for Node.js builtins is a historical practice. The `node
 
 ---
 
-### M12. Inconsistent `import type` Syntax (7 occurrences)
+### M12. Inconsistent `import type` Syntax (7 occurrences) [✅ Agreed]
 
 **Locations:** All LLM provider files + shared types
 
@@ -293,7 +294,7 @@ The inline form leaves the import in the runtime module graph even though only t
 
 ---
 
-### M13. `HistoryPanel.tsx` Load Effect Has Stale Closure on `isMounted` Ref
+### M13. `HistoryPanel.tsx` Load Effect Has Stale Closure on `isMounted` Ref [✅ Agreed]
 
 **Location:** `src/renderer/components/HistoryPanel.tsx:33-51`
 
@@ -307,11 +308,11 @@ const load = useCallback(async (q?: string) => {
 }, []);
 ```
 
-The `isMounted` pattern is an anti-pattern in React 18+. With Strict Mode, effects run twice in development. React 18+ already handles unmounted-component state updates gracefully. The ref adds complexity for no benefit—remove the `isMounted` guard and handle cancellation via AbortController instead.
+The `isMounted` pattern is an anti-pattern in React 18+. With Strict Mode, effects run twice in development. React 18+ already handles unmounted-component state updates gracefully. The ref adds complexity for no benefit — remove the `isMounted` guard and handle cancellation via AbortController instead.
 
 ---
 
-### M14. Bubble Position Not Persisted Across App Restarts
+### M14. Bubble Position Not Persisted Across App Restarts [✅ Agreed]
 
 **Location:** `src/renderer/hooks/useBubblePosition.ts:70`
 
@@ -321,21 +322,21 @@ Position is saved to `localStorage` (per-origin browser storage). In an Electron
 
 ## 🔵 MINOR
 
-### m1. Migrated Framework Files Left Orphaned in Renderer
+### m1. Migrated Framework Files Left Orphaned in Renderer [✅ Agreed]
 
 **Location:** `src/renderer/lib/frameworks/`
 
-The `src/shared/frameworks/` directory has all 5 framework definitions. `src/renderer/lib/frameworks/` has only `index.ts` which re-exports from shared. The parent `src/shared/frameworks.ts` also imports correctly from `./frameworks/`. However, the renderer directory is vestigial—it's 1 file that just re-exports. Either remove the renderer wrapper and have consumers import directly from `@/shared/frameworks`, or keep it for backward compat. Either is fine, but maintainers need to know why this layer exists.
+The `src/shared/frameworks/` directory has all 5 framework definitions. `src/renderer/lib/frameworks/` has only `index.ts` which re-exports from shared. The renderer directory is vestigial — it's 1 file that just re-exports. Either remove the renderer wrapper and have consumers import directly from `@/shared/frameworks`, or keep it for backward compat.
 
 ---
 
-### m2. GSAP Reinflated Per-Component
+### m2. GSAP Reinflated Per-Component [⚠️ Debatable]
 
-GSAP is separately instantiated in `App.tsx`, `Bubble.tsx`, `BubbleExpanded.tsx`, `Toast.tsx` with identical `gsap.context()` patterns. Consider a shared `useGsapAnimation` hook.
+GSAP is separately instantiated in `App.tsx`, `Bubble.tsx`, `BubbleExpanded.tsx`, `Toast.tsx` with identical `gsap.context()` patterns. Components have different animation needs — a shared hook isn't obviously better. Not worth abstracting unless the pattern repeats to 6+ instances.
 
 ---
 
-### m3. `.npmrc` Uses Deprecated npm Config with pnpm
+### m3. `.npmrc` Uses Deprecated npm Config with pnpm [✅ Agreed]
 
 **Location:** `.npmrc:4-5`
 
@@ -353,7 +354,7 @@ Unknown project config "shamefully-hoist"
 
 ---
 
-### m4. `detectFramework` Regex Flags Inconsistency
+### m4. `detectFramework` Regex Flags Inconsistency [⚠️ Debatable]
 
 **Location:** `src/shared/frameworks.ts:22-26`
 
@@ -362,29 +363,29 @@ if (/(video|film|animation|3d|motion|cinematic)/i.test(lower)) return 'mplct';
 if (/(agent|assistant|tool|function|autonomous)/i.test(lower)) return 'karpathy';
 ```
 
-First regex uses `/i` flag but `lower` is already `.toLowerCase()`. The `/i` flag is redundant on all of them. Inconsistent — `(lower)` + `/i` vs just `(lower)` is noisy.
+`.toLowerCase()` + `/i` is redundant but harmless. Pure cosmetic.
 
 ---
 
-### m5. `InputArea.tsx` Character Counter Lacks Proximity Warning
+### m5. `InputArea.tsx` Character Counter Lacks Proximity Warning [⚠️ Debatable]
 
 ```typescript
 <span className="text-[11px] text-white/25 font-mono">{input.length}/5000</span>
 ```
 
-No color change or visual indicator when user approaches the 5000-char limit. Below 10% remaining (>4500), the counter should switch to amber/red.
+No color change or visual indicator when user approaches the 5000-char limit. Valid UX suggestion, but not a code quality issue.
 
 ---
 
-### m6. `formatDate` in HistoryPanel Creates New `Date()` Objects Repeatedly
+### m6. `formatDate` in HistoryPanel Creates New `Date()` Objects Repeatedly [⚠️ Debatable]
 
 **Location:** `src/renderer/components/HistoryPanel.tsx:9-22`
 
-Called once per history entry, each call creates up to 2 `new Date()` instances. Not a performance issue for 50 entries, but the function is impure and should accept `now` as a parameter for testability.
+Called once per history entry, each call creates up to 2 `new Date()` instances. Not a performance issue for 50 entries. Critique itself notes this isn't a real problem.
 
 ---
 
-### m7. CI `security-scan` Job Runs `pnpm install` for Audit Only
+### m7. CI `security-scan` Job Runs `pnpm install` for Audit Only [✅ Agreed]
 
 **Location:** `.github/workflows/ci.yml:40-44`
 
@@ -392,19 +393,19 @@ The `security-scan` job installs all dependencies just to run `pnpm audit`. This
 
 ---
 
-### m8. `pnpm-workspace.yaml` Is a Single-Project Workspace
+### m8. `pnpm-workspace.yaml` Is a Single-Project Workspace [⚠️ Debatable]
 
-The file exists but this project has no workspace packages. The config only allows builds for `electron` and `esbuild`. This is valid but unnecessary overhead — remove unless multi-package workspace is planned.
-
----
-
-### m9. No `AGENTS.md` or `CLAUDE.md` for AI Tooling
-
-No agentic coding guidelines file exists. Given the heavy use of AI-assisted development (evidenced by PRIDES.md, agent references, and commit messages), a project-level guidelines file would improve consistency across sessions.
+The file exists but this project has no workspace packages. The config only allows builds for `electron` and `esbuild`. This is valid but unnecessary overhead — doesn't hurt anything. Trivial.
 
 ---
 
-### m10. `buildSectionContent` Has an Unused `_label` Parameter
+### m9. No `AGENTS.md` or `CLAUDE.md` for AI Tooling [⚠️ Debatable]
+
+No agentic coding guidelines file exists. Given the heavy use of AI-assisted development (evidenced by PRIDES.md, agent references, and commit messages), a project-level guidelines file would improve consistency across sessions. But this is opinion-based — not every project needs one. Global config at `~/.config/opencode/AGENTS.md` partially covers this.
+
+---
+
+### m10. `buildSectionContent` Has an Unused `_label` Parameter [✅ Agreed]
 
 **Location:** `src/main/llm/orchestrator.ts:93`
 
@@ -416,19 +417,15 @@ The `_label` parameter is never used in the function body. The underscore prefix
 
 ---
 
-### m11. Release Pipeline SHA Generation Inconsistency (macOS vs Linux)
+### m11. Release Pipeline SHA Generation Inconsistency (macOS vs Linux) [❌ Retracted]
 
-**Location:** `.github/workflows/release.yml:88,227-231`
+**Location:** `.github/workflows/release.yml:124`
 
-macOS jobs use `shasum -a 256` (BSD/macOS command) while the Linux job uses `sha256sum` (GNU). Both are **correct for their runner**, but the macOS commands contain a subtle bug:
-```bash
-shasum -a 256 "$f" >> "$f.sha256"
-```
-After the loop, each binary has a `.sha256` file appended to it. On the Linux side, `sha256sum "$f" > "$f.sha256"` overwrites (correctly). The `>>` on macOS means repeated runs append duplicates. Use `>` consistently.
+Incorrect. Both macOS and Linux use `${{ matrix.checksum }} "$f" > "$f.sha256"` with `>` (overwrite), not `>>` (append). The code is already correct. This finding is wrong.
 
 ---
 
-### m12. `parseLLMOutput` Regex Is Brittle — No Escape for Special Regex Chars in Section Keys
+### m12. `parseLLMOutput` Regex Is Brittle — No Escape for Special Regex Chars in Section Keys [✅ Agreed]
 
 **Location:** `src/main/llm/orchestrator.ts:77-90`
 
@@ -440,7 +437,7 @@ If a framework section key contained characters special to regex (e.g., `[status
 
 ---
 
-### m13. `Process.env.NODE_ENV` Used in Renderer Without Define Plugin Config
+### m13. `Process.env.NODE_ENV` Used in Renderer Without Define Plugin Config [✅ Agreed]
 
 **Location:** `src/renderer/components/TemplateBrowser.tsx:46`
 
@@ -452,7 +449,7 @@ This works because `vite-plugin-electron-renderer` shims Node.js globals, but it
 
 ---
 
-### m14. React StrictMode Compatibility — `useEffect` Cleanup Race in BubbleExpanded
+### m14. React StrictMode Compatibility — `useEffect` Cleanup Race in BubbleExpanded [✅ Agreed]
 
 **Location:** `src/renderer/components/BubbleExpanded.tsx:36-55`
 
@@ -460,7 +457,7 @@ GSAP context is created inside `useEffect` with `gsap.context()`. In React Stric
 
 ---
 
-### m15. `useBubblePosition` Does Not Handle Touch Events for Dragging
+### m15. `useBubblePosition` Does Not Handle Touch Events for Dragging [✅ Agreed]
 
 **Location:** `src/renderer/hooks/useBubblePosition.ts:50-83`
 
@@ -468,14 +465,43 @@ Only `mousedown`/`mousemove`/`mouseup` events are tracked. Touch devices (Surfac
 
 ---
 
-## SUMMARY
+## APPENDIX: Findings from REVIEW_AUDIT.md Not in Original CRITIQUE
 
-| Severity | Count |
+The REVIEW_AUDIT cross-check caught 6 issues my initial Round 1 missed. Current status verified against HEAD (develop @ c5bcc49):
+
+| # | Finding | Severity | Status |
+|---|---------|----------|--------|
+| #50 | OutputPanel: `useEffect` after conditional early return (rules-of-hooks) | 🟡 | **Fixed** — useEffect moved before return |
+| #51 | PromptSection: missing `setTimeout` cleanup on copy feedback | 🔵 | **Fixed** — `timerRef` with cleanup present |
+| #52 | HistoryPanel: no unmount guard on async `load()` | 🔵 | Still present — overlaps with M13 above |
+| #53 | whisper.ts: `body as any` escape — claimed fixed but NOT | 🔵 | **Fixed** — cast removed |
+| #54 | Dead stream functions — claimed fixed but NOT | 🔵 | Partial — stream functions removed, `StreamChunk` interface still on `types.ts:90` (unused) |
+| #55 | Bubble.tsx: missing `aria-label` — claimed fixed but NOT | 🔵 | **Fixed** — `aria-label="Open Prompter"` present |
+| #56 | TemplateBrowser: `console.warn` on every render | 🔵 | **Fixed** — wrapped in `useEffect` |
+
+**Takeaway:** The REVIEW_AUDIT was conducted before the most recent fix pass. 5 of 6 findings are already resolved. Only #52 (same as M13) and the leftover `StreamChunk` interface remain.
+
+---
+
+## VERDICT SUMMARY
+
+| Category | Count |
 |----------|-------|
-| 🔴 Critical | 6 |
-| 🟡 Moderate | 14 |
-| 🔵 Minor | 15 |
-| **Total** | **35** |
+| ✅ Agreed | 25 |
+| ⚠️ Debatable (low impact for local app) | 9 |
+| ❌ Retracted (factually wrong) | 1 |
+| **Total original findings** | **35** |
+| Missed in original, from REVIEW_AUDIT | 6 (5 now fixed) |
+
+### Breakdown
+
+**Agreed (25):** C1–C6, M4, M6–M9, M11–M14, m1, m3, m7, m10, m12–m15 — all valid. Electron upgrade, silent catches, dead exports, broken Biome, no tests, missing `node:` prefix, brittle regex, touch events, etc.
+
+**Debatable (9):** M1 (CSP already port-tightened), M2 (side-channel risk near-zero for local app), M3 (version still current), M5 (z-index stacking correct), M10 (harmless docs), m2 (components differ), m4 (cosmetic), m5 (UX suggestion, not code quality), m6 (not a real perf issue), m8 (trivial), m9 (opinion-based).
+
+**Retracted (1):** m11 — SHA generation uses `>` consistently. The code is correct.
+
+---
 
 ### Top 7 Actions (Highest ROI)
 
@@ -487,11 +513,7 @@ Only `mousedown`/`mousemove`/`mouseup` events are tracked. Touch devices (Surfac
 6. **Fix Biome config + run linter** (🟡 M8) — 137 errors, mostly auto-fixable
 7. **Remove 8 dead exports** (🟡 M6) — Reduce noise and maintenance surface
 
-> *"Would a senior engineer say this is overcomplicated? If yes, simplify."*
 > The codebase is well-structured, clean, and follows good patterns overall.
 > The issues are concentrated in security, testing, and configuration — not architecture.
->
-> **Round 1 → Round 2 delta:** 25 → 35 total findings (+10). Deeper analysis revealed
-> dead exports, Biome breakage, error-swallowing patterns, missing touch support,
-> React StrictMode concerns, and brittle regex. Architecture is sound; discipline
-> around testing, linting, and error handling needs attention.
+> 34/35 findings directionally correct; only m11 is factually wrong.
+> The "debatable" 9 are real concerns but carry low practical impact for a local Electron app.

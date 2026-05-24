@@ -1,4 +1,4 @@
-import { type Framework } from '@/shared/types';
+import type { Framework } from '@/shared/types';
 
 export const mplctFramework: Framework = {
   id: 'mplct',

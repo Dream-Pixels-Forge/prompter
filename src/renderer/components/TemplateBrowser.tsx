@@ -1,8 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Sparkles, ChefHat, BookOpen, Bot, GitPullRequest, Video, PenLine, Headphones, BarChart3, Palette, FileText, Microscope, type LucideIcon } from 'lucide-react';
-import { usePromptStore } from '@/renderer/stores/prompt-store';
+import { getTemplate, templates } from '@/renderer/lib/templates';
 import { useAppStore } from '@/renderer/stores/app-store';
-import { templates, getTemplate } from '@/renderer/lib/templates';
+import { usePromptStore } from '@/renderer/stores/prompt-store';
+import {
+  BarChart3,
+  BookOpen,
+  Bot,
+  ChefHat,
+  FileText,
+  GitPullRequest,
+  Headphones,
+  type LucideIcon,
+  Microscope,
+  Palette,
+  PenLine,
+  Sparkles,
+  Video,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { TemplateCard } from './TemplateCard';
 
 const iconMap: Record<string, LucideIcon> = {
@@ -43,8 +57,8 @@ export function TemplateBrowser() {
   };
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      templates.forEach(tpl => {
+    if (import.meta.env.DEV) {
+      templates.forEach((tpl) => {
         if (!iconMap[tpl.icon] && tpl.icon !== 'Sparkles') {
           console.warn(`[TemplateBrowser] No icon mapping for "${tpl.icon}" — using Sparkles fallback`);
         }
@@ -52,20 +66,21 @@ export function TemplateBrowser() {
     }
   }, []);
 
-  const cat = CATEGORIES.find(c => c.id === activeCategory)!;
-  const visible = templates.filter(t => cat.ids.includes(t.id));
+  const cat = CATEGORIES.find((c) => c.id === activeCategory)!;
+  const visible = templates.filter((t) => cat.ids.includes(t.id));
 
   return (
     <div className="space-y-2">
       {/* Tabs */}
       <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
-        {CATEGORIES.map(c => (
-          <button key={c.id} onClick={() => setActiveCategory(c.id)}
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => setActiveCategory(c.id)}
             className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${
-              c.id === activeCategory
-                ? 'bg-[#2D4A7A]/25 text-white/90'
-                : 'text-white/40 hover:text-white/70'
-            }`}>
+              c.id === activeCategory ? 'bg-[#2D4A7A]/25 text-white/90' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
             {c.label}
           </button>
         ))}
@@ -73,7 +88,7 @@ export function TemplateBrowser() {
 
       {/* Grid */}
       <div className="grid grid-cols-2 gap-1.5 auto-rows-fr">
-        {visible.map(tpl => (
+        {visible.map((tpl) => (
           <TemplateCard
             key={tpl.id}
             template={tpl}

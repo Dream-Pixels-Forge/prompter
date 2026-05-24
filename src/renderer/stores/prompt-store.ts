@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { type GenerateResponse } from '@/shared/types';
 import { frameworks } from '@/renderer/lib/frameworks';
 import { templates } from '@/renderer/lib/templates';
+import type { GenerateResponse } from '@/shared/types';
+import { create } from 'zustand';
 
 interface PromptStore {
   input: string;

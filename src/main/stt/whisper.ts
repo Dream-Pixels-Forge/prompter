@@ -1,5 +1,4 @@
 export const WHISPER_DEFAULT_URL = 'https://api.openai.com/v1';
-export const WHISPER_DEFAULT_MODEL = 'whisper-1';
 
 export async function transcribeAudio(audioBase64: string, apiKey: string): Promise<string> {
   const boundary = `----PrompterFormBoundary${crypto.randomUUID().replace(/-/g, '')}`;
@@ -31,7 +30,7 @@ export async function transcribeAudio(audioBase64: string, apiKey: string): Prom
       method: 'POST',
       headers: {
         'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body,
       signal: controller.signal,
@@ -40,9 +39,11 @@ export async function transcribeAudio(audioBase64: string, apiKey: string): Prom
     if (!res.ok) {
       let detail = `HTTP ${res.status}`;
       try {
-        const err = await res.json() as { error?: { message?: string } };
+        const err = (await res.json()) as { error?: { message?: string } };
         if (err.error?.message) detail += ` — ${err.error.message}`;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       throw new Error(`Whisper API error: ${detail}`);
     }
 

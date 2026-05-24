@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'prompter-bubble-pos';
 const DEFAULT_POSITION = { bottom: 104, right: 44 };
@@ -8,19 +8,10 @@ interface Position {
   right: number;
 }
 
-/**
- * Migrate from old {x, y} translate-offset format (relative to CSS bottom:24; right:24 anchor)
- * to new absolute viewport-coordinate {bottom, right} format.
- *
- * Old {x: -20, y: -80} with CSS bottom:24px; right:24px anchor had an
- * effective visual position of bottom:104px; right:44px.
- * Conversion: bottom = 24 - y, right = 24 - x
- */
 function migratePosition(saved: Record<string, unknown>): Position {
   if ('bottom' in saved && 'right' in saved) {
     return { bottom: Number(saved.bottom), right: Number(saved.right) };
   }
-  // Legacy format: {x, y} as translate offsets
   if ('x' in saved && 'y' in saved) {
     return {
       bottom: 24 - Number(saved.y),
@@ -28,6 +19,13 @@ function migratePosition(saved: Record<string, unknown>): Position {
     };
   }
   return DEFAULT_POSITION;
+}
+
+function getClientCoords(e: MouseEvent | TouchEvent): { x: number; y: number } {
+  if ('touches' in e) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
 }
 
 export function useBubblePosition() {
@@ -48,21 +46,28 @@ export function useBubblePosition() {
   const positionRef = useRef(position);
   positionRef.current = position;
 
-  const startDrag = useCallback((e: React.MouseEvent, currentPos: Position) => {
+  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, currentPos: Position) => {
     e.preventDefault();
+    const coords = 'touches' in e
+      ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      : { x: e.clientX, y: e.clientY };
     setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
+    setDragStart(coords);
     setDragOrigin(currentPos);
   }, []);
 
-  const onDrag = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    const newPos = {
-      bottom: dragOrigin.bottom + (dragStart.y - e.clientY),
-      right: dragOrigin.right + (dragStart.x - e.clientX),
-    };
-    setPosition(newPos);
-  }, [isDragging, dragStart, dragOrigin]);
+  const onDrag = useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      const coords = getClientCoords(e);
+      const newPos = {
+        bottom: dragOrigin.bottom + (dragStart.y - coords.y),
+        right: dragOrigin.right + (dragStart.x - coords.x),
+      };
+      setPosition(newPos);
+    },
+    [isDragging, dragStart, dragOrigin],
+  );
 
   const stopDrag = useCallback(() => {
     if (isDragging) {
@@ -75,9 +80,13 @@ export function useBubblePosition() {
     if (isDragging) {
       window.addEventListener('mousemove', onDrag);
       window.addEventListener('mouseup', stopDrag);
+      window.addEventListener('touchmove', onDrag, { passive: false });
+      window.addEventListener('touchend', stopDrag);
       return () => {
         window.removeEventListener('mousemove', onDrag);
         window.removeEventListener('mouseup', stopDrag);
+        window.removeEventListener('touchmove', onDrag);
+        window.removeEventListener('touchend', stopDrag);
       };
     }
   }, [isDragging, onDrag, stopDrag]);

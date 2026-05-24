@@ -1,5 +1,7 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { IPC_CHANNELS, type GenerateRequest, type AppSettings, type HistoryEntry } from '../shared/types';
+import type { IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
+import type { AppSettings, GenerateRequest, HistoryEntry } from '../shared/types';
+import { IPC_CHANNELS } from '../shared/types';
 
 contextBridge.exposeInMainWorld('api', {
   llm: {
@@ -37,7 +39,9 @@ contextBridge.exposeInMainWorld('api', {
     onTriggered: (callback: (action: string) => void) => {
       const handler = (_event: IpcRendererEvent, action: string) => callback(action);
       ipcRenderer.on(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
-      return () => { ipcRenderer.removeListener(IPC_CHANNELS.HOTKEY_TRIGGERED, handler); };
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
+      };
     },
   },
 });

@@ -1,11 +1,11 @@
-import { Copy, Check, RotateCcw } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { useAppStore } from '@/renderer/stores/app-store';
-import { getFramework } from '@/renderer/lib/frameworks';
 import { copyText } from '@/renderer/lib/clipboard';
-import { PromptSection } from './PromptSection';
+import { getFramework } from '@/renderer/lib/frameworks';
+import { useAppStore } from '@/renderer/stores/app-store';
+import { usePromptStore } from '@/renderer/stores/prompt-store';
+import { Check, Copy, RotateCcw } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { FrameworkBadge } from './FrameworkBadge';
+import { PromptSection } from './PromptSection';
 
 export function OutputPanel() {
   const { output, clearOutput } = usePromptStore();
@@ -14,7 +14,9 @@ export function OutputPanel() {
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    return () => { if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current); };
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
   }, []);
 
   if (!output) return null;
@@ -40,15 +42,22 @@ export function OutputPanel() {
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-0.5">
-          <button onClick={handleCopy} aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
-            {copied
-              ? <Check className="w-3.5 h-3.5 text-green-400" />
-              : <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
-            }
+          <button
+            onClick={handleCopy}
+            aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-green-400" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
+            )}
           </button>
-          <button onClick={clearOutput} aria-label="Clear output"
-            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+          <button
+            onClick={clearOutput}
+            aria-label="Clear output"
+            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
+          >
             <RotateCcw className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
           </button>
         </div>
@@ -56,12 +65,8 @@ export function OutputPanel() {
 
       {/* Sections */}
       <div className="space-y-2">
-        {framework?.sections.map(section => (
-          <PromptSection
-            key={section.key}
-            label={section.label}
-            content={output.sections[section.key] || ''}
-          />
+        {framework?.sections.map((section) => (
+          <PromptSection key={section.key} label={section.label} content={output.sections[section.key] || ''} />
         ))}
       </div>
     </div>

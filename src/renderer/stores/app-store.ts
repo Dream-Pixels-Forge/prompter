@@ -1,5 +1,5 @@
+import type { AppTab, BubbleState } from '@/shared/types';
 import { create } from 'zustand';
-import { type BubbleState, type AppTab } from '@/shared/types';
 
 interface AppStore {
   bubbleState: BubbleState;
@@ -34,8 +34,9 @@ export const useAppStore = create<AppStore>((set) => ({
   setProcessing: (processing) => set({ isProcessing: processing, bubbleState: processing ? 'processing' : 'expanded' }),
   showToast: (message) => set({ toastMessage: message }),
   hideToast: () => set({ toastMessage: null }),
-  toggleExpanded: () => set((state) => ({
-    isExpanded: !state.isExpanded,
-    bubbleState: state.isExpanded ? 'dormant' : 'expanded',
-  })),
+  toggleExpanded: () =>
+    set((state) => ({
+      isExpanded: !state.isExpanded,
+      bubbleState: state.isExpanded ? 'dormant' : 'expanded',
+    })),
 }));

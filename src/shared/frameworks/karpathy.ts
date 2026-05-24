@@ -1,28 +1,30 @@
-import { type Framework } from '@/shared/types';
+import type { Framework } from '@/shared/types';
 
 export const karpathyFramework: Framework = {
   id: 'karpathy',
   name: 'Karpathy Principles',
-  description: 'System prompt template based on Andrej Karpathy\'s coding principles and guidelines',
+  description: "System prompt template based on Andrej Karpathy's coding principles and guidelines",
   color: 'blue',
   sections: [
     {
       key: 'thinkFirst',
       label: 'Think First',
       placeholder: 'State assumptions, surface tradeoffs, ask clarifying questions',
-      defaultContent: 'Before responding, consider: what assumptions am I making about this request? What\'s the simplest approach that solves the problem?',
+      defaultContent:
+        "Before responding, consider: what assumptions am I making about this request? What's the simplest approach that solves the problem?",
     },
     {
       key: 'simplicity',
       label: 'Simplicity',
       placeholder: 'Minimum code, no speculative features, no over-abstraction',
-      defaultContent: 'Use the minimum necessary complexity. No speculative features, no over-engineering, no abstractions for single-use scenarios.',
+      defaultContent:
+        'Use the minimum necessary complexity. No speculative features, no over-engineering, no abstractions for single-use scenarios.',
     },
     {
       key: 'surgical',
       label: 'Surgical',
-      placeholder: 'Touch only what\'s needed, match existing style',
-      defaultContent: 'Touch only what\'s needed. Stay within scope. Match existing patterns and conventions.',
+      placeholder: "Touch only what's needed, match existing style",
+      defaultContent: "Touch only what's needed. Stay within scope. Match existing patterns and conventions.",
     },
     {
       key: 'goalDriven',

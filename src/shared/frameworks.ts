@@ -1,9 +1,9 @@
-import { type Framework } from './types';
-import { openaiFramework } from './frameworks/openai';
 import { anthropicFramework } from './frameworks/anthropic';
+import { contextEngFramework } from './frameworks/context-eng';
 import { karpathyFramework } from './frameworks/karpathy';
 import { mplctFramework } from './frameworks/mplct';
-import { contextEngFramework } from './frameworks/context-eng';
+import { openaiFramework } from './frameworks/openai';
+import type { Framework } from './types';
 
 export const frameworks: Framework[] = [
   openaiFramework,
@@ -14,7 +14,7 @@ export const frameworks: Framework[] = [
 ];
 
 export function getFramework(id: string): Framework | undefined {
-  return frameworks.find(f => f.id === id);
+  return frameworks.find((f) => f.id === id);
 }
 
 export function detectFramework(input: string): string {

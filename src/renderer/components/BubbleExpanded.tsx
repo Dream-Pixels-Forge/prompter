@@ -1,15 +1,15 @@
-import { useRef, useEffect } from 'react';
-import { X, PenLine, Layout, Clock, Settings } from 'lucide-react';
-import gsap from 'gsap';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { type AppTab } from '@/shared/types';
+import type { AppTab } from '@/shared/types';
+import gsap from 'gsap';
+import { Clock, Layout, PenLine, Settings, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { HistoryPanel } from './HistoryPanel';
 import { InputArea } from './InputArea';
 import { OutputPanel } from './OutputPanel';
 import { ProcessingOverlay } from './ProcessingOverlay';
-import { TemplateBrowser } from './TemplateBrowser';
-import { HistoryPanel } from './HistoryPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { TemplateBrowser } from './TemplateBrowser';
 
 const tabs: { key: AppTab; label: string; icon: typeof PenLine }[] = [
   { key: 'compose', label: 'Compose', icon: PenLine },
@@ -25,6 +25,7 @@ export function BubbleExpanded() {
   const bodyRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const mountedRef = useRef(false);
 
   // Apply frameless window drag regions (Electron-specific CSS)
   useEffect(() => {
@@ -34,6 +35,9 @@ export function BubbleExpanded() {
 
   // Entrance animation — scale from bubble origin (bottom-right)
   useEffect(() => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+
     const card = cardRef.current;
     const body = bodyRef.current;
     if (!card) return;
@@ -59,19 +63,20 @@ export function BubbleExpanded() {
     const body = bodyRef.current;
     if (!body) return;
 
-    gsap.fromTo(body,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.15, ease: 'power1.out', willChange: 'opacity' }
-    );
+    gsap.fromTo(body, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'power1.out', willChange: 'opacity' });
   }, [activeTab]);
 
   return (
-    <div ref={cardRef}
+    <div
+      ref={cardRef}
       className="fixed bottom-4 right-4 w-[400px] max-h-[560px] glass-card
-                 flex flex-col overflow-hidden z-50">
-
+                 flex flex-col overflow-hidden z-50"
+    >
       {/* Header — draggable for frameless window */}
-      <div ref={headerRef} className="relative flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+      <div
+        ref={headerRef}
+        className="relative flex items-center justify-between px-4 py-3 border-b border-white/[0.06]"
+      >
         {/* Gradient accent line */}
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#4A7FA0]/40 to-transparent" />
         <div className="flex items-center gap-2">
@@ -81,8 +86,12 @@ export function BubbleExpanded() {
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
           <span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
         </div>
-        <button ref={closeBtnRef} onClick={() => setExpanded(false)} aria-label="Close"
-          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group">
+        <button
+          ref={closeBtnRef}
+          onClick={() => setExpanded(false)}
+          aria-label="Close"
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
+        >
           <X className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
         </button>
       </div>
@@ -90,13 +99,15 @@ export function BubbleExpanded() {
       {/* Tabs with icons */}
       <div className="flex gap-1 px-3 pt-3 pb-1 border-b border-white/[0.04]">
         {tabs.map(({ key, label, icon: Icon }) => (
-          <button key={key}
+          <button
+            key={key}
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md capitalize transition-all duration-200 ${
               activeTab === key
                 ? 'bg-[#4A7FA0]/15 text-white shadow-sm'
                 : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
-            }`}>
+            }`}
+          >
             <Icon className={`w-3.5 h-3.5 ${activeTab === key ? 'text-[#4A7FA0]' : ''}`} />
             {label}
           </button>
@@ -105,9 +116,7 @@ export function BubbleExpanded() {
 
       {/* Body */}
       <div ref={bodyRef} className="flex-1 overflow-y-auto px-3 pb-3 pt-2 space-y-2">
-        {activeTab === 'compose' && (
-          <>{output ? <OutputPanel /> : <InputArea />}</>
-        )}
+        {activeTab === 'compose' && <>{output ? <OutputPanel /> : <InputArea />}</>}
         {activeTab === 'templates' && <TemplateBrowser />}
         {activeTab === 'history' && <HistoryPanel />}
         {activeTab === 'settings' && <SettingsPanel />}

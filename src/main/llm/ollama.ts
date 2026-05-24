@@ -1,4 +1,4 @@
-import { type OllamaStatus } from '../../shared/types';
+import type { OllamaStatus } from '../../shared/types';
 import { fetchWithTimeout } from './fetch-with-timeout';
 
 export const OLLAMA_DEFAULT_URL = 'http://localhost:11434';
@@ -49,9 +49,7 @@ export async function checkOllamaStatus(baseUrl?: string): Promise<OllamaStatus>
     const tagsData = await tagsRes.json();
     const versionData = await versionRes.json();
 
-    const models: string[] = (tagsData.models ?? []).map(
-      (m: { name: string }) => m.name,
-    );
+    const models: string[] = (tagsData.models ?? []).map((m: { name: string }) => m.name);
 
     return {
       available: true,
@@ -62,5 +60,3 @@ export async function checkOllamaStatus(baseUrl?: string): Promise<OllamaStatus>
     return { available: false };
   }
 }
-
-

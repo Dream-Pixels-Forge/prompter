@@ -1,4 +1,4 @@
-import { type Framework } from '@/shared/types';
+import type { Framework } from '@/shared/types';
 
 export const anthropicFramework: Framework = {
   id: 'anthropic',
@@ -16,13 +16,15 @@ export const anthropicFramework: Framework = {
       key: 'guidelines',
       label: 'Guidelines',
       placeholder: 'Behavioral rules and decision framework',
-      defaultContent: '- Analyze the request thoroughly\n- Apply domain best practices\n- Provide structured, actionable output\n- Be transparent about assumptions',
+      defaultContent:
+        '- Analyze the request thoroughly\n- Apply domain best practices\n- Provide structured, actionable output\n- Be transparent about assumptions',
     },
     {
       key: 'policy',
       label: 'Policy',
       placeholder: 'Boundaries, invariants, and prohibited actions',
-      defaultContent: '- Do not invent facts or specifications\n- Stay within the defined domain\n- Respect user constraints and requirements',
+      defaultContent:
+        '- Do not invent facts or specifications\n- Stay within the defined domain\n- Respect user constraints and requirements',
     },
     {
       key: 'outputContract',
@@ -34,7 +36,8 @@ export const anthropicFramework: Framework = {
       key: 'stopSequences',
       label: 'Stop Sequences',
       placeholder: 'When to stop, ask, or escalate',
-      defaultContent: 'Stop when the core request is fully addressed and actionable. Ask for clarification only if critical information is missing.',
+      defaultContent:
+        'Stop when the core request is fully addressed and actionable. Ask for clarification only if critical information is missing.',
     },
   ],
 };

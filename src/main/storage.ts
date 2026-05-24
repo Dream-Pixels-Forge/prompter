@@ -1,7 +1,7 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { app, safeStorage } from 'electron';
-import * as fs from 'fs';
-import * as path from 'path';
-import { type HistoryEntry } from '../shared/types';
+import type { HistoryEntry } from '../shared/types';
 
 const HISTORY_FILE = 'prompter-history.json';
 const KEYS_FILE = 'prompter-keys.json';
@@ -21,7 +21,9 @@ export class StorageService {
   }
 
   private enqueueWrite(fn: () => void): void {
-    this.writeQueue = this.writeQueue.then(fn, fn);
+    this.writeQueue = this.writeQueue
+      .then(fn, () => {})
+      .catch((err) => console.error('[Storage] Write queue error:', err));
   }
 
   // ── History Persistence ──────────────────────────────
@@ -64,25 +66,21 @@ export class StorageService {
   searchHistory(query: string): HistoryEntry[] {
     const q = query.toLowerCase();
     return this.history.filter(
-      e =>
+      (e) =>
         e.rawInput.toLowerCase().includes(q) ||
         e.structuredOutput.toLowerCase().includes(q) ||
-        (e.framework && e.framework.toLowerCase().includes(q))
+        e.framework?.toLowerCase().includes(q),
     );
   }
 
   deleteHistory(id: string): void {
-    this.history = this.history.filter(e => e.id !== id);
+    this.history = this.history.filter((e) => e.id !== id);
     this.persistHistory();
   }
 
   clearHistory(): void {
     this.history = [];
     this.persistHistory();
-  }
-
-  getAllHistory(): HistoryEntry[] {
-    return [...this.history];
   }
 
   // ── Encrypted API Key Storage ────────────────────────
@@ -95,8 +93,10 @@ export class StorageService {
       }
 
       if (!safeStorage.isEncryptionAvailable()) {
-        throw new Error('System encryption unavailable — cannot securely store API key. ' +
-          'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).');
+        throw new Error(
+          'System encryption unavailable — cannot securely store API key. ' +
+            'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).',
+        );
       }
       const encrypted = safeStorage.encryptString(apiKey);
       keys[service] = encrypted.toString('base64');
@@ -120,14 +120,5 @@ export class StorageService {
       console.error('[Storage] Failed to read API key:', err);
       return null;
     }
-  }
-
-  getAllApiKeys(): Record<string, string> {
-    const result: Record<string, string> = {};
-    for (const svc of ['openai', 'anthropic']) {
-      const key = this.getApiKey(svc);
-      if (key) result[svc] = key;
-    }
-    return result;
   }
 }

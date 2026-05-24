@@ -1,17 +1,13 @@
-import { ipcMain, BrowserWindow, clipboard, Tray, Menu, nativeImage, app } from 'electron';
-import path from 'path';
-import {
-  IPC_CHANNELS,
-  type GenerateRequest,
-  type GenerateResponse,
-  type AppSettings,
-  type HistoryEntry,
-} from '../shared/types';
-import { generatePrompt, updateConfig } from './llm/orchestrator';
+import type { BrowserWindow } from 'electron';
+import { Menu, Tray, app, clipboard, ipcMain, nativeImage } from 'electron';
+import path from 'node:path';
+import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry } from '../shared/types';
+import { IPC_CHANNELS } from '../shared/types';
 import { checkOllamaStatus } from './llm/ollama';
+import { generatePrompt, updateConfig } from './llm/orchestrator';
 import { setWindowPosition } from './overlay';
-import { transcribeAudio } from './stt/whisper';
 import { StorageService } from './storage';
+import { transcribeAudio } from './stt/whisper';
 
 const VALID_SERVICES = new Set(['openai', 'anthropic']);
 
@@ -139,7 +135,7 @@ function createTray(win: BrowserWindow) {
   // assets/ path works in dev (project root) and production (extraResources)
   const devPath = path.join(app.getAppPath(), 'assets/tray-icon.png');
   const prodPath = path.join(process.resourcesPath, 'assets/tray-icon.png');
-  const iconPath = require('fs').existsSync(devPath) ? devPath : prodPath;
+  const iconPath = require('node:fs').existsSync(devPath) ? devPath : prodPath;
   const icon = nativeImage.createFromPath(iconPath);
   tray = new Tray(icon);
   tray.setToolTip('Prompter');

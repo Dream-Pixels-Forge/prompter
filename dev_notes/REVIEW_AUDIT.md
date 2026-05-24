@@ -1,6 +1,6 @@
-# Review Audit — ISSUES_FIXED.md Cross-Check + CRITIQUE.md Review
+# Review Audit — ISSUES_FIXED.md Cross-Check + CRITIQUE.md Review + CRITIQUE.md Round 2
 
-Full source code audit conducted 2026-05-24. Every fix claimed in `ISSUES_FIXED.md` verified against actual current source code. Plus all 25 items in `CRITIQUE.md` cross-checked and triaged.
+Full source code audit conducted 2026-05-24. Every fix claimed in `ISSUES_FIXED.md` verified against actual current source code. Plus all 35 items in `CRITIQUE.md` (Round 1 - 25 items, Round 2 - 10 additional items) cross-checked and triaged.
 
 ---
 
@@ -88,7 +88,7 @@ Full source code audit conducted 2026-05-24. Every fix claimed in `ISSUES_FIXED.
 
 ---
 
-## Part 2: CRITIQUE.md Review
+## Part 2: CRITIQUE.md Review (Round 1 — 25 items)
 
 All 25 items from `dev_notes/CRITIQUE.md` cross-checked against current code. 15 created as new issues, 10 skipped (already mitigated, intentional tradeoffs, or too minor).
 
@@ -100,7 +100,7 @@ All 25 items from `dev_notes/CRITIQUE.md` cross-checked against current code. 15
 | C2 | Unused `uuid` + `@types/uuid` dependencies | `package.json:33,40` — still present | **#63** | Open |
 | C3 | `catch (err: any)` type escape in InputArea | `InputArea.tsx:79` — still `catch (err: any)` | **#58** | Open |
 | C4 | API key base64 fallback when safeStorage unavailable | `storage.ts:97-103` — base64 fallback still present | **#59** | Open |
-| C5 | Zero test coverage | `package.json:18` — already tracked as #27 | #27 | Kept open |
+| C5 | Zero test coverage | `package.json:18` — already tracked as #27 | #27 | Open |
 
 ### 🟡 Moderate (10) — 6 created, 2 skipped, 2 overlap
 
@@ -111,10 +111,10 @@ All 25 items from `dev_notes/CRITIQUE.md` cross-checked against current code. 15
 | M3 | Hardcoded Anthropic API version | `anthropic.ts:30` — still `'2023-06-01'` literal | **#61** | Open |
 | M4 | History search should use debounced search-as-you-type | `HistoryPanel.tsx:132` — still on Enter keypress only | **#62** | Open |
 | M5 | Toast renders under Processing Overlay | Toast: `fixed z-60`, Overlay: `absolute z-50` inside card. Toast is fixed to viewport, renders correctly above | — | Skipped |
-| M6 | Unused export `copyToClipboard` in llm.ts | `llm.ts:54-56` — still exported, never imported | **#64** | Open |
+| M6 | Unused export `copyToClipboard` in llm.ts | `llm.ts:54-56` — still exported, never imported | ~~#64~~ **#83** | Superseded |
 | M7 | Release pipeline 4 jobs duplicated ~300 lines | `.github/workflows/release.yml` — still copy-pasted | **#65** | Open |
-| M8 | No linting configuration (ESLint/Prettier/Biome) | No config file exists | **#66** | Open |
-| M9 | Silent catch swallows errors (HistoryPanel + elsewhere) | `HistoryPanel.tsx:40-42` — `catch { // offline fallback }` | **#67** | Open |
+| M8 | No linting configuration (ESLint/Prettier/Biome) | No config file exists | ~~#66~~ **#82** | Superseded |
+| M9 | Silent catch swallows errors (HistoryPanel + elsewhere) | `HistoryPanel.tsx:40-42` — `catch { // offline fallback }` | ~~#67~~ **#84** | Superseded |
 | M10 | `env.d.ts` SpeechRecognition types redundant with `@types/dom-speech-recognition` | Works fine, minor maintenance concern | — | Skipped |
 
 ### 🔵 Minor (10) — 5 created, 5 skipped
@@ -134,32 +134,65 @@ All 25 items from `dev_notes/CRITIQUE.md` cross-checked against current code. 15
 
 ---
 
+## Part 3: CRITIQUE.md Review (Round 2 — 10 new findings)
+
+Round 2 expanded CRITIQUE.md from 25 to 35 findings. All 10 new items verified against code. 10 created as new issues (incl. 3 scope upgrades for existing issues).
+
+### 🔴 Critical (1 new)
+
+| ID | Title | Code Verification | Issue | Status |
+|----|-------|-------------------|-------|--------|
+| C6 | `insertHistory()` error silently swallowed — `.catch(() => {})` | `InputArea.tsx:78` — still `.catch(() => {})` | **#72** | Open |
+
+### 🟡 Moderate (5 new)
+
+| ID | Title | Code Verification | Issue | Status |
+|----|-------|-------------------|-------|--------|
+| M10 | `env.d.ts` re-declares SpeechRecognition types already in DOM lib | `src/renderer/env.d.ts` — file exists, fully redundant with `target: ESNext` | **#81** | Open |
+| M11 | Missing `node:` protocol on Node.js builtin imports (3x) | `import path from 'path'` (2x), `import * as fs from 'fs'` (1x) | **#75** | Open |
+| M12 | Inconsistent `import type` syntax (26 occurrences) | `import { type X }` used instead of `import type { X }` across 26 files | **#76** | Open |
+| M13 | HistoryPanel `isMounted` ref is React 18+ anti-pattern | `HistoryPanel.tsx:31-50` — stale closure pattern with useRef | **#73** | Open |
+| M14 | Bubble position uses localStorage — lost on renderer restart | `useBubblePosition.ts:70` — `localStorage.setItem(...)` | **#74** | Open |
+
+### 🔵 Minor (4 new)
+
+| ID | Title | Code Verification | Issue | Status |
+|----|-------|-------------------|-------|--------|
+| m12 | `parseLLMOutput` regex doesn't escape special chars in section keys | `orchestrator.ts:81` — `new RegExp(\`...${lookup}...\`)` with no escaping | **#77** | Open |
+| m13 | `process.env.NODE_ENV` in renderer should use `import.meta.env.DEV` | `TemplateBrowser.tsx:46` — `process.env.NODE_ENV === 'development'` | **#78** | Open |
+| m14 | BubbleExpanded GSAP animation plays twice in StrictMode | `BubbleExpanded.tsx:36-55` — `gsap.context()` in `useEffect` | **#79** | Open |
+| m15 | `useBubblePosition` no touch event handlers | `useBubblePosition.ts:74-83` — only mouse events | **#80** | Open |
+
+### Scope Upgrades (3)
+
+| ID | Old Issue | New Issue | Change |
+|----|-----------|-----------|--------|
+| M6 | #64 (copyToClipboard only) | **#83** (8 dead exports) | Expanded from 1 to 8 symbols: `getAllHistory`, `getAllApiKeys`, `getDefaultPosition`, `getTemplatesByFramework`, `copyToClipboard`, `WHISPER_DEFAULT_MODEL`, `isSpeechSupported`, `OPENAI_DEFAULT_MODEL` |
+| M8 | #66 (no lint config) | **#82** (broken Biome, 137 errors) | Config exists but broken by version mismatch — 137 lint errors, most auto-fixable |
+| M9 | #67 (HistoryPanel only) | **#84** (3 silent catch locations) | Added InputArea `.catch(() => {})` and StorageService write queue chain swallowing |
+
+---
+
 ## All Open Issues
 
 | # | Title | Source | Severity |
 |---|-------|--------|----------|
 | #27 | Zero test coverage | Critique C5 | 🔴 |
-| #50 | OutputPanel rules-of-hooks violation | Deep dive | 🟡 |
-| #51 | PromptSection missing setTimeout cleanup | Deep dive | 🔵 |
-| #52 | HistoryPanel unmount guard | Deep dive | 🔵 |
-| #53 | whisper.ts body as any (ISSUES_FIXED.md un-fixed) | ISSUES_FIXED review | 🔵 |
-| #54 | Dead stream functions (ISSUES_FIXED.md un-fixed) | ISSUES_FIXED review | 🔵 |
-| #55 | Bubble.tsx missing aria-label (ISSUES_FIXED.md un-fixed) | ISSUES_FIXED review | 🔵 |
-| #56 | TemplateBrowser console.warn on every render | Deep dive | 🔵 |
-| #57 | Upgrade Electron ^34.x to ^39.x (CVEs) | Critique C1 | 🔴 |
-| #58 | catch (err: any) type escape in InputArea | Critique C3 | 🔴 |
-| #59 | API key base64 fallback (fail closed instead) | Critique C4 | 🔴 |
-| #60 | Self-host Inter font instead of Google Fonts CDN | Critique M2 | 🟡 |
-| #61 | Extract hardcoded Anthropic API version to constant | Critique M3 | 🟡 |
-| #62 | Debounced search-as-you-type in History | Critique M4 | 🟡 |
-| #63 | Remove unused uuid + @types/uuid dependencies | Critique C2 | 🔴 |
-| #64 | Remove unused export copyToClipboard in llm.ts | Critique M6 | 🔵 |
-| #65 | Release pipeline matrix strategy | Critique M7 | 🟡 |
-| #66 | Add linting configuration | Critique M8 | 🟡 |
-| #67 | Silent catch swallows errors | Critique M9 | 🟡 |
-| #68 | shared/frameworks.ts reverse dependency | Critique m1 | 🔵 |
-| #69 | .npmrc deprecated pnpm config flags | Critique m3 | 🔵 |
-| #70 | CI security-scan duplicates pnpm install | Critique m7 | 🔵 |
-| #71 | Remove unused _label param in buildSectionContent | Critique m10 | 🔵 |
+| #72 | C6: insertHistory error silently swallowed | Critique R2 C6 | 🔴 |
+| #73 | M13: HistoryPanel isMounted React 18+ anti-pattern | Critique R2 M13 | 🟡 |
+| #74 | M14: Bubble position not persisted across restarts | Critique R2 M14 | 🟡 |
+| #75 | M11: Missing node: protocol on imports (3x) | Critique R2 M11 | 🟡 |
+| #76 | M12: Inconsistent import type syntax (26x) | Critique R2 M12 | 🟡 |
+| #77 | m12: parseLLMOutput regex no escape for special chars | Critique R2 m12 | 🔵 |
+| #78 | m13: process.env.NODE_ENV should use import.meta.env.DEV | Critique R2 m13 | 🔵 |
+| #79 | m14: BubbleExpanded StrictMode double animation | Critique R2 m14 | 🔵 |
+| #80 | m15: useBubblePosition missing touch events | Critique R2 m15 | 🔵 |
+| #81 | M10: env.d.ts redundant with DOM lib | Critique R2 M10 | 🟡 |
+| #82 | M8 (new): Broken Biome config — 137 errors | Critique R2 M8 | 🟡 |
+| #83 | M6 (new): 8 dead exports across codebase | Critique R2 M6 | 🟡 |
+| #84 | M9 (new): 3 silent catch locations | Critique R2 M9 | 🟡 |
 
-**Stats:** 26 original issues → 29/32 fixes verified, 3 missing. 25 CRITIQUE items → 15 new issues created. **23 total open issues.**
+### Previously addressed (closed):
+Issues from original audit (#1–#26), deep-dive (#43–#56), and Critique R1 (#57–#71) have all been addressed and closed. Only #27 (test coverage) was kept open. Superseded issues: #64→#83, #66→#82, #67→#84.
+
+**Stats:** 35 CRITIQUE items → 25 actionable (15 R1 + 10 R2). **14 total open issues** (#27 + #72–#84).

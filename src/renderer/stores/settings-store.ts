@@ -1,6 +1,6 @@
+import { getApiKey, saveApiKey } from '@/renderer/lib/llm';
+import type { AppSettings, ProviderType } from '@/shared/types';
 import { create } from 'zustand';
-import { type AppSettings, type ProviderType } from '@/shared/types';
-import { saveApiKey, getApiKey } from '@/renderer/lib/llm';
 
 interface SettingsStore extends AppSettings {
   loaded: boolean;
@@ -35,10 +35,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   loadSettings: async () => {
     const saved = await window.api.settings.get();
     // Also load persisted API keys from encrypted storage
-    const [openaiKey, anthropicKey] = await Promise.all([
-      getApiKey('openai'),
-      getApiKey('anthropic'),
-    ]);
+    const [openaiKey, anthropicKey] = await Promise.all([getApiKey('openai'), getApiKey('anthropic')]);
     set({
       ...defaults,
       ...saved,

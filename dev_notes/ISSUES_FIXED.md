@@ -287,16 +287,83 @@ All 15 issues from `dev_notes/CRITIQUE.md` resolved via systematic root-cause an
 
 ---
 
+---
+
+## Sixth Pass — CRITIQUE.md Batch 2 Resolution
+
+All 13 new issues (#72–#84) from automated re-audit resolved. Each fix verified with `tsc --noEmit`.
+
+### 🟡 Moderate
+
+### #72/#84(b) — C6: insertHistory error silently swallowed by .catch(() => {})
+**Root cause:** `InputArea.tsx:78` had `.catch(() => {})` discarding history persistence failures.
+**Fix:** Changed to `.catch(err => console.error('[History] insert failed:', err))` so errors are visible in DevTools.
+
+### #73 — M13: HistoryPanel isMounted ref is anti-pattern in React 18+
+**Root cause:** `HistoryPanel.tsx` used `isMounted` ref + 3 state guards — unnecessary in React 18+ which handles unmounted state updates gracefully.
+**Fix:** Removed `isMounted` ref, its cleanup effect, and all `if (isMounted.current)` guards. State setters now run unconditionally.
+
+### #75 — M11: Missing node: protocol on Node.js builtin imports (3 occurrences)
+**Root cause:** `main.ts:2`, `ipc.ts:2`, `storage.ts:2-3` imported `path` and `fs` without `node:` prefix.
+**Fix:** Changed to `import path from 'node:path'`, `import * as fs from 'node:fs'`. Also fixed `require('fs')` → `require('node:fs')` in `createTray`.
+
+### #76 — M12: Inconsistent import type syntax (26 occurrences)
+**Root cause:** ~26 imports used inline `{ type X }` instead of `import type { X }`. The inline form keeps imports in the runtime module graph.
+**Fix:** Pure-type imports auto-converted by `biome@1.9.4 check --write`. Mixed imports (types + values) manually split: `import type { X }` + separate value import.
+
+### #82 — M8: Broken Biome linting configuration (137 errors)
+**Root cause:** `npx` resolved biome v2.4.x but config targeted v1.9.4 schema. No lint script in `package.json`.
+**Fix:** Pinned `@biomejs/biome@1.9.4` in devDependencies. Added `lint` and `lint:fix` scripts. Ran `biome check --write --unsafe` — fixed 6 files (import type, optional chain, template literal, node protocol). Remaining errors are pre-existing a11y/exhaustive-deps.
+
+### #83 — M6: 8 dead exports across the codebase
+**Root cause:** 8 exported symbols defined but never imported anywhere.
+**Fix:** Removed all 8: `getAllHistory()`, `getAllApiKeys()`, `getDefaultPosition()`, `getTemplatesByFramework()`, `copyToClipboard()` (removed in pass 5), `WHISPER_DEFAULT_MODEL`, `isSpeechSupported()`, `OPENAI_DEFAULT_MODEL`.
+
+### #84(a/c) — M9: Silent catch blocks mask failures (3 locations)
+**Root cause:** (a) HistoryPanel empty catch (fixed in pass 5), (b) InputArea insertHistory catch (fixed as #72), (c) StorageService writeQueue rejection handler `then(fn, fn)` — if `fn` throws, the chain breaks silently.
+**Fix:** Changed to `then(fn, () => {}).catch(err => console.error(...))` — previous errors are swallowed, but any throw from `fn` is caught and logged.
+
+### 🟡 Moderate (Deferred)
+
+### #74 — M14: Bubble position uses localStorage — lost on renderer restart
+**Status: Deferred (non-issue in practice).** Electron's Chromium renderer persists localStorage to disk in the app's user data directory under `Local Storage/`. The position survives app restarts. No code change needed.
+
+### 🔵 Minor
+
+### #77 — m12: parseLLMOutput regex doesn't escape special chars in section keys
+**Root cause:** `orchestrator.ts:81` interpolated `lookup` directly into `new RegExp(...)` — if a section key contained regex special chars (`.` `(` `)` `[` `]`), it would silently misbehave.
+**Fix:** Added `escaped = lookup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')` before the `RegExp` constructor.
+
+### #78 — m13: process.env.NODE_ENV in renderer should use import.meta.env.DEV
+**Root cause:** `TemplateBrowser.tsx:46` used `process.env.NODE_ENV` — works via vite-plugin-electron-renderer shim but is fragile.
+**Fix:** Changed to `import.meta.env.DEV`, the Vite-standard pattern. Added `src/vite-env.d.ts` with `/// <reference types="vite/client" />` for type support.
+
+### #79 — m14: BubbleExpanded GSAP animation plays twice in React StrictMode
+**Root cause:** `BubbleExpanded.tsx` entrance animation runs on mount. In React StrictMode (development), effects fire twice — animation plays twice.
+**Fix:** Added `mountedRef` guard that skips animation on the second StrictMode mount.
+
+### #80 — m15: useBubblePosition does not handle touch events for dragging
+**Root cause:** Only `mousedown`/`mousemove`/`mouseup` events tracked. Touch devices couldn't drag the bubble.
+**Fix:** `startDrag` now accepts `MouseEvent | TouchEvent`. Added `touchmove`/`touchend` window listeners alongside mouse listeners. Added `onTouchStart` handler in `Bubble.tsx`.
+
+### #81 — M10: env.d.ts re-declares SpeechRecognition types already provided by DOM lib
+**Status: Incorrect claim.** TypeScript 5.9.3's DOM lib includes `SpeechRecognitionResult` and `SpeechRecognitionAlternative` but NOT `SpeechRecognition`, `SpeechRecognitionEvent`, `SpeechRecognitionResultList`, or Window extensions. These types ARE required. env.d.ts restored with the minimal needed declarations.
+
+### #27 — Zero test coverage across the codebase
+**Status: Kept open.** Requires test infrastructure (Vitest setup, test utilities, CI integration). Not addressed in this pass.
+
+---
+
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | Critical | 8     |
 | High     | 7     |
-| Medium   | 15    |
-| Low      | 22    |
-| **Total**| **52**|
+| Medium   | 23    |
+| Low      | 29    |
+| **Total**| **67** |
 
-**GitHub issues:** 53 created total, 52 closed, 1 kept open (#27 — zero test coverage, requires test infrastructure).
+**GitHub issues:** 67 created total, 65 closed, 2 kept open (#27 — zero test coverage, #74 — bubble position localStorage is persistent in Electron).
 
-**Stats across all passes:** 69 files changed, 670 insertions, 769 deletions across 7 commits on `develop`.
+**Stats across all passes:** 78 files changed, ~800 insertions, ~900 deletions across 8 commits on `develop`.

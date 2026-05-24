@@ -1,4 +1,4 @@
-import { type Template } from '@/shared/types';
+import type { Template } from '@/shared/types';
 
 export const cookingBookTemplate: Template = {
   id: 'cooking-book',

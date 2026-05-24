@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { Check } from 'lucide-react';
-import gsap from 'gsap';
 import { useAppStore } from '@/renderer/stores/app-store';
+import gsap from 'gsap';
+import { Check } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export function Toast() {
   const { toastMessage, hideToast, isExpanded } = useAppStore();
@@ -10,12 +10,15 @@ export function Toast() {
   useEffect(() => {
     if (toastMessage && toastRef.current) {
       const el = toastRef.current;
-      gsap.fromTo(el,
+      gsap.fromTo(
+        el,
         { y: 12, opacity: 0, scale: 0.95 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', willChange: 'transform, opacity' }
+        { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', willChange: 'transform, opacity' },
       );
       const timer = setTimeout(() => {
-        gsap.to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in', willChange: 'transform, opacity' }).then(hideToast);
+        gsap
+          .to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in', willChange: 'transform, opacity' })
+          .then(hideToast);
       }, 2000);
       return () => clearTimeout(timer);
     }

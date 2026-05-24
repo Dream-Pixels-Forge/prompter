@@ -1,7 +1,7 @@
-import { app, BrowserWindow, globalShortcut } from 'electron';
-import path from 'path';
-import { registerIpcHandlers } from './ipc';
+import path from 'node:path';
+import { BrowserWindow, app, globalShortcut } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
+import { registerIpcHandlers } from './ipc';
 
 // Transparent window fixes per platform:
 // - Windows: enable-transparent-visuals enables DWM alpha channel
@@ -44,7 +44,9 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
@@ -60,7 +62,7 @@ app.whenReady().then(() => {
 
   // Global hotkey: Alt+M to toggle mic
   globalShortcut.register('Alt+M', () => {
-    if (mainWindow && mainWindow.isVisible()) {
+    if (mainWindow?.isVisible()) {
       mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGERED, 'toggle-mic');
     }
   });

@@ -40,10 +40,10 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
     if (!response.ok) {
       const body = await response.text().catch(() => '');
       if (response.status === 401) {
-        throw new Error(`Anthropic authentication failed (401). Check your API key.`);
+        throw new Error('Anthropic authentication failed (401). Check your API key.');
       }
       if (response.status === 429) {
-        throw new Error(`Anthropic rate limit exceeded (429). Try again later.`);
+        throw new Error('Anthropic rate limit exceeded (429). Try again later.');
       }
       throw new Error(`Anthropic API error ${response.status}${body ? `: ${body}` : ''}`);
     }
@@ -61,5 +61,3 @@ export async function generateAnthropic(options: AnthropicOptions): Promise<stri
     throw err;
   }
 }
-
-

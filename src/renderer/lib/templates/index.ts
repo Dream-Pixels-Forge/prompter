@@ -1,16 +1,16 @@
-import { type Template } from '@/shared/types';
-import { saasLandingTemplate } from './saas-landing';
-import { cookingBookTemplate } from './cooking-book';
-import { apiDocsTemplate } from './api-docs';
+import type { Template } from '@/shared/types';
 import { agentPromptTemplate } from './agent-prompt';
-import { codeReviewTemplate } from './code-review';
-import { videoGenTemplate } from './video-gen';
+import { apiDocsTemplate } from './api-docs';
 import { blogPostTemplate } from './blog-post';
-import { supportAgentTemplate } from './support-agent';
+import { codeReviewTemplate } from './code-review';
+import { cookingBookTemplate } from './cooking-book';
 import { dataAnalysisTemplate } from './data-analysis';
-import { uxBriefTemplate } from './ux-brief';
 import { prdTemplate } from './prd';
 import { researchPaperTemplate } from './research-paper';
+import { saasLandingTemplate } from './saas-landing';
+import { supportAgentTemplate } from './support-agent';
+import { uxBriefTemplate } from './ux-brief';
+import { videoGenTemplate } from './video-gen';
 
 export const templates: Template[] = [
   saasLandingTemplate,
@@ -28,9 +28,5 @@ export const templates: Template[] = [
 ];
 
 export function getTemplate(id: string): Template | undefined {
-  return templates.find(t => t.id === id);
-}
-
-export function getTemplatesByFramework(framework: string): Template[] {
-  return templates.filter(t => t.framework === framework);
+  return templates.find((t) => t.id === id);
 }

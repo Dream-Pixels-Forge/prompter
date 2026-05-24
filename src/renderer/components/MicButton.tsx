@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, Loader2 } from 'lucide-react';
 import { SpeechRecognizer } from '@/renderer/lib/stt';
 import { useAppStore } from '@/renderer/stores/app-store';
+import { Loader2, Mic } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MicButtonProps {
   onTranscript: (text: string) => void;
@@ -87,9 +87,10 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         className={`
           relative w-9 h-9 rounded-md flex items-center justify-center
           transition-all duration-200
-          ${state === 'listening'
-            ? 'bg-red-500/15 border border-red-500/25 shadow-sm shadow-red-500/10'
-            : 'sub-card hover:bg-white/[0.07]'
+          ${
+            state === 'listening'
+              ? 'bg-red-500/15 border border-red-500/25 shadow-sm shadow-red-500/10'
+              : 'sub-card hover:bg-white/[0.07]'
           }
           ${!canInteract ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
         `}

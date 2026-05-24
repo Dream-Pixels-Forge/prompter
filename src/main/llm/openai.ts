@@ -1,7 +1,6 @@
 import { fetchWithTimeout } from './fetch-with-timeout';
 
 export const OPENAI_DEFAULT_URL = 'https://api.openai.com/v1';
-export const OPENAI_DEFAULT_MODEL = 'gpt-4o';
 
 interface OpenAIRequestOptions {
   model: string;
@@ -23,7 +22,7 @@ async function request(url: string, body: unknown, apiKey: string): Promise<Resp
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
     try {
-      const err = await res.json() as { error?: { message?: string } };
+      const err = (await res.json()) as { error?: { message?: string } };
       if (err.error?.message) detail += ` — ${err.error.message}`;
     } catch {
       // ignore parse failures
@@ -62,5 +61,3 @@ export async function generateOpenAI(options: OpenAIRequestOptions): Promise<str
     throw err;
   }
 }
-
-

@@ -1,10 +1,4 @@
-import {
-  type GenerateRequest,
-  type GenerateResponse,
-  type AppSettings,
-  type OllamaStatus,
-  type HistoryEntry,
-} from '@/shared/types';
+import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry, OllamaStatus } from '@/shared/types';
 
 declare global {
   interface Window {

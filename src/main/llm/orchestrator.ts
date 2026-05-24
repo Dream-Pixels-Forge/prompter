@@ -1,8 +1,8 @@
-import { generateOllama, checkOllamaStatus } from './ollama';
-import { generateOpenAI } from './openai';
-import { generateAnthropic } from './anthropic';
 import { getFramework } from '../../shared/frameworks';
-import { type GenerateRequest, type GenerateResponse, type ProviderType } from '../../shared/types';
+import type { GenerateRequest, GenerateResponse, ProviderType } from '../../shared/types';
+import { generateAnthropic } from './anthropic';
+import { checkOllamaStatus, generateOllama } from './ollama';
+import { generateOpenAI } from './openai';
 
 const DEFAULTS = {
   ollamaEndpoint: 'http://localhost:11434',
@@ -34,9 +34,7 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
     sections[section.key] = buildSectionContent(section.key, req.input, framework.sections);
   }
 
-  const structuredPrompt = framework.sections
-    .map(s => `### ${s.label}\n${sections[s.key]}`)
-    .join('\n\n');
+  const structuredPrompt = framework.sections.map((s) => `### ${s.label}\n${sections[s.key]}`).join('\n\n');
 
   const provider = activeConfig.activeProvider;
   let llmOutput: string;
@@ -48,7 +46,10 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
     return { sections, raw: structuredPrompt, framework: req.framework, template: req.template };
   }
 
-  const parsedSections = parseLLMOutput(llmOutput, framework.sections.map(s => s.key));
+  const parsedSections = parseLLMOutput(
+    llmOutput,
+    framework.sections.map((s) => s.key),
+  );
 
   return {
     sections: Object.keys(parsedSections).length > 0 ? parsedSections : sections,
@@ -76,9 +77,14 @@ async function callLLM(provider: ProviderType, prompt: string): Promise<string> 
 function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of sectionKeys) {
-    const fuzzyKeys = [key, key.replace(/([A-Z])/g, ' $1').trim(), ...key.split(/(?=[A-Z])/).map(k => k.toLowerCase())];
+    const fuzzyKeys = [
+      key,
+      key.replace(/([A-Z])/g, ' $1').trim(),
+      ...key.split(/(?=[A-Z])/).map((k) => k.toLowerCase()),
+    ];
     for (const lookup of [...new Set(fuzzyKeys)]) {
-      const regex = new RegExp(`#{1,3}\\s+${lookup}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
+      const escaped = lookup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`#{1,3}\\s+${escaped}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
       const match = output.match(regex);
       if (match) {
         const content = match[0].replace(/^#{1,3}\s+.*$/m, '').trim();
@@ -91,7 +97,7 @@ function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, s
 }
 
 function buildSectionContent(key: string, input: string, sections: { key: string; defaultContent: string }[]): string {
-  const section = sections.find(s => s.key === key);
+  const section = sections.find((s) => s.key === key);
   const template = section?.defaultContent || '{goal}';
 
   return template

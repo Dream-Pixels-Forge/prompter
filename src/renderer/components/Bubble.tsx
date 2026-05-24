@@ -1,8 +1,8 @@
-import { useRef, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
-import gsap from 'gsap';
-import { useAppStore } from '@/renderer/stores/app-store';
 import { useBubblePosition } from '@/renderer/hooks/useBubblePosition';
+import { useAppStore } from '@/renderer/stores/app-store';
+import gsap from 'gsap';
+import { Sparkles } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export function Bubble() {
   const { toggleExpanded } = useAppStore();
@@ -33,6 +33,7 @@ export function Bubble() {
     <div
       ref={wrapperRef}
       onMouseDown={(e) => startDrag(e, position)}
+      onTouchStart={(e) => startDrag(e, position)}
       className="fixed z-50"
       style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
     >

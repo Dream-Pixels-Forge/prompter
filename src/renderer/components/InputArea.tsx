@@ -1,15 +1,25 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Sparkles } from 'lucide-react';
-import { MicButton } from './MicButton';
+import { getFramework } from '@/renderer/lib/frameworks';
+import { analyzeIntent } from '@/renderer/lib/intent-parser';
+import { generatePrompt, insertHistory } from '@/renderer/lib/llm';
+import { getTemplate, templates } from '@/renderer/lib/templates';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { generatePrompt, insertHistory } from '@/renderer/lib/llm';
-import { analyzeIntent } from '@/renderer/lib/intent-parser';
-import { templates, getTemplate } from '@/renderer/lib/templates';
-import { getFramework } from '@/renderer/lib/frameworks';
+import { Send, Sparkles } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { MicButton } from './MicButton';
 
 export function InputArea() {
-  const { input, setInput, setOutput, setFramework, selectedFramework, selectedTemplate, setTemplate, error, setError } = usePromptStore();
+  const {
+    input,
+    setInput,
+    setOutput,
+    setFramework,
+    selectedFramework,
+    selectedTemplate,
+    setTemplate,
+    error,
+    setError,
+  } = usePromptStore();
   const { isProcessing, setProcessing, showToast } = useAppStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -20,18 +30,21 @@ export function InputArea() {
 
   const placeholder = currentTemplate?.defaultInput || 'Describe what you want to create...';
 
-  const analyzeWithDebounce = useCallback((text: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (text.length > 10) {
-        const analysis = analyzeIntent(text);
-        setFramework(analysis.framework.id);
-        if (analysis.template && !selectedTemplate) {
-          setTemplate(analysis.template.id);
+  const analyzeWithDebounce = useCallback(
+    (text: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        if (text.length > 10) {
+          const analysis = analyzeIntent(text);
+          setFramework(analysis.framework.id);
+          if (analysis.template && !selectedTemplate) {
+            setTemplate(analysis.template.id);
+          }
         }
-      }
-    }, 300);
-  }, [selectedTemplate, setFramework, setTemplate]);
+      }, 300);
+    },
+    [selectedTemplate, setFramework, setTemplate],
+  );
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -39,7 +52,9 @@ export function InputArea() {
 
   useEffect(() => {
     analyzeWithDebounce(input);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [input, analyzeWithDebounce]);
 
   // Clear error when user starts typing (separate effect — must not react to error being set)
@@ -50,7 +65,7 @@ export function InputArea() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [input]);
 
@@ -75,7 +90,7 @@ export function InputArea() {
         framework: selectedFramework,
         template: selectedTemplate || undefined,
         createdAt: new Date().toISOString(),
-      }).catch(() => {});
+      }).catch((err) => console.error('[History] insert failed:', err));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Generation failed';
       setError(message);
@@ -106,8 +121,10 @@ export function InputArea() {
         <div className="flex items-center gap-2 px-2.5 py-1.5 sub-card">
           <Sparkles className="w-3 h-3 text-[#4A7FA0] shrink-0" />
           <span className="text-xs text-white/60 truncate">{currentTemplate.name}</span>
-          <button onClick={() => setTemplate(null)}
-            className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]">
+          <button
+            onClick={() => setTemplate(null)}
+            className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
+          >
             &times;
           </button>
         </div>
@@ -152,13 +169,15 @@ export function InputArea() {
           <MicButton onTranscript={handleTranscript} disabled={isProcessing} />
           <span className="text-[11px] text-white/25 font-mono">{input.length}/5000</span>
         </div>
-        <button onClick={handleGenerate}
+        <button
+          onClick={handleGenerate}
           disabled={!input.trim()}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#2D4A7A] to-[#3A5A8A]
                      hover:from-[#345585] hover:to-[#4A6A9A]
                      disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-[#2D4A7A] disabled:hover:to-[#3A5A8A]
                      text-white text-xs font-medium rounded-md transition-all duration-200
-                     shadow-sm shadow-[#2D4A7A]/20 active:scale-[0.97]">
+                     shadow-sm shadow-[#2D4A7A]/20 active:scale-[0.97]"
+        >
           <Send className="w-3.5 h-3.5" />
           Generate Prompt
         </button>

@@ -1,4 +1,4 @@
-import { type Template } from '@/shared/types';
+import type { Template } from '@/shared/types';
 
 export const videoGenTemplate: Template = {
   id: 'video-gen',

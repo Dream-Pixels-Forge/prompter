@@ -1,4 +1,4 @@
-import { type Framework } from '@/shared/types';
+import type { Framework } from '@/shared/types';
 
 export const contextEngFramework: Framework = {
   id: 'context-eng',
