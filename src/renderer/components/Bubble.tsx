@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { Sparkles } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-export function Bubble() {
+export function Bubble({ onMouseEnter, onMouseLeave }: { onMouseEnter?: () => void; onMouseLeave?: () => void }) {
   const { toggleExpanded } = useAppStore();
   const { position, isDragging, startDrag } = useBubblePosition();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -34,6 +34,8 @@ export function Bubble() {
       ref={wrapperRef}
       onMouseDown={(e) => startDrag(e, position)}
       onTouchStart={(e) => startDrag(e, position)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className="fixed z-50"
       style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
     >
