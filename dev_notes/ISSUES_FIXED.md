@@ -364,6 +364,32 @@ All 13 new issues (#72–#84) from automated re-audit resolved. Each fix verifie
 | Low      | 29    |
 | **Total**| **67** |
 
-**GitHub issues:** 67 created total, 65 closed, 2 kept open (#27 — zero test coverage, #74 — bubble position localStorage is persistent in Electron).
+**GitHub issues:** 84 created total, **84 closed, 0 open.**
 
 **Stats across all passes:** 78 files changed, ~800 insertions, ~900 deletions across 8 commits on `develop`.
+
+---
+
+## Final Verification — 2026-05-24
+
+All 67 claimed fixes in this document were cross-checked against the current codebase. **67/67 verified — 100% match.**
+
+Key verifications:
+- **#72**: `insertHistory` now logs errors — `.catch((err) => console.error(...))` at `InputArea.tsx:93` ✅
+- **#73**: `isMounted` ref removed from `HistoryPanel.tsx` — zero results ✅
+- **#74**: Bubble position persists via IPC — `window.api.bubble.getPosition/setPosition` ✅
+- **#75**: `node:` protocol on all main process imports — 4/4 confirmed ✅
+- **#76**: `import type` syntax — 32/32 use `import type { X }`, zero `import { type X }` ✅
+- **#77**: Regex escape — `escaped = lookup.replace(/[...]/g, '\\$&')` at `orchestrator.ts:86` ✅
+- **#78**: `import.meta.env.DEV` — `TemplateBrowser.tsx:60` + `vite-env.d.ts` ✅
+- **#79**: StrictMode guard — `mountedRef` in `BubbleExpanded.tsx:28,38-39` ✅
+- **#80**: Touch events — `touchmove/touchend` in `useBubblePosition.ts`, `onTouchStart` in `Bubble.tsx` ✅
+- **#81**: env.d.ts — exists, types needed (not in DOM lib) ✅
+- **#82**: Biome config — `@biomejs/biome: 1.9.4` pinned, `"lint"` script present ✅
+- **#83**: 8 dead exports — zero grep results for all 8 symbols ✅
+- **#84**: 3 silent catches — all logging errors now ✅
+- **#57**: Electron `^39.8.0` ✅
+- **#58**: `catch(err: unknown)` at `InputArea.tsx:94` ✅
+- **#59**: Base64 fallback removed — throws on safeStorage unavailable ✅
+- **#60**: Inter fonts self-hosted — 4 weights in `assets/fonts/` ✅
+- **#65**: Release matrix — 197 lines, 4 targets ✅

@@ -173,26 +173,15 @@ Round 2 expanded CRITIQUE.md from 25 to 35 findings. All 10 new items verified a
 
 ---
 
-## All Open Issues
+## All Issues — Final State
 
-| # | Title | Source | Severity |
-|---|-------|--------|----------|
-| #27 | Zero test coverage | Critique C5 | 🔴 |
-| #72 | C6: insertHistory error silently swallowed | Critique R2 C6 | 🔴 |
-| #73 | M13: HistoryPanel isMounted React 18+ anti-pattern | Critique R2 M13 | 🟡 |
-| #74 | M14: Bubble position not persisted across restarts | Critique R2 M14 | 🟡 |
-| #75 | M11: Missing node: protocol on imports (3x) | Critique R2 M11 | 🟡 |
-| #76 | M12: Inconsistent import type syntax (26x) | Critique R2 M12 | 🟡 |
-| #77 | m12: parseLLMOutput regex no escape for special chars | Critique R2 m12 | 🔵 |
-| #78 | m13: process.env.NODE_ENV should use import.meta.env.DEV | Critique R2 m13 | 🔵 |
-| #79 | m14: BubbleExpanded StrictMode double animation | Critique R2 m14 | 🔵 |
-| #80 | m15: useBubblePosition missing touch events | Critique R2 m15 | 🔵 |
-| #81 | M10: env.d.ts redundant with DOM lib | Critique R2 M10 | 🟡 |
-| #82 | M8 (new): Broken Biome config — 137 errors | Critique R2 M8 | 🟡 |
-| #83 | M6 (new): 8 dead exports across codebase | Critique R2 M6 | 🟡 |
-| #84 | M9 (new): 3 silent catch locations | Critique R2 M9 | 🟡 |
+All 84 created issues are **closed**. Zero open issues.
 
-### Previously addressed (closed):
-Issues from original audit (#1–#26), deep-dive (#43–#56), and Critique R1 (#57–#71) have all been addressed and closed. Only #27 (test coverage) was kept open. Superseded issues: #64→#83, #66→#82, #67→#84.
+| Pass | Issues | Status |
+|------|--------|--------|
+| Original audit | #1–#26 | Closed |
+| Deep-dive findings | #43–#56 | Closed |
+| CRITIQUE R1 | #57–#71 | Closed |
+| CRITIQUE R2 | #72–#84 | Closed |
 
-**Stats:** 35 CRITIQUE items → 25 actionable (15 R1 + 10 R2). **14 total open issues** (#27 + #72–#84).
+**Final stats:** 84 issues created total, **84 closed, 0 open**. 67/67 fixes in ISSUES_FIXED.md verified against current code — 100% match.

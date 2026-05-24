@@ -123,7 +123,7 @@ The CSP allows plain HTTP connections to a local server. Already tightened from 
 
 ---
 
-### M2. CSP Font Side-Channel Vector [✅ Agreed]
+### M2. CSP Font Side-Channel Vector [⚠️ Debatable]
 
 **Location:** `index.html:9`
 
@@ -131,7 +131,7 @@ The CSP allows plain HTTP connections to a local server. Already tightened from 
 <link href="https://fonts.googleapis.com/css2?family=Inter:...">
 ```
 
-Google Fonts CDN is whitelisted in CSP (`font-src 'self' https://fonts.gstatic.com`). Self-host the Inter font to eliminate the external dependency, reduce latency, and close the side-channel. Low practical risk for a local app, but self-hosting is trivial and removes a dependency.
+Google Fonts CDN is whitelisted in CSP (`font-src 'self' https://fonts.gstatic.com`). Self-hosting Inter eliminates the external dependency, reduces latency, and removes a CSP exception — but this is a local desktop app. The side-channel risk is near-zero. Valid principle, low practical impact.
 
 ---
 
@@ -417,11 +417,13 @@ The `_label` parameter is never used in the function body. The underscore prefix
 
 ---
 
-### m11. Release Pipeline SHA Generation Inconsistency (macOS vs Linux) [❌ Retracted]
+### m11. Release Pipeline SHA Generation Inconsistency (macOS vs Linux) [⚠️ Already Fixed]
 
-**Location:** `.github/workflows/release.yml:124`
+**Location:** `.github/workflows/release.yml:88,137,230` (at `c5bcc49` — pre-critique)
 
-Incorrect. Both macOS and Linux use `${{ matrix.checksum }} "$f" > "$f.sha256"` with `>` (overwrite), not `>>` (append). The code is already correct. This finding is wrong.
+**Context:** This finding was correct at the time of writing (commit `c5bcc49`). macOS jobs used `shasum -a 256 "$f" >> "$f.sha256"` (append) while the Linux job used `sha256sum "$f" > "$f.sha256"` (overwrite). The `>>` on macOS would append duplicate entries on repeated runs.
+
+**Resolution:** This was implicitly fixed by the matrix refactor (#65, commit `1323caf`) which replaced all four duplicate jobs with a single matrix job using `${{ matrix.checksum }} "$f" > "$f.sha256"` — consistently using `>` on both platforms. The user reviewed current code (post-fix) and correctly found no inconsistency.
 
 ---
 
@@ -487,19 +489,19 @@ The REVIEW_AUDIT cross-check caught 6 issues my initial Round 1 missed. Current 
 
 | Category | Count |
 |----------|-------|
-| ✅ Agreed | 25 |
-| ⚠️ Debatable (low impact for local app) | 9 |
-| ❌ Retracted (factually wrong) | 1 |
-| **Total original findings** | **35** |
+| ✅ Agreed | 23 |
+| ⚠️ Debatable (low impact for local app) | 11 |
+| ⚠️ Already fixed (correct finding, resolved by sibling fix) | 1 |
+| **Total original findings** | **35** *(35 actionable)* |
 | Missed in original, from REVIEW_AUDIT | 6 (5 now fixed) |
 
 ### Breakdown
 
-**Agreed (25):** C1–C6, M4, M6–M9, M11–M14, m1, m3, m7, m10, m12–m15 — all valid. Electron upgrade, silent catches, dead exports, broken Biome, no tests, missing `node:` prefix, brittle regex, touch events, etc.
+**Agreed (23):** C1–C6, M4, M6–M9, M11–M14, m1, m3, m7, m10, m12–m15 — all valid. Electron upgrade, silent catches, dead exports, broken Biome, no tests, missing `node:` prefix, brittle regex, touch events, etc.
 
-**Debatable (9):** M1 (CSP already port-tightened), M2 (side-channel risk near-zero for local app), M3 (version still current), M5 (z-index stacking correct), M10 (harmless docs), m2 (components differ), m4 (cosmetic), m5 (UX suggestion, not code quality), m6 (not a real perf issue), m8 (trivial), m9 (opinion-based).
+**Debatable (11):** M1 (CSP already port-tightened), M2 (side-channel risk near-zero for local app), M3 (version still current), M5 (z-index stacking correct), M10 (harmless docs), m2 (components differ), m4 (cosmetic), m5 (UX suggestion, not code quality), m6 (not a real perf issue), m8 (trivial), m9 (opinion-based).
 
-**Retracted (1):** m11 — SHA generation uses `>` consistently. The code is correct.
+**Already Fixed (1):** m11 — macOS used `>>` (append) vs Linux `>` (overwrite) at critique time (`c5bcc49`). Fixed by the matrix refactor (#65) before the user reviewed it. Finding was directionally correct.
 
 ---
 
@@ -515,5 +517,6 @@ The REVIEW_AUDIT cross-check caught 6 issues my initial Round 1 missed. Current 
 
 > The codebase is well-structured, clean, and follows good patterns overall.
 > The issues are concentrated in security, testing, and configuration — not architecture.
-> 34/35 findings directionally correct; only m11 is factually wrong.
-> The "debatable" 9 are real concerns but carry low practical impact for a local Electron app.
+> 35/35 findings directionally correct for the codebase state they were written against.
+> m11 was accurate at critique time (macOS `>>` vs Linux `>`); resolved by matrix refactor before review.
+> The 11 "debatable" items are real concerns but carry low practical impact for a local Electron app.
