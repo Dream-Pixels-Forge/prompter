@@ -82,6 +82,12 @@
 
 /* ── Base ────────────────────────────────────────────── */
 
+html,
+body,
+#root {
+  background: transparent;
+}
+
 body {
   font-family: var(--font-sans);
   background: transparent;
