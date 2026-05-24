@@ -138,9 +138,22 @@
 - [x] **Issue #1** — History Panel scrollable list max-h (380px) exceeds available space
   - Replaced hardcoded `max-h-[380px]` with `flex-1 min-h-0` flex-based layout
 
+## 2026-05-24 — Session 10 — Compact Overhaul + Tests + localStorage Fix
+
+### Completed
+- [x] **Layout Overhaul**: reduced rounding (20→12, 12→8, 10→8, 8→6px), tightened padding/spacing across all 14 components, widget 420→400px / 580→560px
+- [x] **CSS fix**: split #root from html,body (ID specificity was overriding Tailwind bg classes)
+- [x] **Electron transparency**: removed `type:'panel'` (Linux DOCK windows don't support alpha), added SwiftShader for GL alpha on Linux
+- [x] **DevTools fix**: removed `NODE_ENV` check (unsafe in vite-plugin-electron sub-build), only `VITE_DEV_SERVER_URL` gates dev server
+- [x] **Settings**: provider radio→dropdown, model text inputs→dropdowns (Ollama from server, OpenAI/Anthropic from known model lists), removed status indicator + chip list
+- [x] **Templates**: grouped into Dev/Content/Business/Misc tabbed categories with segmented control
+- [x] **Issue #27** — Zero test coverage: Vitest installed + configured, 30 tests across 5 test files (intent-parser, migratePosition, orchestrator extractors, framework/template contracts)
+- [x] **Issue #74** — Bubble localStorage: added IPC channels + StorageService methods + preload bridge, dual-write (localStorage cache + IPC durable file in userData)
+- [x] All 30 tests pass, production build passes
+
 ### Next Steps
-- Verify all fixes in running app
-- Consider adding automated UI tests
+- Run electron-builder for new release
+- Address remaining GitHub issues
 
 ## 2026-05-23 — Session 9 — Layout Bug Fixes Batch 2
 

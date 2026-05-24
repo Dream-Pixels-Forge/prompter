@@ -96,7 +96,7 @@ function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, s
   return result;
 }
 
-function buildSectionContent(key: string, input: string, sections: { key: string; defaultContent: string }[]): string {
+export function buildSectionContent(key: string, input: string, sections: { key: string; defaultContent: string }[]): string {
   const section = sections.find((s) => s.key === key);
   const template = section?.defaultContent || '{goal}';
 
@@ -106,7 +106,7 @@ function buildSectionContent(key: string, input: string, sections: { key: string
     .replace(/\{audience\}/g, extractAudienceTone(input));
 }
 
-function extractDomain(input: string): string {
+export function extractDomain(input: string): string {
   const domains: [RegExp, string][] = [
     [/saas|software|app|platform|dashboard/i, 'SaaS/product'],
     [/recipe|cook|kitchen|food|meal/i, 'culinary/food'],
@@ -126,13 +126,13 @@ function extractDomain(input: string): string {
   return 'general';
 }
 
-function extractGoal(input: string): string {
+export function extractGoal(input: string): string {
   const clean = input.replace(/^(create|write|generate|build|make|develop)\s+/i, '').trim();
   const firstSentence = clean.split(/[.!?]/)[0]?.trim() || clean;
   return firstSentence.charAt(0).toUpperCase() + firstSentence.slice(1);
 }
 
-function extractAudienceTone(input: string): string {
+export function extractAudienceTone(input: string): string {
   if (/professional|enterprise|business|b2b|corporate/i.test(input)) return 'professional authority';
   if (/casual|friendly|fun|creative|playful/i.test(input)) return 'approachable warmth';
   if (/technical|developer|engineer|coder|api/i.test(input)) return 'technical precision';

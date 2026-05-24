@@ -118,6 +118,16 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return true;
   });
 
+  // ── Bubble Position ──
+  ipcMain.handle(IPC_CHANNELS.BUBBLE_POS_GET, () => {
+    return storage.getBubblePosition();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.BUBBLE_POS_SET, (_event, pos: { bottom: number; right: number }) => {
+    storage.saveBubblePosition(pos);
+    return true;
+  });
+
   // ── Encrypted API Key Storage ──
   ipcMain.handle(IPC_CHANNELS.STORE_SAVE_API_KEY, (_event, service: string, apiKey: string) => {
     validateService(service);

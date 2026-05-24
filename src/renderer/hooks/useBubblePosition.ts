@@ -8,7 +8,7 @@ interface Position {
   right: number;
 }
 
-function migratePosition(saved: Record<string, unknown>): Position {
+export function migratePosition(saved: Record<string, unknown>): Position {
   if ('bottom' in saved && 'right' in saved) {
     return { bottom: Number(saved.bottom), right: Number(saved.right) };
   }
@@ -46,6 +46,15 @@ export function useBubblePosition() {
   const positionRef = useRef(position);
   positionRef.current = position;
 
+  // On mount, load the durable position from main process storage
+  useEffect(() => {
+    window.api.bubble.getPosition().then((saved: Position | null) => {
+      if (saved && (saved.bottom !== positionRef.current.bottom || saved.right !== positionRef.current.right)) {
+        setPosition(saved);
+      }
+    });
+  }, []);
+
   const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, currentPos: Position) => {
     e.preventDefault();
     const coords = 'touches' in e
@@ -72,7 +81,11 @@ export function useBubblePosition() {
   const stopDrag = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(positionRef.current));
+      const pos = positionRef.current;
+      // Immediate localStorage cache
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
+      // Durable persistence via main process IPC
+      window.api.bubble.setPosition(pos);
     }
   }, [isDragging]);
 

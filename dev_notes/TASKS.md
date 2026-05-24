@@ -71,6 +71,27 @@
 
 ## Phase I — Implement (Bug Fixes)
 
+### Layout Overhaul ✅
+
+- [x] **I-L1** Reduced all border-radius tokens (20→12, 12→8, 10→8, 8→6px)
+- [x] **I-L2** Tightened padding/spacing across all 14 components
+- [x] **I-L3** Shrunk widget dimensions (420→400px, 580→560px max-h)
+- [x] **I-L4** Fixed CSS #root specificity overriding Tailwind bg classes
+- [x] **I-L5** Removed backdrop-filter for Linux transparent window support
+- [x] **I-L6** Electron transparency: removed type:'panel', added SwiftShader for GL alpha
+- [x] **I-L7** DevTools: removed NODE_ENV check (unsafe in sub-build), only VITE_DEV_SERVER_URL gates
+- [x] **I-L8** Settings: provider radio list → dropdown; model inputs → model dropdowns
+- [x] **I-L9** Settings: removed status indicator and chip list to save vertical space
+- [x] **I-L10** Templates: grouped into Dev/Content/Business/Misc tabbed categories
+
+### Bubble localStorage → IPC Persistence (Fix #74) ✅
+
+- [x] **I-P1** Added BUBBLE_POS_GET/SET IPC channels in shared/types
+- [x] **I-P2** Added getBubblePosition/saveBubblePosition to StorageService
+- [x] **I-P3** Added IPC handlers in main process
+- [x] **I-P4** Added preload methods for renderer
+- [x] **I-P5** Updated useBubblePosition to dual-write (localStorage cache + IPC durable)
+
 ### Layout Bug Fixes ✅
 
 - [x] **I-B1** (#1) History Panel max-h overflow: replaced `max-h-[380px]` with flex-based dynamic sizing
@@ -89,6 +110,15 @@
 - [x] **I-B14** (#14) TemplateBrowser icon map: dev warning for missing mappings
 - [x] **I-B15** (#15) Toast z-index: z-50 → z-60 above card
 - [x] **I-B16** (#16) Settings API key row: unified with FormRow 2-column pattern
+
+## Test Coverage (Fix #27) ✅
+
+- [x] **T-1** Installed Vitest + config (vitest.config.ts)
+- [x] **T-2** Tests for intent-parser.ts: extractKeywords (5 tests)
+- [x] **T-3** Tests for migratePosition (5 tests)
+- [x] **T-4** Tests for orchestrator.ts extractors + buildSectionContent (13 tests)
+- [x] **T-5** Contract tests for frameworks/templates definitions (6 tests)
+- [x] **T-6** All 30 tests pass, production build passes
 
 ## Phase E — Extend
 

@@ -44,4 +44,8 @@ contextBridge.exposeInMainWorld('api', {
       };
     },
   },
+  bubble: {
+    getPosition: () => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_GET),
+    setPosition: (pos: { bottom: number; right: number }) => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_SET, pos),
+  },
 });

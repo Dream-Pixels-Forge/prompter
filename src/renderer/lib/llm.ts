@@ -37,6 +37,10 @@ declare global {
       hotkey: {
         onTriggered: (callback: (action: string) => void) => () => void;
       };
+      bubble: {
+        getPosition: () => Promise<{ bottom: number; right: number } | null>;
+        setPosition: (pos: { bottom: number; right: number }) => Promise<boolean>;
+      };
     };
   }
 }
