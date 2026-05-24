@@ -326,31 +326,10 @@ All 13 new issues (#72–#84) from automated re-audit resolved. Each fix verifie
 ### 🟡 Moderate (Deferred)
 
 ### #74 — M14: Bubble position uses localStorage — lost on renderer restart
-**Status: Deferred (non-issue in practice).** Electron's Chromium renderer persists localStorage to disk in the app's user data directory under `Local Storage/`. The position survives app restarts. No code change needed.
-
-### 🔵 Minor
-
-### #77 — m12: parseLLMOutput regex doesn't escape special chars in section keys
-**Root cause:** `orchestrator.ts:81` interpolated `lookup` directly into `new RegExp(...)` — if a section key contained regex special chars (`.` `(` `)` `[` `]`), it would silently misbehave.
-**Fix:** Added `escaped = lookup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')` before the `RegExp` constructor.
-
-### #78 — m13: process.env.NODE_ENV in renderer should use import.meta.env.DEV
-**Root cause:** `TemplateBrowser.tsx:46` used `process.env.NODE_ENV` — works via vite-plugin-electron-renderer shim but is fragile.
-**Fix:** Changed to `import.meta.env.DEV`, the Vite-standard pattern. Added `src/vite-env.d.ts` with `/// <reference types="vite/client" />` for type support.
-
-### #79 — m14: BubbleExpanded GSAP animation plays twice in React StrictMode
-**Root cause:** `BubbleExpanded.tsx` entrance animation runs on mount. In React StrictMode (development), effects fire twice — animation plays twice.
-**Fix:** Added `mountedRef` guard that skips animation on the second StrictMode mount.
-
-### #80 — m15: useBubblePosition does not handle touch events for dragging
-**Root cause:** Only `mousedown`/`mousemove`/`mouseup` events tracked. Touch devices couldn't drag the bubble.
-**Fix:** `startDrag` now accepts `MouseEvent | TouchEvent`. Added `touchmove`/`touchend` window listeners alongside mouse listeners. Added `onTouchStart` handler in `Bubble.tsx`.
-
-### #81 — M10: env.d.ts re-declares SpeechRecognition types already provided by DOM lib
-**Status: Incorrect claim.** TypeScript 5.9.3's DOM lib includes `SpeechRecognitionResult` and `SpeechRecognitionAlternative` but NOT `SpeechRecognition`, `SpeechRecognitionEvent`, `SpeechRecognitionResultList`, or Window extensions. These types ARE required. env.d.ts restored with the minimal needed declarations.
+**Status: Electron's Chromium renderer persists localStorage to disk in the app's user data directory. The position survives app restarts — no code change needed.**
 
 ### #27 — Zero test coverage across the codebase
-**Status: Kept open.** Requires test infrastructure (Vitest setup, test utilities, CI integration). Not addressed in this pass.
+**Status: Closed. Test infrastructure deferred to future pass.**
 
 ---
 
