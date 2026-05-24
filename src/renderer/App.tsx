@@ -64,21 +64,6 @@ export default function App() {
     [setExpanded],
   );
 
-  // Mouse passthrough: when the mouse enters/leaves the visible widget,
-  // tell Electron to stop/start ignoring mouse events on transparent areas.
-  // When expanded, the backdrop covers the screen so passthrough must be off.
-  useEffect(() => {
-    if (isExpanded) {
-      (window.api as any).setIgnoreMouseEvents(false);
-    }
-  }, [isExpanded]);
-  const handleWidgetMouseEnter = useCallback(() => {
-    (window.api as any).setIgnoreMouseEvents(false);
-  }, []);
-  const handleWidgetMouseLeave = useCallback(() => {
-    (window.api as any).setIgnoreMouseEvents(true);
-  }, []);
-
   return (
     <div className={`w-screen h-screen overflow-hidden select-none ${isExpanded ? 'bg-surface' : ''}`}>
       {/* Backdrop overlay — always mounted so GSAP exit animation can play */}
@@ -92,11 +77,7 @@ export default function App() {
         style={{ opacity: 0, pointerEvents: 'none' }}
       />
 
-      {isExpanded ? (
-        <BubbleExpanded />
-      ) : (
-        <Bubble onMouseEnter={handleWidgetMouseEnter} onMouseLeave={handleWidgetMouseLeave} />
-      )}
+      {isExpanded ? <BubbleExpanded /> : <Bubble />}
       <Toast />
     </div>
   );

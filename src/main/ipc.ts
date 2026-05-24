@@ -70,14 +70,6 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return win.isVisible();
   });
 
-  // ── Mouse passthrough for transparent regions ──
-  ipcMain.on(IPC_CHANNELS.WINDOW_SET_IGNORE_MOUSE, (event, ignore: boolean) => {
-    const bw = BrowserWindow.fromWebContents(event.sender);
-    if (bw) {
-      bw.setIgnoreMouseEvents(ignore, { forward: true });
-    }
-  });
-
   // ── Settings (in-memory) ──
   ipcMain.handle(IPC_CHANNELS.SETTINGS_GET, () => {
     return settings;

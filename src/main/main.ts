@@ -43,10 +43,6 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
-  // Make transparent areas click-through by default.
-  // The renderer toggles this via IPC when the mouse enters/leaves the widget.
-  mainWindow.setIgnoreMouseEvents(true, { forward: true });
-
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
