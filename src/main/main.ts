@@ -5,19 +5,16 @@ import { registerIpcHandlers } from './ipc';
 
 // Transparent window fixes per platform:
 // - Windows: enable-transparent-visuals enables DWM alpha channel
-// - Linux: disable HW acceleration for transparency support
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('enable-transparent-visuals');
-} else if (process.platform === 'linux') {
-  app.disableHardwareAcceleration();
 }
 
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 540,
-    height: 540,
+    width: 80,
+    height: 80,
     frame: false,
     transparent: true,
     alwaysOnTop: true,

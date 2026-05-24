@@ -20,6 +20,15 @@ export default function App() {
     return cleanup;
   }, []);
 
+  // Resize Electron window to match content (bubble vs expanded card)
+  useEffect(() => {
+    if (isExpanded) {
+      window.api.window.resize(480, 480);
+    } else {
+      window.api.window.resize(80, 80);
+    }
+  }, [isExpanded]);
+
   // Escape key to close expanded card
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

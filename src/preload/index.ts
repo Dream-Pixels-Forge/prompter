@@ -1,5 +1,6 @@
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
+import type { PrompterApi } from '../shared/api-types';
 import type { AppSettings, GenerateRequest, HistoryEntry } from '../shared/types';
 import { IPC_CHANNELS } from '../shared/types';
 
@@ -13,6 +14,7 @@ contextBridge.exposeInMainWorld('api', {
   window: {
     setBounds: (bounds: { x: number; y: number }) => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_SET_BOUNDS, bounds),
     toggle: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_TOGGLE),
+    resize: (width: number, height: number) => ipcRenderer.send(IPC_CHANNELS.WINDOW_RESIZE, width, height),
   },
   settings: {
     get: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),

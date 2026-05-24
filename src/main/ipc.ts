@@ -70,6 +70,12 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return win.isVisible();
   });
 
+  // ── Window resize (bubble ↔ expanded) ──
+  ipcMain.on(IPC_CHANNELS.WINDOW_RESIZE, (_event, width: number, height: number) => {
+    win.setSize(width, height);
+    win.center();
+  });
+
   // ── Settings (in-memory) ──
   ipcMain.handle(IPC_CHANNELS.SETTINGS_GET, () => {
     return settings;
