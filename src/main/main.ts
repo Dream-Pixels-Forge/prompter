@@ -5,13 +5,11 @@ import { registerIpcHandlers } from './ipc';
 
 // Transparent window fixes per platform:
 // - Windows: enable-transparent-visuals enables DWM alpha channel
-// - Linux: GPU drivers often don't produce correct alpha in window surfaces.
-//          SwiftShader (bundled software GL renderer) handles transparency correctly.
+// - Linux: disable HW acceleration for transparency support
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('enable-transparent-visuals');
 } else if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('enable-transparent-visuals');
-  app.commandLine.appendSwitch('use-gl', 'swiftshader');
+  app.disableHardwareAcceleration();
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -22,7 +20,6 @@ function createWindow() {
     height: 540,
     frame: false,
     transparent: true,
-    backgroundColor: '#00000000',
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
