@@ -78,7 +78,7 @@ export function TemplateBrowser() {
             key={c.id}
             onClick={() => setActiveCategory(c.id)}
             className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${
-              c.id === activeCategory ? 'bg-[#2D4A7A]/25 text-white/90' : 'text-white/40 hover:text-white/70'
+              c.id === activeCategory ? 'bg-brand-500/20 text-white/90' : 'text-white/48 hover:text-white/72'
             }`}
           >
             {c.label}

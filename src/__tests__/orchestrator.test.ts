@@ -1,10 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import {
-  extractDomain,
-  extractGoal,
-  extractAudienceTone,
-  buildSectionContent,
-} from '@/main/llm/orchestrator';
+import { buildSectionContent, extractAudienceTone, extractDomain, extractGoal } from '@/main/llm/orchestrator';
+import { describe, expect, it } from 'vitest';
 
 describe('extractDomain', () => {
   it('detects SaaS/product domain', () => {
@@ -55,16 +50,14 @@ describe('extractAudienceTone', () => {
 describe('buildSectionContent', () => {
   it('substitutes {goal} in the template', () => {
     const sections = [{ key: 'goal', defaultContent: 'Goal: {goal}' }];
-    expect(buildSectionContent('goal', 'create a blog post', sections)).toBe(
-      'Goal: A blog post',
-    );
+    expect(buildSectionContent('goal', 'create a blog post', sections)).toBe('Goal: A blog post');
   });
 
   it('substitutes multiple tokens in the template', () => {
     const sections = [{ key: 'goal', defaultContent: 'Goal: {goal}, Domain: {domain}' }];
-    expect(
-      buildSectionContent('goal', 'build a saas platform for developers', sections),
-    ).toBe('Goal: A saas platform for developers, Domain: SaaS/product');
+    expect(buildSectionContent('goal', 'build a saas platform for developers', sections)).toBe(
+      'Goal: A saas platform for developers, Domain: SaaS/product',
+    );
   });
 
   it('falls through with {goal} template when section key is not found (goal gets replaced)', () => {

@@ -6,6 +6,7 @@ import type { HistoryEntry } from '../shared/types';
 const HISTORY_FILE = 'prompter-history.json';
 const KEYS_FILE = 'prompter-keys.json';
 const BUBBLE_POS_FILE = 'prompter-bubble-pos.json';
+const SETTINGS_FILE = 'prompter-settings.json';
 
 export class StorageService {
   private userDataPath: string;
@@ -13,6 +14,7 @@ export class StorageService {
   private historyPath: string;
   private keysPath: string;
   private bubblePosPath: string;
+  private settingsPath: string;
   private writeQueue: Promise<void> = Promise.resolve();
 
   constructor() {
@@ -20,6 +22,7 @@ export class StorageService {
     this.historyPath = path.join(this.userDataPath, HISTORY_FILE);
     this.keysPath = path.join(this.userDataPath, KEYS_FILE);
     this.bubblePosPath = path.join(this.userDataPath, BUBBLE_POS_FILE);
+    this.settingsPath = path.join(this.userDataPath, SETTINGS_FILE);
     this.loadHistory();
   }
 
@@ -89,25 +92,21 @@ export class StorageService {
   // ── Encrypted API Key Storage ────────────────────────
 
   saveApiKey(service: string, apiKey: string): void {
-    try {
-      let keys: Record<string, string> = {};
-      if (fs.existsSync(this.keysPath)) {
-        keys = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
-      }
-
-      if (!safeStorage.isEncryptionAvailable()) {
-        throw new Error(
-          'System encryption unavailable — cannot securely store API key. ' +
-            'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).',
-        );
-      }
-      const encrypted = safeStorage.encryptString(apiKey);
-      keys[service] = encrypted.toString('base64');
-
-      fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
-    } catch (err) {
-      console.error('[Storage] Failed to save API key:', err);
+    let keys: Record<string, string> = {};
+    if (fs.existsSync(this.keysPath)) {
+      keys = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
     }
+
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error(
+        'System encryption unavailable — cannot securely store API key. ' +
+          'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).',
+      );
+    }
+    const encrypted = safeStorage.encryptString(apiKey);
+    keys[service] = encrypted.toString('base64');
+
+    fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
   }
 
   getApiKey(service: string): string | null {
@@ -123,6 +122,30 @@ export class StorageService {
       console.error('[Storage] Failed to read API key:', err);
       return null;
     }
+  }
+
+  // ── Settings Persistence ────────────────────────────────
+
+  loadSettings(): Record<string, unknown> {
+    try {
+      if (fs.existsSync(this.settingsPath)) {
+        const raw = fs.readFileSync(this.settingsPath, 'utf-8');
+        return JSON.parse(raw);
+      }
+    } catch (err) {
+      console.error('[Storage] Failed to load settings:', err);
+    }
+    return {};
+  }
+
+  saveSettings(settings: Record<string, unknown>): void {
+    this.enqueueWrite(() => {
+      try {
+        fs.writeFileSync(this.settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+      } catch (err) {
+        console.error('[Storage] Failed to save settings:', err);
+      }
+    });
   }
 
   // ── Bubble Position Persistence ──────────────────────────

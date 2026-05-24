@@ -1,6 +1,5 @@
-import type { BrowserWindow } from 'electron';
-import { Menu, Tray, app, clipboard, ipcMain, nativeImage } from 'electron';
 import path from 'node:path';
+import { BrowserWindow, Menu, Tray, app, clipboard, ipcMain, nativeImage } from 'electron';
 import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry } from '../shared/types';
 import { IPC_CHANNELS } from '../shared/types';
 import { checkOllamaStatus } from './llm/ollama';
@@ -36,7 +35,8 @@ let tray: Tray | null = null;
 export function registerIpcHandlers(win: BrowserWindow) {
   storage = new StorageService();
 
-  // ── Load non-sensitive settings on start (API keys loaded on demand from storage) ──
+  // ── Load persisted settings on start ──
+  settings = storage.loadSettings() as Partial<AppSettings>;
   updateConfig(settings);
 
   // ── System Tray ──
@@ -70,6 +70,14 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return win.isVisible();
   });
 
+  // ── Mouse passthrough for transparent regions ──
+  ipcMain.on(IPC_CHANNELS.WINDOW_SET_IGNORE_MOUSE, (event, ignore: boolean) => {
+    const bw = BrowserWindow.fromWebContents(event.sender);
+    if (bw) {
+      bw.setIgnoreMouseEvents(ignore, { forward: true });
+    }
+  });
+
   // ── Settings (in-memory) ──
   ipcMain.handle(IPC_CHANNELS.SETTINGS_GET, () => {
     return settings;
@@ -78,6 +86,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
   ipcMain.handle(IPC_CHANNELS.SETTINGS_SET, (_event, newSettings: Partial<AppSettings>) => {
     settings = { ...settings, ...newSettings };
     updateConfig(settings);
+    storage.saveSettings(settings as Record<string, unknown>);
     return true;
   });
 
@@ -154,7 +163,12 @@ function createTray(win: BrowserWindow) {
     {
       label: 'Show/Hide Prompter',
       click: () => {
-        win.isVisible() ? win.hide() : (win.show(), win.focus());
+        if (win.isVisible()) {
+          win.hide();
+        } else {
+          win.show();
+          win.focus();
+        }
       },
     },
     { type: 'separator' },
@@ -170,6 +184,11 @@ function createTray(win: BrowserWindow) {
   tray.setContextMenu(contextMenu);
 
   tray.on('click', () => {
-    win.isVisible() ? win.hide() : (win.show(), win.focus());
+    if (win.isVisible()) {
+      win.hide();
+    } else {
+      win.show();
+      win.focus();
+    }
   });
 }

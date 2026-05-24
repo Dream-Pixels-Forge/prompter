@@ -11,7 +11,7 @@ const COLOR_MAP: Record<string, string> = {
 
 export function FrameworkBadge({ framework }: { framework: string }) {
   const fw = getFramework(framework);
-  const colorClass = COLOR_MAP[fw?.color || ''] || 'bg-white/[0.06] text-white/50 border-white/[0.08]';
+  const colorClass = COLOR_MAP[fw?.color || ''] || 'bg-white/[0.06] text-white/48 border-white/[0.08]';
 
   return (
     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${colorClass}`}>

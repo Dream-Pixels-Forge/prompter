@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { frameworks } from '@/shared/frameworks';
 import { templates } from '@/renderer/lib/templates';
+import { frameworks } from '@/shared/frameworks';
+import { describe, expect, it } from 'vitest';
 
 describe('frameworks contract', () => {
   it('every framework has all required fields', () => {

@@ -2,7 +2,7 @@ import { copyText } from '@/renderer/lib/clipboard';
 import { getFramework } from '@/renderer/lib/frameworks';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { Check, Copy, RotateCcw } from 'lucide-react';
+import { Check, Copy, PenLine, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FrameworkBadge } from './FrameworkBadge';
 import { PromptSection } from './PromptSection';
@@ -38,7 +38,7 @@ export function OutputPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">Structured Prompt</span>
+          <span className="text-xs font-semibold text-white/72 uppercase tracking-wider">Structured Prompt</span>
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-0.5">
@@ -50,7 +50,7 @@ export function OutputPanel() {
             {copied ? (
               <Check className="w-3.5 h-3.5 text-green-400" />
             ) : (
-              <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
+              <Copy className="w-3.5 h-3.5 text-white/48 group-hover:text-white/72" />
             )}
           </button>
           <button
@@ -58,7 +58,7 @@ export function OutputPanel() {
             aria-label="Clear output"
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
+            <RotateCcw className="w-3.5 h-3.5 text-white/48 group-hover:text-white/72" />
           </button>
         </div>
       </div>
@@ -69,6 +69,15 @@ export function OutputPanel() {
           <PromptSection key={section.key} label={section.label} content={output.sections[section.key] || ''} />
         ))}
       </div>
+
+      {/* New prompt button */}
+      <button
+        onClick={clearOutput}
+        className="flex items-center gap-1.5 px-3 py-1.5 btn-subtle rounded-md w-full justify-center hover:bg-brand-500/15 hover:text-brand-400 hover:border-brand-500/20"
+      >
+        <PenLine className="w-3 h-3" />
+        <span className="text-xs">New Prompt</span>
+      </button>
     </div>
   );
 }

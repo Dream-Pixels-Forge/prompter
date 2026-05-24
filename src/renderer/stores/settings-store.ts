@@ -63,11 +63,23 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       hotkeyMic: state.hotkeyMic,
     };
     await window.api.settings.set(settings);
+    const keyErrors: string[] = [];
     if (settings.openaiApiKey) {
-      await saveApiKey('openai', settings.openaiApiKey);
+      try {
+        await saveApiKey('openai', settings.openaiApiKey);
+      } catch (err) {
+        keyErrors.push(`OpenAI: ${err instanceof Error ? err.message : 'save failed'}`);
+      }
     }
     if (settings.anthropicApiKey) {
-      await saveApiKey('anthropic', settings.anthropicApiKey);
+      try {
+        await saveApiKey('anthropic', settings.anthropicApiKey);
+      } catch (err) {
+        keyErrors.push(`Anthropic: ${err instanceof Error ? err.message : 'save failed'}`);
+      }
+    }
+    if (keyErrors.length > 0) {
+      throw new Error(`API key save failed — ${keyErrors.join('; ')}`);
     }
   },
 

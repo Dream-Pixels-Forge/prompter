@@ -57,9 +57,8 @@ export function useBubblePosition() {
 
   const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, currentPos: Position) => {
     e.preventDefault();
-    const coords = 'touches' in e
-      ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
-      : { x: e.clientX, y: e.clientY };
+    const coords =
+      'touches' in e ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
     setIsDragging(true);
     setDragStart(coords);
     setDragOrigin(currentPos);

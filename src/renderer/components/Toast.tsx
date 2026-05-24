@@ -28,9 +28,9 @@ export function Toast() {
 
   return (
     <div ref={toastRef} className={`fixed z-60 right-6 ${isExpanded ? 'top-4' : 'bottom-24'}`}>
-      <div className="flex items-center gap-2 px-3.5 py-2 bg-[#2D4A7A] rounded-lg shadow-lg shadow-black/20">
-        <Check className="w-3.5 h-3.5 text-white" />
-        <span className="text-xs text-white font-medium">{toastMessage}</span>
+      <div className="flex items-center gap-2 px-3.5 py-2 bg-accent rounded-lg shadow-lg shadow-black/20">
+        <Check className="w-3.5 h-3.5 text-surface" />
+        <span className="text-xs text-surface font-medium">{toastMessage}</span>
       </div>
     </div>
   );

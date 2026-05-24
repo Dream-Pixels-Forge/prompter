@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { migratePosition } from '@/renderer/hooks/useBubblePosition';
+import { describe, expect, it } from 'vitest';
 
 describe('migratePosition', () => {
   it('returns new-format position (bottom + right) as-is', () => {

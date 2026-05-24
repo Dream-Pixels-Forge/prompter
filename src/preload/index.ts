@@ -48,4 +48,5 @@ contextBridge.exposeInMainWorld('api', {
     getPosition: () => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_GET),
     setPosition: (pos: { bottom: number; right: number }) => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_SET, pos),
   },
+  setIgnoreMouseEvents: (ignore: boolean) => ipcRenderer.send(IPC_CHANNELS.WINDOW_SET_IGNORE_MOUSE, ignore),
 });

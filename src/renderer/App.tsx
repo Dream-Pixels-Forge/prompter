@@ -6,14 +6,8 @@ import gsap from 'gsap';
 import { useCallback, useEffect, useRef } from 'react';
 
 export default function App() {
-  const { isExpanded, setExpanded, setRecording } = useAppStore();
-  const recordingRef = useRef(false);
+  const { isExpanded, setExpanded } = useAppStore();
   const backdropRef = useRef<HTMLDivElement>(null);
-
-  // Keep ref in sync with store
-  useEffect(() => {
-    recordingRef.current = useAppStore.getState().isRecording;
-  });
 
   // Listen for global hotkeys from main process
   useEffect(() => {
@@ -70,12 +64,28 @@ export default function App() {
     [setExpanded],
   );
 
+  // Mouse passthrough: when the mouse enters/leaves the visible widget,
+  // tell Electron to stop/start ignoring mouse events on transparent areas.
+  const handleMouseEnter = useCallback(() => {
+    (window.api as any).setIgnoreMouseEvents(false);
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    (window.api as any).setIgnoreMouseEvents(true);
+  }, []);
+
   return (
-    <div className={`w-screen h-screen overflow-hidden select-none ${isExpanded ? 'bg-[#1C1917]' : ''}`}>
+    <div
+      className={`w-screen h-screen overflow-hidden select-none ${isExpanded ? 'bg-surface' : ''}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Backdrop overlay — always mounted so GSAP exit animation can play */}
       <div
         ref={backdropRef}
         onClick={handleBackdropClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setExpanded(false);
+        }}
         className="fixed inset-0 bg-black/30 z-40"
         style={{ opacity: 0, pointerEvents: 'none' }}
       />

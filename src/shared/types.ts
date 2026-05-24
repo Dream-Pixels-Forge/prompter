@@ -19,6 +19,7 @@ export const IPC_CHANNELS = {
   HOTKEY_TRIGGERED: 'hotkey:triggered',
   BUBBLE_POS_GET: 'bubble:pos:get',
   BUBBLE_POS_SET: 'bubble:pos:set',
+  WINDOW_SET_IGNORE_MOUSE: 'window:setIgnoreMouse',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────

@@ -99,15 +99,15 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
           <span className="absolute inset-0 rounded-md animate-pulse-ring border border-red-500/40" />
         )}
         {state === 'processing' ? (
-          <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
+          <Loader2 className="w-4 h-4 text-white/48 animate-spin" />
         ) : (
-          <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/50'}`} />
+          <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/48'}`} />
         )}
       </button>
 
       {/* Interim text — positioned below button, clipped to card-safe width */}
       {interimText && (
-        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-[10px] text-white/30 whitespace-nowrap max-w-[140px] truncate text-center pointer-events-none">
+        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-[10px] text-white/48 whitespace-nowrap max-w-[140px] truncate text-center pointer-events-none">
           {interimText}
         </span>
       )}

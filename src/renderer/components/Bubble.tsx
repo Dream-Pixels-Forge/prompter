@@ -41,9 +41,9 @@ export function Bubble() {
         ref={bubbleRef}
         onClick={toggleExpanded}
         aria-label="Open Prompter"
-        className={`w-14 h-14 rounded-full bg-gradient-to-br from-[#2D4A7A] to-[#4A7FA0]
-                   flex items-center justify-center cursor-pointer shadow-lg shadow-[#2D4A7A]/25
-                   hover:shadow-xl hover:shadow-[#2D4A7A]/35 ${isDragging ? '' : 'hover:scale-110'}
+        className={`w-14 h-14 rounded-full bg-gradient-to-br from-brand-500 to-accent
+                   flex items-center justify-center cursor-pointer shadow-lg shadow-brand-500/25
+                   hover:shadow-xl hover:shadow-brand-500/35 ${isDragging ? '' : 'hover:scale-110'}
                    transition-all duration-300 ease-out
                    backdrop-blur-sm border border-white/[0.12]`}
       >

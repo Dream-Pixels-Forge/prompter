@@ -7,7 +7,6 @@ import { useEffect, useRef } from 'react';
 import { HistoryPanel } from './HistoryPanel';
 import { InputArea } from './InputArea';
 import { OutputPanel } from './OutputPanel';
-import { ProcessingOverlay } from './ProcessingOverlay';
 import { SettingsPanel } from './SettingsPanel';
 import { TemplateBrowser } from './TemplateBrowser';
 
@@ -43,14 +42,16 @@ export function BubbleExpanded() {
     if (!card) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(card,
+      gsap.fromTo(
+        card,
         { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
-        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' }
+        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' },
       );
       if (body) {
-        gsap.fromTo(body,
+        gsap.fromTo(
+          body,
           { opacity: 0 },
-          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' }
+          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' },
         );
       }
     });
@@ -69,22 +70,19 @@ export function BubbleExpanded() {
   return (
     <div
       ref={cardRef}
-      className="fixed bottom-4 right-4 w-[400px] max-h-[560px] glass-card
+      className="fixed bottom-4 right-4 w-[480px] h-[480px] glass-card
                  flex flex-col overflow-hidden z-50"
     >
       {/* Header — draggable for frameless window */}
-      <div
-        ref={headerRef}
-        className="relative flex items-center justify-between px-4 py-3 border-b border-white/[0.06]"
-      >
+      <div ref={headerRef} className="relative flex items-center justify-between px-4 py-3 border-b border-border">
         {/* Gradient accent line */}
-        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#4A7FA0]/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[#2D4A7A] to-[#4A7FA0] flex items-center justify-center shadow-sm">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-brand-500 to-accent flex items-center justify-center shadow-sm">
             <PenLine className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
-          <span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
+          <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
         </div>
         <button
           ref={closeBtnRef}
@@ -92,7 +90,7 @@ export function BubbleExpanded() {
           aria-label="Close"
           className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
         >
-          <X className="w-3.5 h-3.5 text-white/40 group-hover:text-white/70" />
+          <X className="w-3.5 h-3.5 text-white/48 group-hover:text-white/70" />
         </button>
       </div>
 
@@ -104,11 +102,11 @@ export function BubbleExpanded() {
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md capitalize transition-all duration-200 ${
               activeTab === key
-                ? 'bg-[#4A7FA0]/15 text-white shadow-sm'
-                : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
+                ? 'bg-accent/15 text-white shadow-sm'
+                : 'text-white/48 hover:text-white/68 hover:bg-white/[0.04]'
             }`}
           >
-            <Icon className={`w-3.5 h-3.5 ${activeTab === key ? 'text-[#4A7FA0]' : ''}`} />
+            <Icon className={`w-3.5 h-3.5 ${activeTab === key ? 'text-accent' : ''}`} />
             {label}
           </button>
         ))}
@@ -122,7 +120,15 @@ export function BubbleExpanded() {
         {activeTab === 'settings' && <SettingsPanel />}
       </div>
 
-      {isProcessing && <ProcessingOverlay />}
+      {/* Inline processing indicator */}
+      {isProcessing && (
+        <div className="px-3 py-2 border-t border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full border-2 border-accent/40 border-t-accent animate-spin" />
+            <span className="text-xs text-white/68">Structuring your prompt...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

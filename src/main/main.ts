@@ -18,8 +18,8 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 460,
-    height: 480,
+    width: 540,
+    height: 540,
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
@@ -44,6 +44,10 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
+  // Make transparent areas click-through by default.
+  // The renderer toggles this via IPC when the mouse enters/leaves the widget.
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -51,7 +55,8 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  registerIpcHandlers(mainWindow!);
+  if (!mainWindow) return;
+  registerIpcHandlers(mainWindow);
 
   // Global hotkey: Alt+Space to toggle
   globalShortcut.register('Alt+Space', () => {

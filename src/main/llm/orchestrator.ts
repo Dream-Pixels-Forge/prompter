@@ -96,7 +96,11 @@ function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, s
   return result;
 }
 
-export function buildSectionContent(key: string, input: string, sections: { key: string; defaultContent: string }[]): string {
+export function buildSectionContent(
+  key: string,
+  input: string,
+  sections: { key: string; defaultContent: string }[],
+): string {
   const section = sections.find((s) => s.key === key);
   const template = section?.defaultContent || '{goal}';
 

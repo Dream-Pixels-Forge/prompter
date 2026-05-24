@@ -119,11 +119,11 @@ export function InputArea() {
       {/* Active template badge */}
       {currentTemplate && (
         <div className="flex items-center gap-2 px-2.5 py-1.5 sub-card">
-          <Sparkles className="w-3 h-3 text-[#4A7FA0] shrink-0" />
-          <span className="text-xs text-white/60 truncate">{currentTemplate.name}</span>
+          <Sparkles className="w-3 h-3 text-accent shrink-0" />
+          <span className="text-xs text-white/68 truncate">{currentTemplate.name}</span>
           <button
             onClick={() => setTemplate(null)}
-            className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
+            className="ml-auto text-xs text-white/48 hover:text-white/68 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
           >
             &times;
           </button>
@@ -133,9 +133,9 @@ export function InputArea() {
       {/* Framework indicator */}
       {currentFramework && (
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#4A7FA0]/60" />
-          <span className="text-[11px] text-white/40">
-            Framework: <span className="text-[#4A7FA0] font-medium">{currentFramework.name}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+          <span className="text-[11px] text-white/48">
+            Framework: <span className="text-accent font-medium">{currentFramework.name}</span>
           </span>
         </div>
       )}
@@ -150,8 +150,8 @@ export function InputArea() {
         rows={3}
         maxLength={5000}
         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5
-                   text-sm text-white/85 placeholder-white/25 resize-none
-                   focus:outline-none focus:border-[#4A7FA0]/40 focus:bg-white/[0.06]
+                   text-sm text-white/85 placeholder-white/48 resize-none
+                   focus:outline-none focus:border-accent/40 focus:bg-white/[0.06]
                    transition-all duration-200 leading-relaxed"
       />
 
@@ -167,16 +167,16 @@ export function InputArea() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <MicButton onTranscript={handleTranscript} disabled={isProcessing} />
-          <span className="text-[11px] text-white/25 font-mono">{input.length}/5000</span>
+          <span className="text-[11px] text-white/48 font-mono">{input.length}/5000</span>
         </div>
         <button
           onClick={handleGenerate}
           disabled={!input.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#2D4A7A] to-[#3A5A8A]
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-brand-500 to-brand-600
                      hover:from-[#345585] hover:to-[#4A6A9A]
-                     disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-[#2D4A7A] disabled:hover:to-[#3A5A8A]
+                     disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-brand-500 disabled:hover:to-brand-600
                      text-white text-xs font-medium rounded-md transition-all duration-200
-                     shadow-sm shadow-[#2D4A7A]/20 active:scale-[0.97]"
+                     shadow-sm shadow-brand-500/20 active:scale-[0.97]"
         >
           <Send className="w-3.5 h-3.5" />
           Generate Prompt
