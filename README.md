@@ -113,6 +113,12 @@ MIT © Dream Pixels Forge
 
 ---
 
+## Support
+
+If Prompter makes your prompt engineering faster or better, consider [starring the repo](https://github.com/Dream-Pixels-Forge/prompter) — it helps others discover the project.
+
+---
+
 ## Built With
 
 This project was crafted using [Dream Pixels Forge (DPF)](https://github.com/Dream-Pixels-Forge) tools:
