@@ -5,10 +5,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface MicButtonProps {
   onTranscript: (text: string) => void;
+  onInterim?: (text: string) => void;
   disabled?: boolean;
+  large?: boolean;
 }
 
-export function MicButton({ onTranscript, disabled }: MicButtonProps) {
+export function MicButton({ onTranscript, onInterim, disabled, large = false }: MicButtonProps) {
   const [state, setState] = useState<'idle' | 'listening' | 'processing'>('idle');
   const [interimText, setInterimText] = useState('');
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
@@ -49,11 +51,13 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
       onResult: (text, isFinal) => {
         if (isFinal) {
           setInterimText('');
+          onInterim?.('');
           setState('idle');
           clearSilenceTimeout();
           onTranscript(text);
         } else {
           setInterimText(text);
+          onInterim?.(text);
           resetSilenceTimeout();
         }
       },
@@ -61,12 +65,14 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         if (newState === 'idle') {
           setState('idle');
           setInterimText('');
+          onInterim?.('');
         }
       },
       onError: (error) => {
         showToast(error);
         setState('idle');
         setInterimText('');
+        onInterim?.('');
       },
     });
 
@@ -74,18 +80,18 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
     recognizer.start();
     setState('listening');
     resetSilenceTimeout();
-  }, [state, disabled, onTranscript, clearSilenceTimeout, resetSilenceTimeout, showToast]);
+  }, [state, disabled, onTranscript, onInterim, clearSilenceTimeout, resetSilenceTimeout, showToast]);
 
   const canInteract = state === 'listening' || (!disabled && state === 'idle');
 
   return (
     <div className="relative inline-flex flex-col items-center overflow-visible">
-      <button
+      <button type="button"
         onClick={handleToggle}
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
         className={`
-          relative w-9 h-9 rounded-md flex items-center justify-center
+          relative ${large ? 'w-16 h-16 rounded-2xl' : 'w-9 h-9 rounded-md'} flex items-center justify-center
           transition-all duration-200
           ${
             state === 'listening'
@@ -96,21 +102,14 @@ export function MicButton({ onTranscript, disabled }: MicButtonProps) {
         `}
       >
         {state === 'listening' && (
-          <span className="absolute inset-0 rounded-md animate-pulse-ring border border-red-500/40" />
+          <span className="absolute inset-0 rounded-2xl animate-pulse-ring border border-red-500/40" />
         )}
         {state === 'processing' ? (
-          <Loader2 className="w-4 h-4 text-white/48 animate-spin" />
+          <Loader2 className={`${large ? 'w-6 h-6' : 'w-4 h-4'} text-white/48 animate-spin`} />
         ) : (
-          <Mic className={`w-4 h-4 ${state === 'listening' ? 'text-red-400' : 'text-white/48'}`} />
+          <Mic className={`${large ? 'w-6 h-6' : 'w-4 h-4'} ${state === 'listening' ? 'text-red-400' : 'text-white/48'}`} />
         )}
       </button>
-
-      {/* Interim text — positioned below button, clipped to card-safe width */}
-      {interimText && (
-        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 text-[10px] text-white/48 whitespace-nowrap max-w-[140px] truncate text-center pointer-events-none">
-          {interimText}
-        </span>
-      )}
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function HistoryPanel() {
   useEffect(() => {
     const timer = setTimeout(() => load(query), 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, load]);
 
   const handleSearch = () => load(query);
 
@@ -77,7 +77,7 @@ export function HistoryPanel() {
   if (selected) {
     return (
       <div className="space-y-3.5">
-        <button
+        <button type="button"
           onClick={() => setSelected(null)}
           className="flex items-center gap-1.5 text-xs text-white/48 hover:text-white/72 transition-colors group"
         >
@@ -116,13 +116,13 @@ export function HistoryPanel() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
-          <button
+          <button type="button"
             onClick={() => handleReuse(selected)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium rounded-md transition-colors active:scale-[0.97]"
           >
             <RotateCcw className="w-3 h-3" /> Reuse
           </button>
-          <button
+          <button type="button"
             onClick={() => {
               handleDelete(selected.id);
               setSelected(null);
@@ -149,7 +149,7 @@ export function HistoryPanel() {
           className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/48 outline-none"
         />
         {query && (
-          <button
+          <button type="button"
             onClick={() => {
               setQuery('');
               load();
@@ -167,7 +167,7 @@ export function HistoryPanel() {
           <span className="text-[11px] text-white/48">
             {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           </span>
-          <button onClick={handleClear} className="text-[11px] text-error/50 hover:text-error transition-colors">
+          <button type="button" onClick={handleClear} className="text-[11px] text-error/50 hover:text-error transition-colors">
             Clear all
           </button>
         </div>
@@ -190,7 +190,7 @@ export function HistoryPanel() {
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-10 h-10 rounded-lg bg-white/[0.04] flex items-center justify-center mb-2">
-              <Clock className="w-5 h-5 text-white/20" />
+              <Clock className="w-5 h-5 text-white/35" />
             </div>
             <p className="text-xs text-white/48">{query ? 'No matches found' : 'No history yet'}</p>
             <p className="text-[11px] text-white/48 mt-1">
@@ -199,9 +199,10 @@ export function HistoryPanel() {
           </div>
         ) : (
           entries.map((entry) => (
-            <div
+            <button
               key={entry.id}
-              className="group flex items-start gap-2.5 p-2.5 rounded-lg sub-card cursor-pointer"
+              type="button"
+              className="group flex items-start gap-2.5 p-2.5 rounded-lg sub-card cursor-pointer text-left w-full"
               onClick={() => setSelected(entry)}
             >
               <div className="flex-1 min-w-0">
@@ -212,17 +213,17 @@ export function HistoryPanel() {
                   <span className="text-[10px] text-white/48 ml-auto">{formatDate(entry.createdAt)}</span>
                 </div>
               </div>
-              <button
+              <button type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete(entry.id);
                 }}
                 aria-label="Delete entry"
-                className="p-1 rounded-md opacity-30 hover:opacity-100 hover:bg-error/15 transition-all shrink-0 mt-0.5"
+                className="p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-error/15 transition-all shrink-0 mt-0.5"
               >
                 <Trash2 className="w-3 h-3 text-white/68 hover:text-error" />
               </button>
-            </div>
+            </button>
           ))
         )}
       </div>

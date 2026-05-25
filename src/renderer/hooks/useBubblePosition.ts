@@ -1,92 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'prompter-bubble-pos';
-const DEFAULT_POSITION = { bottom: 104, right: 44 };
-
-interface Position {
-  bottom: number;
-  right: number;
-}
-
-export function migratePosition(saved: Record<string, unknown>): Position {
-  if ('bottom' in saved && 'right' in saved) {
-    return { bottom: Number(saved.bottom), right: Number(saved.right) };
-  }
-  if ('x' in saved && 'y' in saved) {
-    return {
-      bottom: 24 - Number(saved.y),
-      right: 24 - Number(saved.x),
-    };
-  }
-  return DEFAULT_POSITION;
-}
-
-function getClientCoords(e: MouseEvent | TouchEvent): { x: number; y: number } {
-  if ('touches' in e) {
-    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }
-  return { x: e.clientX, y: e.clientY };
-}
+// The bubble's CSS position within the 80x80 window is fixed (bottom-right corner).
+// The actual screen position of the bubble is controlled by moving the Electron window.
+const BUBBLE_CSS_POS = { bottom: 12, right: 12 };
 
 export function useBubblePosition() {
-  const [position, setPosition] = useState<Position>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return DEFAULT_POSITION;
-      const parsed = JSON.parse(saved);
-      return migratePosition(parsed);
-    } catch {
-      return DEFAULT_POSITION;
-    }
-  });
-
+  const [position] = useState(BUBBLE_CSS_POS);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [dragOrigin, setDragOrigin] = useState<Position>({ bottom: 0, right: 0 });
-  const positionRef = useRef(position);
-  positionRef.current = position;
+  const dragRef = useRef<{ screenX: number; screenY: number; winX: number; winY: number } | null>(null);
 
-  // On mount, load the durable position from main process storage
-  useEffect(() => {
-    window.api.bubble.getPosition().then((saved: Position | null) => {
-      if (saved && (saved.bottom !== positionRef.current.bottom || saved.right !== positionRef.current.right)) {
-        setPosition(saved);
-      }
+  const startDrag = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const screenX = 'touches' in e ? e.touches[0].screenX : e.screenX;
+    const screenY = 'touches' in e ? e.touches[0].screenY : e.screenY;
+
+    try {
+      const winPos = await window.api.window.getPosition();
+      dragRef.current = { screenX, screenY, winX: winPos.x, winY: winPos.y };
+      setIsDragging(true);
+    } catch {
+      dragRef.current = null;
+    }
+  }, []);
+
+  const onDrag = useCallback((e: MouseEvent | TouchEvent) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+
+    const screenX = 'touches' in e ? e.touches[0].screenX : e.screenX;
+    const screenY = 'touches' in e ? e.touches[0].screenY : e.screenY;
+
+    const dx = screenX - drag.screenX;
+    const dy = screenY - drag.screenY;
+
+    window.api.window.setBounds({
+      x: Math.round(drag.winX + dx),
+      y: Math.round(drag.winY + dy),
     });
   }, []);
 
-  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, currentPos: Position) => {
-    e.preventDefault();
-    const coords =
-      'touches' in e ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-    setIsDragging(true);
-    setDragStart(coords);
-    setDragOrigin(currentPos);
-  }, []);
-
-  const onDrag = useCallback(
-    (e: MouseEvent | TouchEvent) => {
-      if (!isDragging) return;
-      const coords = getClientCoords(e);
-      const newPos = {
-        bottom: dragOrigin.bottom + (dragStart.y - coords.y),
-        right: dragOrigin.right + (dragStart.x - coords.x),
-      };
-      setPosition(newPos);
-    },
-    [isDragging, dragStart, dragOrigin],
-  );
-
   const stopDrag = useCallback(() => {
-    if (isDragging) {
+    if (dragRef.current) {
       setIsDragging(false);
-      const pos = positionRef.current;
-      // Immediate localStorage cache
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
-      // Durable persistence via main process IPC
-      window.api.bubble.setPosition(pos);
+      window.api.window.getPosition().then((pos) => {
+        window.api.bubble.setWindowPosition(pos);
+      });
+      dragRef.current = null;
     }
-  }, [isDragging]);
+  }, []);
 
   useEffect(() => {
     if (isDragging) {

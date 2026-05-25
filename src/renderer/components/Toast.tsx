@@ -10,15 +10,21 @@ export function Toast() {
   useEffect(() => {
     if (toastMessage && toastRef.current) {
       const el = toastRef.current;
-      gsap.fromTo(
-        el,
-        { y: 12, opacity: 0, scale: 0.95 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', willChange: 'transform, opacity' },
-      );
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.fromTo(
+          el,
+          { y: 12, opacity: 0, scale: 0.95 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', willChange: 'transform, opacity' },
+        );
+      }
       const timer = setTimeout(() => {
-        gsap
-          .to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in', willChange: 'transform, opacity' })
-          .then(hideToast);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          gsap
+            .to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in', willChange: 'transform, opacity' })
+            .then(hideToast);
+        } else {
+          hideToast();
+        }
       }, 2000);
       return () => clearTimeout(timer);
     }

@@ -5,15 +5,30 @@ import {
   BarChart3,
   BookOpen,
   Bot,
+  Calendar,
   ChefHat,
+  CheckSquare,
+  Database,
   FileText,
   GitPullRequest,
+  GraduationCap,
+  Hash,
   Headphones,
   type LucideIcon,
+  MessageSquare,
   Microscope,
+  Network,
   Palette,
   PenLine,
+  Rocket,
+  Search,
+  Send,
+  Server,
+  Shield,
   Sparkles,
+  Target,
+  Terminal,
+  Users,
   Video,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -32,13 +47,44 @@ const iconMap: Record<string, LucideIcon> = {
   Palette,
   FileText,
   Microscope,
+  Server,
+  Terminal,
+  Network,
+  Database,
+  CheckSquare,
+  Hash,
+  MessageSquare,
+  Search,
+  GraduationCap,
+  Rocket,
+  Send,
+  Target,
+  Calendar,
+  Users,
+  Shield,
 };
 
 const CATEGORIES = [
-  { id: 'dev', label: 'Dev', ids: ['api-docs', 'code-review', 'agent-prompt'] },
-  { id: 'content', label: 'Content', ids: ['blog-post', 'cooking-book', 'video-gen'] },
-  { id: 'business', label: 'Business', ids: ['saas-landing', 'data-analysis', 'prd', 'support-agent'] },
-  { id: 'misc', label: 'Misc', ids: ['ux-brief', 'research-paper'] },
+  {
+    id: 'dev',
+    label: 'Dev',
+    ids: ['mcp-server', 'code-review', 'agent-prompt', 'architecture', 'cli-tool', 'db-schema', 'test-plan', 'api-docs'],
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    ids: ['blog-post', 'video-gen', 'social-media', 'newsletter', 'seo-content', 'tutorial', 'podcast-script', 'cooking-book'],
+  },
+  {
+    id: 'business',
+    label: 'Business',
+    ids: ['saas-landing', 'data-analysis', 'prd', 'support-agent', 'pitch-deck', 'product-launch', 'email-campaign', 'competitor-analysis'],
+  },
+  {
+    id: 'misc',
+    label: 'Misc',
+    ids: ['ux-brief', 'research-paper', 'resume', 'meeting-notes', 'job-posting', 'onboarding', 'legal-template', 'cover-letter'],
+  },
 ];
 
 export function TemplateBrowser() {
@@ -58,15 +104,15 @@ export function TemplateBrowser() {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      templates.forEach((tpl) => {
+      for (const tpl of templates) {
         if (!iconMap[tpl.icon] && tpl.icon !== 'Sparkles') {
           console.warn(`[TemplateBrowser] No icon mapping for "${tpl.icon}" — using Sparkles fallback`);
         }
-      });
+      }
     }
   }, []);
 
-  const cat = CATEGORIES.find((c) => c.id === activeCategory)!;
+  const cat = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
   const visible = templates.filter((t) => cat.ids.includes(t.id));
 
   return (
@@ -74,7 +120,7 @@ export function TemplateBrowser() {
       {/* Tabs */}
       <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
         {CATEGORIES.map((c) => (
-          <button
+          <button type="button"
             key={c.id}
             onClick={() => setActiveCategory(c.id)}
             className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${

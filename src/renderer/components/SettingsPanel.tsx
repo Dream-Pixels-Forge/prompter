@@ -65,12 +65,12 @@ function ModelDropdown({
 
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
+      <button type="button"
         onClick={() => setOpen(!open)}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
+        aria-label={`Selected model: ${value}`}
         onKeyDown={handleKeyDown}
         className="input-base w-full flex items-center justify-between gap-1.5 text-xs"
       >
@@ -83,20 +83,22 @@ function ModelDropdown({
           role="listbox"
           aria-activedescendant={focusIndex >= 0 ? `${listId}-${focusIndex}` : undefined}
           onKeyDown={handleKeyDown}
+          tabIndex={0}
           className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-lg shadow-xl z-50 max-h-[160px] overflow-y-auto"
         >
           {options.map((opt, i) => (
-            <button
+            <div
               key={opt}
               id={`${listId}-${i}`}
-              type="button"
               role="option"
+              tabIndex={-1}
               aria-selected={opt === value}
               onClick={() => {
                 onChange(opt);
                 setOpen(false);
               }}
               onMouseEnter={() => setFocusIndex(i)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onChange(opt); setOpen(false); } }}
               className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
                 opt === value
                   ? 'bg-brand-500/15 text-white'
@@ -106,7 +108,7 @@ function ModelDropdown({
               }`}
             >
               {opt}
-            </button>
+            </div>
           ))}
         </div>
       )}
@@ -139,7 +141,7 @@ export function SettingsPanel() {
   useEffect(() => {
     store.loadSettings();
     store.checkOllamaStatus();
-  }, []);
+  }, [store]);
 
   const handleChange = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     store.updateSetting(key, value);
@@ -184,7 +186,7 @@ export function SettingsPanel() {
           <span className="text-xs font-medium text-white/68 uppercase tracking-wider">Provider</span>
         </div>
         <div ref={providerRef} className="relative">
-          <button
+          <button type="button"
             onClick={() => setProviderOpen(!providerOpen)}
             className="w-full flex items-center gap-2.5 px-3 py-2 sub-card hover:border-white/[0.1] transition-all text-left"
           >
@@ -200,7 +202,7 @@ export function SettingsPanel() {
           {providerOpen && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-lg shadow-xl overflow-hidden z-50">
               {PROVIDERS.map(({ type, label, description }) => (
-                <button
+                <button type="button"
                   key={type}
                   onClick={() => {
                     handleChange('activeProvider', type);
@@ -237,7 +239,7 @@ export function SettingsPanel() {
         <div className="flex items-center gap-2">
           <Cpu className="w-3.5 h-3.5 text-white/48" />
           <span className="text-xs font-medium text-white/68 uppercase tracking-wider">Ollama</span>
-          <button onClick={store.checkOllamaStatus} className="btn-subtle ml-auto text-[10px]">
+          <button type="button" onClick={store.checkOllamaStatus} className="btn-subtle ml-auto text-[10px]">
             Check
           </button>
         </div>
@@ -295,7 +297,7 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('openaiApiKey', e.target.value)}
                 className="input-base flex-1 text-xs"
               />
-              <button
+              <button type="button"
                 onClick={handleSaveKey}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/68 shrink-0"
               >
@@ -332,7 +334,7 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
                 className="input-base flex-1 text-xs"
               />
-              <button
+              <button type="button"
                 onClick={handleSaveKey}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/68 shrink-0"
               >

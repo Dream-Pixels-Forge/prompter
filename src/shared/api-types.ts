@@ -11,6 +11,7 @@ export interface PrompterApi {
     setBounds: (bounds: { x: number; y: number }) => Promise<boolean>;
     toggle: () => Promise<boolean>;
     resize: (width: number, height: number) => void;
+    getPosition: () => Promise<{ x: number; y: number }>;
   };
   settings: {
     get: () => Promise<Partial<AppSettings>>;
@@ -39,5 +40,10 @@ export interface PrompterApi {
   bubble: {
     getPosition: () => Promise<{ bottom: number; right: number } | null>;
     setPosition: (pos: { bottom: number; right: number }) => Promise<boolean>;
+    getWindowPosition: () => Promise<{ x: number; y: number } | null>;
+    setWindowPosition: (pos: { x: number; y: number }) => Promise<boolean>;
+  };
+  app: {
+    quit: () => Promise<void>;
   };
 }

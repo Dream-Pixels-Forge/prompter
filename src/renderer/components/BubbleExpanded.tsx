@@ -10,6 +10,8 @@ import { OutputPanel } from './OutputPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { TemplateBrowser } from './TemplateBrowser';
 
+const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const tabs: { key: AppTab; label: string; icon: typeof PenLine }[] = [
   { key: 'compose', label: 'Compose', icon: PenLine },
   { key: 'templates', label: 'Templates', icon: Layout },
@@ -41,26 +43,29 @@ export function BubbleExpanded() {
     const body = bodyRef.current;
     if (!card) return;
 
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        card,
-        { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
-        { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' },
-      );
-      if (body) {
+    if (!prefersReduced()) {
+      const ctx = gsap.context(() => {
         gsap.fromTo(
-          body,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' },
+          card,
+          { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
+          { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' },
         );
-      }
-    });
-
-    return () => ctx.revert();
+        if (body) {
+          gsap.fromTo(
+            body,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' },
+          );
+        }
+      });
+      return () => ctx.revert();
+    }
   }, []);
 
   // Fade-only transition on tab switch (no jarring slide between different content)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeTab triggers re-run on tab switch
   useEffect(() => {
+    if (prefersReduced()) return;
     const body = bodyRef.current;
     if (!body) return;
 
@@ -70,7 +75,7 @@ export function BubbleExpanded() {
   return (
     <div
       ref={cardRef}
-      className="fixed bottom-4 right-4 w-[480px] h-[480px] glass-card
+      className="fixed inset-0 glass-card
                  flex flex-col overflow-hidden z-50"
     >
       {/* Header — draggable for frameless window */}
@@ -84,7 +89,7 @@ export function BubbleExpanded() {
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
           <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
         </div>
-        <button
+        <button type="button"
           ref={closeBtnRef}
           onClick={() => setExpanded(false)}
           aria-label="Close"
@@ -97,7 +102,7 @@ export function BubbleExpanded() {
       {/* Tabs with icons */}
       <div className="flex gap-1 px-3 pt-3 pb-1 border-b border-white/[0.04]">
         {tabs.map(({ key, label, icon: Icon }) => (
-          <button
+          <button type="button"
             key={key}
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md capitalize transition-all duration-200 ${

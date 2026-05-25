@@ -1,18 +1,24 @@
 import path from 'node:path';
-import { BrowserWindow, app, globalShortcut } from 'electron';
+import { BrowserWindow, app, globalShortcut, screen } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
 import { registerIpcHandlers } from './ipc';
 
 // Transparent window fixes per platform:
 // - Windows: enable-transparent-visuals enables DWM alpha channel
-if (process.platform === 'win32') {
+// - Linux (X11): enables transparency via X composite extension
+if (process.platform === 'win32' || process.platform === 'linux') {
   app.commandLine.appendSwitch('enable-transparent-visuals');
 }
 
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
   mainWindow = new BrowserWindow({
+    x: screenWidth - 80 - 20,
+    y: screenHeight - 80 - 20,
     width: 80,
     height: 80,
     frame: false,
@@ -20,6 +26,7 @@ function createWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
+    thickFrame: false,
     hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),

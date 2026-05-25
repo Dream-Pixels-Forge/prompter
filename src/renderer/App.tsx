@@ -23,9 +23,19 @@ export default function App() {
   // Resize Electron window to match content (bubble vs expanded card)
   useEffect(() => {
     if (isExpanded) {
-      window.api.window.resize(480, 480);
+      // Save bubble window position before expanding so we can restore it on collapse
+      window.api.window.getPosition().then((pos) => {
+        window.api.bubble.setWindowPosition(pos);
+      });
+      window.api.window.resize(520, 520);
     } else {
       window.api.window.resize(80, 80);
+      // Restore bubble window position so it goes back where the user placed it
+      window.api.bubble.getWindowPosition().then((pos) => {
+        if (pos) {
+          window.api.window.setBounds(pos);
+        }
+      });
     }
   }, [isExpanded]);
 
@@ -44,6 +54,18 @@ export default function App() {
   useEffect(() => {
     const el = backdropRef.current;
     if (!el) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced) {
+      if (isExpanded) {
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+      } else {
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+      }
+      return;
+    }
 
     const ctx = gsap.context(() => {
       if (isExpanded) {

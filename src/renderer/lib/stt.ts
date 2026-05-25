@@ -6,10 +6,17 @@ export interface SpeechCallbacks {
   onError: (error: string) => void;
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+  'not-allowed': 'Microphone access denied. Allow microphone access and try again.',
+  'audio-capture': 'No microphone found. Connect a microphone and try again.',
+  'service-not-allowed': 'Speech service unavailable. Try again later.',
+};
+
 export class SpeechRecognizer {
   private recognition: SpeechRecognition | null = null;
   private callbacks: SpeechCallbacks;
   private isListening = false;
+  private permanentError = false;
 
   constructor(callbacks: SpeechCallbacks) {
     this.callbacks = callbacks;
@@ -50,7 +57,7 @@ export class SpeechRecognizer {
     };
 
     recognition.onend = () => {
-      if (this.isListening) {
+      if (this.isListening && !this.permanentError) {
         try {
           recognition.start();
         } catch {
@@ -62,15 +69,20 @@ export class SpeechRecognizer {
     };
 
     recognition.onerror = (event) => {
-      if (event.error === 'no-speech' || event.error === 'aborted') {
+      if (event.error === 'no-speech' || event.error === 'aborted' || event.error === 'network') {
         return;
       }
-      this.callbacks.onError(`Speech error: ${event.error}`);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        this.permanentError = true;
+      }
+      const msg = ERROR_MESSAGES[event.error] || `Speech error: ${event.error}`;
+      this.callbacks.onError(msg);
       this.callbacks.onStateChange('error');
     };
 
     this.recognition = recognition;
     this.isListening = true;
+    this.permanentError = false;
     this.callbacks.onStateChange('listening');
     recognition.start();
   }

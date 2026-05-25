@@ -20,6 +20,10 @@ export const IPC_CHANNELS = {
   BUBBLE_POS_GET: 'bubble:pos:get',
   BUBBLE_POS_SET: 'bubble:pos:set',
   WINDOW_RESIZE: 'window:resize',
+  WINDOW_POS_GET: 'window:pos:get',
+  BUBBLE_WIN_POS_GET: 'bubble:winpos:get',
+  BUBBLE_WIN_POS_SET: 'bubble:winpos:set',
+  APP_QUIT: 'app:quit',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────

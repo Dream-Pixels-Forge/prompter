@@ -11,7 +11,7 @@ export const karpathyFramework: Framework = {
       label: 'Think First',
       placeholder: 'State assumptions, surface tradeoffs, ask clarifying questions',
       defaultContent:
-        "Before responding, consider: what assumptions am I making about this request? What's the simplest approach that solves the problem?",
+        "Before responding, consider: what assumptions am I making about this request? What's the simplest approach that solves the problem? The user's goal is: {goal}",
     },
     {
       key: 'simplicity',
@@ -30,7 +30,8 @@ export const karpathyFramework: Framework = {
       key: 'goalDriven',
       label: 'Goal-Driven',
       placeholder: 'Define success criteria, loop until verified',
-      defaultContent: 'Define what success looks like. Verify against requirements. Loop until the goal is met.',
+      defaultContent:
+        'The user\'s goal is: {goal}. Define what success looks like for this specific request. Verify against requirements. Loop until the goal is met.',
     },
   ],
 };

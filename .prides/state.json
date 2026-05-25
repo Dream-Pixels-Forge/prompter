@@ -1,0 +1,15 @@
+{
+  "currentPhase": null,
+  "status": "idle",
+  "phaseHistory": [],
+  "circuitBreakers": {
+    "prides-coordinator": {
+      "state": "closed",
+      "failures": 0,
+      "lastFailure": null,
+      "lastSuccess": 1779678098240
+    }
+  },
+  "gateResults": {},
+  "version": 1
+}

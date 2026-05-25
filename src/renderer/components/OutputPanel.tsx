@@ -35,6 +35,15 @@ export function OutputPanel() {
 
   return (
     <div className="space-y-2.5">
+      {/* Back to input */}
+      <button type="button"
+        onClick={clearOutput}
+        className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover transition-colors group"
+      >
+        <PenLine className="w-3 h-3" />
+        <span className="font-medium">New Prompt</span>
+      </button>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
@@ -42,7 +51,7 @@ export function OutputPanel() {
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-0.5">
-          <button
+          <button type="button"
             onClick={handleCopy}
             aria-label={copied ? 'Copied' : 'Copy to clipboard'}
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
@@ -53,7 +62,7 @@ export function OutputPanel() {
               <Copy className="w-3.5 h-3.5 text-white/48 group-hover:text-white/72" />
             )}
           </button>
-          <button
+          <button type="button"
             onClick={clearOutput}
             aria-label="Clear output"
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
@@ -69,15 +78,6 @@ export function OutputPanel() {
           <PromptSection key={section.key} label={section.label} content={output.sections[section.key] || ''} />
         ))}
       </div>
-
-      {/* New prompt button */}
-      <button
-        onClick={clearOutput}
-        className="flex items-center gap-1.5 px-3 py-1.5 btn-subtle rounded-md w-full justify-center hover:bg-brand-500/15 hover:text-brand-400 hover:border-brand-500/20"
-      >
-        <PenLine className="w-3 h-3" />
-        <span className="text-xs">New Prompt</span>
-      </button>
     </div>
   );
 }
