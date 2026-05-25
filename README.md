@@ -4,6 +4,10 @@
 
 Prompter is a system-level floating overlay (inspired by Wispr Flow) that accepts text or voice input and uses an LLM to restructure it into clean, structured prompts using proven frameworks from OpenAI, Anthropic, and more.
 
+<img width="523" height="524" alt="Screenshot from 2026-05-25 05-45-43" src="https://github.com/user-attachments/assets/25c95814-51bf-48c0-96da-853c57e425ec" />
+
+
+
 ![Status](https://img.shields.io/badge/status-beta-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
 [![CI](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml/badge.svg)](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml)
@@ -23,6 +27,9 @@ Prompter is a system-level floating overlay (inspired by Wispr Flow) that accept
 - 🖥️ **System Tray** — Quick access from system tray
 - ✨ **GSAP Animations** — Smooth bubble transitions and entrance effects
 - 📦 **Packaged Releases** — AppImage, DMG (macOS), NSIS (Windows)
+
+<img width="525" height="525" alt="Screenshot from 2026-05-25 05-44-50" src="https://github.com/user-attachments/assets/3c68a2c2-539f-4494-ab30-e9d09d879e03" />
+
 
 ## Built with PRIDES Methodology
 
