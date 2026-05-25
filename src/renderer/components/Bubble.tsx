@@ -2,7 +2,7 @@ import { useBubblePosition } from '@/renderer/hooks/useBubblePosition';
 import { useAppStore } from '@/renderer/stores/app-store';
 import gsap from 'gsap';
 import { Info, LogOut, Sparkles } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -11,7 +11,9 @@ export function Bubble() {
   const { position, isDragging, startDrag } = useBubblePosition();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [adjustedPos, setAdjustedPos] = useState<{ left?: number; top?: number; right?: number; bottom?: number } | null>(null);
 
   // Floating/pulse animation on inner button only
   useEffect(() => {
@@ -45,8 +47,31 @@ export function Bubble() {
     return () => document.removeEventListener('mousedown', handler);
   }, [menuPos]);
 
+  // Adjust menu position to avoid viewport clipping
+  useLayoutEffect(() => {
+    if (!menuPos || !menuRef.current) {
+      setAdjustedPos(null);
+      return;
+    }
+    const rect = menuRef.current.getBoundingClientRect();
+    const { innerWidth, innerHeight } = window;
+    const style: { left?: number; top?: number; right?: number; bottom?: number } = {};
+    if (menuPos.x + rect.width > innerWidth - 8) {
+      style.right = innerWidth - menuPos.x;
+    } else {
+      style.left = menuPos.x;
+    }
+    if (menuPos.y + rect.height > innerHeight - 8) {
+      style.bottom = innerHeight - menuPos.y;
+    } else {
+      style.top = menuPos.y;
+    }
+    setAdjustedPos(style);
+  }, [menuPos]);
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    setAdjustedPos(null);
     setMenuPos({ x: e.clientX, y: e.clientY });
   }, []);
 
@@ -86,10 +111,11 @@ export function Bubble() {
       </button>
 
       {/* Context menu */}
-      {menuPos && (
+      {menuPos && adjustedPos && (
         <div
+          ref={menuRef}
           className="fixed z-[100] min-w-[140px] py-1 rounded-xl bg-[#1a1f2e] border border-white/[0.08] shadow-2xl shadow-black/40 backdrop-blur-xl"
-          style={{ left: menuPos.x, top: menuPos.y }}
+          style={adjustedPos}
         >
           <button type="button"
             onClick={handleAbout}

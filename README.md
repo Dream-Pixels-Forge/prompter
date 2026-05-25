@@ -18,7 +18,7 @@ Prompter is a system-level floating overlay (inspired by Wispr Flow) that accept
 - 🫧 **Floating Bubble UI** — Always-on-top, draggable overlay that stays out of your way
 - 🎤 **Voice Input** — Speak naturally, get structured prompts back (Web Speech API + Whisper fallback)
 - 🧠 **5 Prompt Engineering Frameworks** — OpenAI GPT-5.5, Anthropic Playbook, MPLCT (video/3D), Karpathy Principles, Context Engineering
-- 📚 **12 Curated Templates** — SaaS landing pages, cooking books, API docs, agent instructions, code review, video prompts, blog posts, support agents, data analysis, UX briefs, PRDs, research papers
+- 📚 **32 Curated Templates** — 8 per category (Dev, Content, Business, Productivity): MCP Server, Code Review, Agent Instructions, System Architecture, CLI Tool, DB Schema, Test Plan, API Docs, Blog Post, Video Gen, Social Media, Newsletter, SEO Content, Tutorial, Podcast Script, Cooking Book, SaaS Landing, Data Analysis, PRD, Support Agent, Pitch Deck, Product Launch, Email Campaign, Competitor Analysis, UX Brief, Research Paper, Resume, Meeting Notes, Job Posting, Onboarding Guide, Legal/Policy Docs, Cover Letter
 - 🔄 **Hybrid LLM** — Local first (Ollama), cloud fallback (OpenAI/Anthropic)
 - 🔒 **Encrypted API Key Storage** — Electron safeStorage with base64 fallback
 - 📋 **One-Click Copy** — Copy structured prompts to clipboard instantly
@@ -26,7 +26,30 @@ Prompter is a system-level floating overlay (inspired by Wispr Flow) that accept
 - 🔥 **Global Hotkeys** — Alt+Space toggle, Alt+M mic toggle
 - 🖥️ **System Tray** — Quick access from system tray
 - ✨ **GSAP Animations** — Smooth bubble transitions and entrance effects
-- 📦 **Packaged Releases** — AppImage, DMG (macOS), NSIS (Windows)
+- 📦 **Packaged Releases** — AppImage (Linux), DMG (macOS), NSIS (Windows)
+
+## Download
+
+### Linux
+```bash
+curl -L -o Prompter.AppImage https://github.com/Dream-Pixels-Forge/prompter/releases/latest/download/Prompter-0.2.0.AppImage
+chmod +x Prompter.AppImage
+./Prompter.AppImage
+```
+
+Or install the `.deb`:
+```bash
+curl -L -o prompter.deb https://github.com/Dream-Pixels-Forge/prompter/releases/latest/download/Prompter-0.2.0-amd64.deb
+sudo dpkg -i prompter.deb
+```
+
+### macOS
+Download the latest `.dmg` from the [releases page](https://github.com/Dream-Pixels-Forge/prompter/releases).
+
+### Windows
+Download the latest `-Setup.exe` from the [releases page](https://github.com/Dream-Pixels-Forge/prompter/releases).
+
+---
 
 <img width="525" height="525" alt="Screenshot from 2026-05-25 05-44-50" src="https://github.com/user-attachments/assets/3c68a2c2-539f-4494-ab30-e9d09d879e03" />
 
