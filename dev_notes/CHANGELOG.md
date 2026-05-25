@@ -1,15 +1,42 @@
 # Changelog
 
-## [0.1.1] — 2026-05-23 — Layout Bug Fixes
+## [0.2.0] — 2026-05-25 — Polish, Templates, & STT Improvements
+
+### Added
+- Right-click context menu on bubble: About (opens main window) and Quit (exits app), auto-flips to avoid viewport clipping
+- 20 new templates → 32 total (8 per category): MCP Server, Code Review, Agent Instructions, System Architecture, CLI Tool, DB Schema, Test Plan, API Docs, Blog Post, Video Gen, Social Media, Newsletter, SEO Content, Tutorial, Podcast Script, Cooking Book, SaaS Landing, Data Analysis, PRD, Support Agent, Pitch Deck, Product Launch, Email Campaign, Competitor Analysis, UX Brief, Research Paper, Resume, Meeting Notes, Job Posting, Onboarding Guide, Legal/Policy Docs, Cover Letter
+- TemplateBrowser icon mappings for all 32 templates
+- Frameworks moved from `renderer/lib` to `shared/` for reuse across processes
+- Karpathy Principles framework: `{goal}` placeholder now injects user intent into generated prompts
+- STT interim text display below textarea with pulsing red-dot indicator
+- `app:quit` IPC channel and preload bridge
+- Frameworks contract test, intent parser test, orchestrator test, placeholder test
+
+### Changed
+- InputArea layout: bottom bar centered like media player controls (reset/mic/send), char count moved above textarea, textarea increased from 3→6 rows
+- MicButton: increased to 64×64, added `onInterim` prop, removed local interim display
+- TemplateBrowser: categories reorganized to 8 templates per group (Dev, Content, Business, Productivity)
+- Window width increased from 360px → 460px for expanded card
+- Bubble positioning: migrated from translate offsets to absolute viewport coordinates with auto-migration
 
 ### Fixed
-- **#7** Bubble dual-positioning: refactored `useBubblePosition` from translate offsets to absolute viewport coordinates with auto-migration of legacy localStorage data
-- **#6** Window width mismatch: changed window width from 360px → 460px to accommodate 420px expanded card
-- **#5** Template grid equal heights: added `auto-rows-fr` to grid container
-- **#4** Toast overlap: made toast position dynamic — top-right when card expanded, bottom-right when collapsed
-- **#3** z-index collision: bumped ProcessingOverlay z-index from 40 → 50
-- **#2** Frameless window drag: added `-webkit-app-region: drag` to header, `no-drag` to close button
-- **#1** History panel overflow: replaced hardcoded `max-h-[380px]` with flex-based dynamic sizing
+- Framework auto-detection respects manual override via `manualFrameworkRef`
+- STT permanent errors (permission denied, service not allowed) no longer infinite restart loop
+- STT friendly error messages: "Microphone access denied" / "No microphone found" instead of raw errors
+- Removed "Speech transcribed" toast on every final result
+- Fixed `StorageService.getApiKey` static call bug (crashed on settings load)
+- Bubble dual-positioning: refactored to absolute viewport coordinates
+- Window width mismatch: 360px → 460px for 420px expanded card
+- Template grid equal heights: `auto-rows-fr` added
+- Toast overlap: dynamic position — top-right when expanded, bottom-right when collapsed
+- z-index collision: ProcessingOverlay z-index 40 → 50
+- Frameless window drag: `-webkit-app-region` on header, `no-drag` on close button
+- History panel overflow: flex-based dynamic sizing instead of hardcoded `max-h-[380px]`
+- Dynamic window resize for transparent frameless Electron
+- GPU init errors on Linux: disabled HW acceleration, removed swiftshader
+- HTML/#root transparency for invisible Electron frame
+- Bubble click-through: mouse passthrough attached to widget only
+- Fixed `legal/legal-template` id mismatch in TemplateBrowser
 
 ## [0.1.0] — 2026-05-23 — First Public Release
 
