@@ -44,6 +44,9 @@ Prompter was developed using the **PRIDES** software development methodology —
 | **E**xtend | Scalability, plugin architecture | Modular framework/template system, IPC abstraction layer |
 | **S**ecure | Security audits, hardening | contextIsolation, sandbox, safeStorage encryption, CSP |
 
+<img width="526" height="525" alt="Screenshot from 2026-05-25 05-57-57" src="https://github.com/user-attachments/assets/38f492c1-b2dc-45c1-aa06-5065125affbe" />
+
+
 ### Implementation Phases
 
 | Phase | Scope | Key Deliverables |
