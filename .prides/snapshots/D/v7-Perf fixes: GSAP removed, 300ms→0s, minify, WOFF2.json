@@ -1,0 +1,17 @@
+{
+  "version": 7,
+  "phase": "D",
+  "label": "Perf fixes: GSAP removed, 300ms→0s, minify, WOFF2",
+  "data": {
+    "gsap": "removed (6.4MB saved)",
+    "startup_delay": "300ms→0ms",
+    "minification": "enabled (main 32KB→20KB)",
+    "fonts": "WOFF2 (1.3MB→453KB, -65%)",
+    "typecheck": 0,
+    "lint": 0,
+    "tests": "25/25",
+    "build": "clean"
+  },
+  "created": "2026-05-28T04:21:40.319Z",
+  "immutable": true
+}

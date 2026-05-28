@@ -18,7 +18,7 @@ export default defineConfig({
             rollupOptions: {
               external: ['electron'],
             },
-            minify: false,
+            minify: 'esbuild',
             sourcemap: true,
             emptyOutDir: true,
           },
@@ -38,7 +38,7 @@ export default defineConfig({
             rollupOptions: {
               external: ['electron'],
             },
-            minify: false,
+            minify: 'esbuild',
             sourcemap: true,
             emptyOutDir: true,
           },

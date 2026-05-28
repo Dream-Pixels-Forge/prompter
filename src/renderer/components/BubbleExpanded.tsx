@@ -1,7 +1,6 @@
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import type { AppTab } from '@/shared/types';
-import gsap from 'gsap';
 import { Clock, Layout, PenLine, Settings, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { HistoryPanel } from './HistoryPanel';
@@ -9,8 +8,6 @@ import { InputArea } from './InputArea';
 import { OutputPanel } from './OutputPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { TemplateBrowser } from './TemplateBrowser';
-
-const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const tabs: { key: AppTab; label: string; icon: typeof PenLine }[] = [
   { key: 'compose', label: 'Compose', icon: PenLine },
@@ -36,11 +33,12 @@ export function BubbleExpanded() {
   // Fade-only transition on tab switch (no jarring slide between different content)
   // biome-ignore lint/correctness/useExhaustiveDependencies: activeTab triggers re-run on tab switch
   useEffect(() => {
-    if (prefersReduced()) return;
     const body = bodyRef.current;
     if (!body) return;
-
-    gsap.fromTo(body, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'power1.out', willChange: 'opacity' });
+    body.classList.remove('tab-fade-in');
+    // Force reflow to restart the animation
+    void body.offsetWidth;
+    body.classList.add('tab-fade-in');
   }, [activeTab]);
 
   return (
