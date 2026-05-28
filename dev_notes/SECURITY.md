@@ -1,8 +1,8 @@
 # Prompter — Security Architecture
 
-**Version:** 1.0
-**Status:** Draft
-**Last Updated:** 2026-05-23
+**Version:** 2.0
+**Status:** Living
+**Last Updated:** 2026-05-28
 
 ---
 
@@ -16,8 +16,7 @@
 6. [Privacy Guarantees](#6-privacy-guarantees)
 7. [Dependency Security](#7-dependency-security)
 8. [Build & Distribution Security](#8-build--distribution-security)
-9. [Incident Response Plan](#9-incident-response-plan)
-10. [Security Checklist for V1 Release](#10-security-checklist-for-v1-release)
+9. [Security Checklist](#9-security-checklist)
 
 ---
 
@@ -27,13 +26,12 @@
 
 | Asset | Sensitivity | Location |
 |---|---|---|
-| OpenAI API key | Critical | Encrypted in SQLite + in-memory during use |
-| Anthropic API key | Critical | Encrypted in SQLite + in-memory during use |
-| Prompt history (raw_input + generated_output) | Medium | SQLite at `~/.promptforge/history.db` |
-| Saved templates | Low | SQLite at `~/.promptforge/history.db` |
+| OpenAI API key | Critical | Encrypted in JSON (`prompter-keys.json`) + in-memory during use |
+| Anthropic API key | Critical | Encrypted in JSON (`prompter-keys.json`) + in-memory during use |
+| Prompt history (raw_input + generated_output) | Medium | JSON at `{userData}/prompter-history.json` |
 | Audio recordings | Medium | In-memory during transcription, discarded immediately |
-| Settings/preferences | Low | SQLite at `~/.promptforge/history.db` |
-| Ollama URL | Low | SQLite (localhost-only by default) |
+| Settings/preferences | Low | JSON at `{userData}/prompter-settings.json` |
+| Ollama URL | Low | JSON at `{userData}/prompter-settings.json` (localhost-only by default) |
 
 ### 1.2 Threat Actors
 
@@ -48,28 +46,28 @@
 ### 1.3 Threat Scenarios
 
 #### T1: API Key Exfiltration
-- **Scenario:** Malware reads `~/.promptforge/history.db` and extracts OpenAI/Anthropic keys
-- **Mitigation:** Keys encrypted with Electron `safeStorage` (OS-level encryption). Key material never stored in plaintext on disk. Decryption happens in main process only, in-memory, for the duration of a request.
+- **Scenario:** Malware reads `prompter-keys.json` and extracts OpenAI/Anthropic keys
+- **Mitigation:** Keys encrypted with Electron `safeStorage.encryptString` (OS-level encryption). Key material never stored in plaintext on disk. Decryption happens in main process only, in-memory, for the duration of a request.
 
 #### T2: Unauthorized Microphone Access
 - **Scenario:** Renderer process compromised, attacker activates mic without user action
-- **Mitigation:** Mic activation requires explicit IPC call from renderer. Main process enforces user-gesture requirement. Mic stream never starts without a `startRecording` IPC that renderer can only send after a click event.
+- **Mitigation:** Mic activation requires explicit IPC call from renderer (`stt:start`). Audio captured in renderer via `navigator.mediaDevices.getUserMedia`, sent to main process as base64-encoded data, forwarded to OpenAI Whisper API. No persistent audio stream in main process.
 
 #### T3: MITM on Cloud LLM Calls
 - **Scenario:** Network attacker intercepts HTTP traffic during OpenAI/Anthropic API calls
-- **Mitigation:** All cloud API calls use HTTPS with certificate validation. No HTTP fallback. `ELECTRON_HTTPS_ONLY` enforced. Certificate pinning considered for v2.
+- **Mitigation:** All cloud API calls use HTTPS with certificate validation. No HTTP fallback. Renderer cannot make direct network requests — all LLM calls go through main process IPC.
 
 #### T4: Local Data Exposure
-- **Scenario:** Another application on the same machine reads SQLite database
-- **Mitigation:** API keys are encrypted at rest. History data is not encrypted (performance tradeoff), but file permissions restrict access to the user account. Node.js `fs` module used with `mode: 0o600` for the database file.
+- **Scenario:** Another application on the same machine reads JSON storage files
+- **Mitigation:** API keys are encrypted at rest via `safeStorage`. History data is not encrypted (performance tradeoff), but relies on OS file permissions on `app.getPath('userData')`. No `fs.chmod` calls are made — standard user-directory permissions apply.
 
 #### T5: IPC Injection
-- **Scenario:** Renderer sends spoofed IPC messages to main process (e.g., fake LLM response, decrypt keys)
-- **Mitigation:** Context isolation enabled. Preload script exposes a strict allowlist of IPC channels. Input validation on all IPC arguments. No `ipcRenderer.send` for sensitive channels — uses `ipcRenderer.invoke` with response validation.
+- **Scenario:** Renderer sends spoofed IPC messages to main process
+- **Mitigation:** Context isolation enabled. Preload script exposes a strict typed API via `contextBridge.exposeInMainWorld('api', ...)`. Input validation on IPC arguments (service name validation, text length checks). All IPC channels use typed constant names from `IPC_CHANNELS` in `src/shared/types.ts`.
 
 #### T6: Supply Chain Attack
 - **Scenario:** Compromised npm package (direct or transitive) executes malicious code
-- **Mitigation:** Dependency scanning with `npm audit` in CI. `package.json` uses exact versions with lockfile. SCA tool (Socket.dev or Snyk) blocks vulnerable packages. Electron's sandbox limits damage from renderer-process code execution.
+- **Mitigation:** Lockfile (`pnpm-lock.yaml`) committed to repository. CI uses `--frozen-lockfile`. Dependencies reviewed manually at addition. Electron's context isolation limits damage from renderer-process code execution.
 
 ---
 
@@ -85,123 +83,149 @@
 │  │  ┌──────────────────────────────────────────────────┐  │  │
 │  │  │  safeStorage (OS keychain/macOS Keychain/        │  │  │
 │  │  │   Windows DPAPI/Linux libsecret)                 │  │  │
-│  │  │  - encrypt(plaintext) → buffer                   │  │  │
-│  │  │  - decrypt(buffer) → plaintext                   │  │  │
+│  │  │  - encryptString(plaintext) → base64 string      │  │  │
+│  │  │  - decryptString(base64) → plaintext             │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
 │  │  │  IPC Handlers (validated, typed)                 │  │  │
-│  │  │  │  llm:invoke          → LLM orchestration      │  │  │
-│  │  │  │  stt:start           → mic activation         │  │  │
-│  │  │  │  stt:stop            → mic deactivation       │  │  │
-│  │  │  │  store:get           → read settings          │  │  │
-│  │  │  │  store:set           → write settings         │  │  │
-│  │  │  │  store:getApiKey     → decrypt + return        │  │  │
-│  │  │  │  store:saveApiKey    → encrypt + persist       │  │  │
-│  │  │  │  window:minimize     → hide to tray           │  │  │
-│  │  │  │  app:getVersion      → update check           │  │  │
+│  │  │  │  llm:generate       → LLM orchestration       │  │  │
+│  │  │  │  stt:start          → mic transcription       │  │  │
+│  │  │  │  store:getApiKey    → decrypt + return        │  │  │
+│  │  │  │  store:saveApiKey   → encrypt + persist       │  │  │
+│  │  │  │  settings:get/set   → read/write settings     │  │  │
+│  │  │  │  history:*          → CRUD history entries    │  │  │
+│  │  │  │  window:*           → window management       │  │  │
+│  │  │  │  clipboard:write    → clipboard write         │  │  │
+│  │  │  │  ollama:check       → Ollama health check     │  │  │
+│  │  │  │  hotkey:triggered   → hotkey events           │  │  │
 │  │  │  └──────────────────────────────────────────────────┘  │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
-│  │  │  LLM Clients                                     │  │  │
-│  │  │  │  OllamaClient → http://localhost:11434        │  │  │
-│  │  │  │  OpenAIClient → https://api.openai.com        │  │  │
-│  │  │  │  AnthropicClient → https://api.anthropic.com  │  │  │
-│  │  │  │  All use HTTPS with cert validation           │  │  │
+│  │  │  LLM Clients (main process only)                 │  │  │
+│  │  │  │  Ollama    → http://localhost:11434            │  │  │
+│  │  │  │  OpenAI    → https://api.openai.com            │  │  │
+│  │  │  │  Anthropic → https://api.anthropic.com         │  │  │
+│  │  │  │  All cloud APIs use HTTPS with cert validation │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
-│  │  │  SQLite (better-sqlite3)                         │  │  │
-│  │  │  │  Mode: 0o600 (owner-only access)              │  │  │
-│  │  │  │  Keys encrypted via safeStorage               │  │  │
-│  │  │  │  History in plaintext (local data)            │  │  │
-│  │  │  └──────────────────────────────────────────────────┘  │  │
+│  │  │  JSON File Storage (in userData)                 │  │  │
+│  │  │  │  prompter-history.json — prompt history        │  │  │
+│  │  │  │  prompter-keys.json    — encrypted API keys    │  │  │
+│  │  │  │  prompter-settings.json — app settings         │  │  │
+│  │  │  │  Keys encrypted via safeStorage.encryptString   │  │  │
+│  │  │  │  History/settings in plaintext                  │  │  │
+│  │  └──────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                                                               │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │              Renderer Process (sandboxed)                │  │
+│  │              Renderer Process (contextIsolated)          │  │
 │  │  │  contextIsolation: true                             │  │  │
 │  │  │  nodeIntegration: false                             │  │  │
-│  │  │  sandbox: true                                      │  │  │
+│  │  │  sandbox: false (required for transparent window)   │  │  │
 │  │  │                                                     │  │  │
 │  │  │  ┌──────────────────────────────────────────────┐  │  │
-│  │  │  │  preload.ts (exposed API)                    │  │  │
-│  │  │  │  │  window.electronAPI = {                   │  │  │
-│  │  │  │  │    invokeLLM(payload)                     │  │  │
-│  │  │  │  │    startMic() / stopMic()                 │  │  │
-│  │  │  │  │    getSetting(key) / setSetting(k,v)      │  │  │
-│  │  │  │  │    getApiKey(provider)                    │  │  │
-│  │  │  │  │    saveApiKey(provider, key)              │  │  │
-│  │  │  │  │    getVersion()                           │  │  │
-│  │  │  │  │    minimizeWindow()                       │  │  │
-│  │  │  │  │    onUpdateAvailable(callback)            │  │  │
+│  │  │  │  preload/index.ts (exposed API)              │  │  │
+│  │  │  │  │  window.api = {                           │  │  │
+│  │  │  │  │    llm.generate(req)                      │  │  │
+│  │  │  │  │    clipboard.write(text)                  │  │  │
+│  │  │  │  │    window.setBounds/toggle/resize/pos     │  │  │
+│  │  │  │  │    settings.get/set                       │  │  │
+│  │  │  │  │    ollama.check()                         │  │  │
+│  │  │  │  │    stt.transcribe(audioData)              │  │  │
+│  │  │  │  │    history.insert/list/search/delete/clear│  │  │
+│  │  │  │  │    store.saveApiKey/getApiKey             │  │  │
+│  │  │  │  │    hotkey.onTriggered(cb)                 │  │  │
+│  │  │  │  │    app.quit()                             │  │  │
 │  │  │  │  │  }                                        │  │  │
 │  │  │  └──────────────────────────────────────────────┘  │  │
 │  │  │                                                     │  │
 │  │  │  ┌──────────────────────────────────────────────┐  │  │
-│  │  │  │  React App (no Node access)                  │  │  │
+│  │  │  │  React 19 App (Zustand for state)            │  │  │
 │  │  │  │  │  CSP restricts: script-src, connect-src   │  │  │
-│  │  │  │  │  No fetch to arbitrary hosts              │  │  │
+│  │  │  │  │  connect-src allows localhost:11434       │  │  │
 │  │  │  │  │  All LLM calls via IPC → main process     │  │  │
 │  │  │  └──────────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────────────┘  │
+│  │  └────────────────────────────────────────────────────┘  │
+│  └──────────────────────────────────────────────────────────┘
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ### 2.2 Key Security Settings
 
 ```typescript
-// main.ts — BrowserWindow creation
+// src/main/main.ts — BrowserWindow creation
 const mainWindow = new BrowserWindow({
-  // ... window config
+  width: 520,
+  height: 520,
+  frame: false,
+  transparent: true,
+  backgroundColor: '#00000000',
+  alwaysOnTop: true,
+  resizable: false,
   webPreferences: {
-    preload: join(__dirname, 'preload.js'),
+    preload: path.join(__dirname, '../preload/index.js'),
     contextIsolation: true,       // CRITICAL: isolate renderer from Node
     nodeIntegration: false,       // CRITICAL: no Node in renderer
-    sandbox: true,                // CRITICAL: OS-level sandbox
-    webSecurity: true,            // CRITICAL: enforce CORS, CSP
-    allowRunningInsecureContent: false,
-    spellcheck: false,            // reduces attack surface
-    autoplayPolicy: 'user-gesture-required',
-  }
+    sandbox: false,               // REQUIRED: transparent window compositing
+  },
 });
 ```
 
 ### 2.3 IPC Channel Allowlist
 
-All IPC communication goes through a strict allowlist in the preload script. The renderer **cannot** send arbitrary IPC messages.
+All IPC communication goes through typed constant names defined in `src/shared/types.ts`. The renderer **cannot** send arbitrary IPC messages — only the channels exposed via `contextBridge` are available.
 
 ```typescript
-// preload.ts — strict allowlist
+// src/preload/index.ts — strict typed API
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  // LLM — read-only invocation, no key exposure
-  invokeLLM: (payload: LLMInvocation) =>
-    ipcRenderer.invoke('llm:invoke', payload),
-
-  // Microphone — requires user gesture in renderer
-  startMic: () => ipcRenderer.invoke('stt:start'),
-  stopMic: () => ipcRenderer.invoke('stt:stop'),
-
-  // Storage — typed, validated keys
-  getSetting: (key: string) =>
-    ipcRenderer.invoke('store:get', validateKey(key)),
-  setSetting: (key: string, value: unknown) =>
-    ipcRenderer.invoke('store:set', validateKey(key), value),
-
-  // API Keys — dedicated encrypted path
-  getApiKey: (provider: 'openai' | 'anthropic') =>
-    ipcRenderer.invoke('store:getApiKey', provider),
-  saveApiKey: (provider: 'openai' | 'anthropic', key: string) =>
-    ipcRenderer.invoke('store:saveApiKey', provider, key),
-
-  // Window management
-  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
-
-  // Updates
-  getVersion: () => ipcRenderer.invoke('app:getVersion'),
-  onUpdateAvailable: (callback: (info: UpdateInfo) => void) => {
-    const handler = (_event: IpcRendererEvent, info: UpdateInfo) => callback(info);
-    ipcRenderer.on('update:available', handler);
-    return () => ipcRenderer.removeListener('update:available', handler);
+contextBridge.exposeInMainWorld('api', {
+  llm: {
+    generate: (req: GenerateRequest) =>
+      ipcRenderer.invoke('llm:generate', req),
+  },
+  clipboard: {
+    write: (text: string) =>
+      ipcRenderer.invoke('clipboard:write', text),
+  },
+  window: {
+    setBounds: (bounds) => ipcRenderer.invoke('window:setBounds', bounds),
+    toggle: () => ipcRenderer.invoke('window:toggle'),
+    resize: (w, h) => ipcRenderer.send('window:resize', w, h),
+    getPosition: () => ipcRenderer.invoke('window:pos:get'),
+  },
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    set: (s) => ipcRenderer.invoke('settings:set', s),
+  },
+  ollama: {
+    check: () => ipcRenderer.invoke('ollama:check'),
+  },
+  stt: {
+    transcribe: (audioData: string) =>
+      ipcRenderer.invoke('stt:start', audioData),
+  },
+  history: {
+    insert: (entry) => ipcRenderer.invoke('history:insert', entry),
+    list: (limit, offset) => ipcRenderer.invoke('history:list', limit, offset),
+    search: (query) => ipcRenderer.invoke('history:search', query),
+    delete: (id) => ipcRenderer.invoke('history:delete', id),
+    clear: () => ipcRenderer.invoke('history:clear'),
+  },
+  store: {
+    saveApiKey: (service, key) =>
+      ipcRenderer.invoke('store:saveApiKey', service, key),
+    getApiKey: (service) =>
+      ipcRenderer.invoke('store:getApiKey', service),
+  },
+  hotkey: {
+    onTriggered: (callback) => {
+      const handler = (_event, action) => callback(action);
+      ipcRenderer.on('hotkey:triggered', handler);
+      return () => ipcRenderer.removeListener('hotkey:triggered', handler);
+    },
+  },
+  app: {
+    quit: () => ipcRenderer.invoke('app:quit'),
   },
 });
 ```
@@ -211,19 +235,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
 Every IPC handler validates input before processing:
 
 ```typescript
-// ipc.ts — input validation pattern
-ipcMain.handle('store:getApiKey', async (_event, provider: string) => {
-  // Validate provider is one of the allowed values
-  if (provider !== 'openai' && provider !== 'anthropic') {
-    throw new Error(`Invalid provider: ${provider}`);
+// src/main/ipc.ts — input validation pattern
+const VALID_SERVICES = new Set(['openai', 'anthropic']);
+
+function validateService(service: string): void {
+  if (!VALID_SERVICES.has(service)) {
+    throw new Error(`Invalid service: must be one of [${[...VALID_SERVICES].join(', ')}]`);
   }
-  // Origin check: verify sender is our window
-  const sender = _event.sender;
-  if (!isOurWindow(sender)) {
-    throw new Error('IPC call from unauthorized sender');
+}
+
+function validateTextLength(text: string, max = 100000): void {
+  if (typeof text !== 'string' || text.length > max) {
+    throw new Error(`Invalid text: must be a string with max ${max} characters`);
   }
-  // Proceed with decryption
-  return getDecryptedKey(provider);
+}
+
+ipcMain.handle('store:saveApiKey', (_event, service: string, apiKey: string) => {
+  validateService(service);
+  validateTextLength(apiKey, 4096);
+  storage.saveApiKey(service, apiKey);
+  return true;
 });
 ```
 
@@ -243,35 +274,33 @@ Renderer → IPC ('store:saveApiKey', 'openai', 'sk-...')
 Main Process validates provider + key format
          │
          ▼
-safeStorage.encrypt(plaintextKey) → encrypted Buffer
+safeStorage.encryptString(plaintextKey) → encrypted string
          │
          ▼
-Buffer.toString('hex') → stored as hex string in SQLite
-(settings table, key='api_key_openai', value='<hex_encoded_ciphertext>')
+Buffer.from(encrypted).toString('base64') → stored in prompter-keys.json
          │
          ▼
-┌───────────────────────────────────────────────────┐
-│ At Rest: Encrypted hex string in SQLite            │
-│ Protected by OS keychain (DPAPI/libsecret/Keychain)│
-│ File permissions: 0o600 (owner read/write only)    │
-└───────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ At Rest: Base64-encoded ciphertext in JSON file      │
+│ Protected by OS keychain (DPAPI/libsecret/Keychain)  │
+│ File location: {userData}/prompter-keys.json         │
+└─────────────────────────────────────────────────────┘
 
 --- Later, when LLM call is made ---
 
-Renderer → IPC ('llm:invoke', payload)
+Renderer → IPC ('llm:generate', payload)
          │
          ▼
-Main Process reads encrypted key from SQLite
+Main Process reads encrypted key from prompter-keys.json
          │
          ▼
-safeStorage.decrypt(hexBuffer) → plaintext key
+safeStorage.decryptString(base64Buffer) → plaintext key
          │
          ▼
 Plaintext key used ONLY for this request's HTTP headers
          │
          ▼
-After request completes → key reference zeroed
-(sensitive strings allowed to go out of scope for GC)
+After request completes → key reference released (GC eligible)
          │
          ▼
 Key never written to disk, never persisted in renderer
@@ -280,60 +309,53 @@ Key never written to disk, never persisted in renderer
 ### 3.2 Microphone Access Flow
 
 ```
-User clicks Mic button in renderer (user gesture required)
+User clicks Mic button in renderer
          │
          ▼
-Renderer calls window.electronAPI.startMic()
+Renderer calls navigator.mediaDevices.getUserMedia({ audio: true })
          │
          ▼
-IPC → Main Process validates:
-  - Is there a pending user gesture? (navigator.mediaDevices requirement)
-  - Is mic already active? (prevent double-start)
-  - Is Whisper server available?
+Audio recorded in renderer → converted to base64 data
          │
          ▼
-Main Process:
-  1. Opens audio input stream (via getUserMedia or native mic)
-  2. Streams audio chunks to Whisper process
-  3. Returns transcribed text via IPC callback
+Renderer calls api.stt.transcribe(audioData)
          │
          ▼
-On stopMic() or transcription complete:
-  1. Audio stream closed immediately
-  2. Audio buffers released
-  3. Whisper process idle
+IPC → Main Process:
+  - Retrieves OpenAI API key from encrypted storage
+  - Sends audio data to OpenAI Whisper API
+  - Returns transcribed text to renderer
          │
          ▼
-Audio data is NEVER written to disk
-Audio data is NEVER sent over network
-Audio data exists ONLY in-memory during active recording
+On completion:
+  - Audio stream closed in renderer
+  - Audio buffers released in main process
+  - Audio data is NEVER written to disk
+  - Audio data is NEVER sent except to OpenAI Whisper API
 ```
 
 ### 3.3 LLM Invocation Flow
 
 ```
-Renderer sends IPC ('llm:invoke', { input, framework, template?, provider? })
+Renderer sends IPC ('llm:generate', { input, framework, template? })
          │
          ▼
-Main Process LLM Orchestrator:
-  ┌─ 1. Validate input (sanitize, length check)
+Main Process LLM Orchestrator (src/main/llm/orchestrator.ts):
+  ┌─ 1. Validate framework exists
   ├─ 2. Select provider (Ollama / OpenAI / Anthropic)
   ├─ 3. If cloud provider:
-  │     ├─ Retrieve encrypted key from SQLite
-  │     ├─ Decrypt with safeStorage
-  │     ├─ Construct HTTPS request (TLS 1.3 minimum)
-  │     ├─ Set Authorization header with decrypted key
-  │     ├─ Send request (timeout: 30s)
-  │     ├─ Verify response signature (if available)
-  │     └─ Zero key reference after request
+  │     ├─ Read API key from active config (decrypted earlier)
+  │     ├─ Construct HTTPS request (TLS)
+  │     ├─ Set Authorization header
+  │     ├─ Send request
+  │     └─ Key is removed from scope after request
   ├─ 4. If Ollama (local):
-  │     ├─ Verify URL is localhost (reject non-local)
-  │     ├──warn if URL is not localhost
-  │     └─ Send HTTP request (localhost, unencrypted is acceptable)
+  │     ├─ Connect to configured endpoint (default: http://localhost:11434)
+  │     └─ Send HTTP request
   └─ 5. Return structured result to renderer
          │
          ▼
-Result sent back via IPC response (never containing API keys)
+Result sent via IPC response (never containing API keys)
 ```
 
 ### 3.4 History Storage
@@ -345,16 +367,16 @@ User generates prompt
 LLM result returned to renderer
          │
          ▼
-Main Process saves to SQLite:
-  - raw_input (plaintext) — user's own text
-  - generated_prompt (plaintext) — structured output
+Main Process saves to JSON (prompter-history.json):
+  - rawInput (plaintext) — user's own text
+  - structuredOutput (plaintext) — generated prompt
   - framework, template, timestamp
          │
          ▼
-File permissions on SQLite DB:
-  - Location: ~/.promptforge/history.db
-  - Mode: 0o600 (owner-only read/write)
-  - Directory: ~/.promptforge/ mode 0o700
+History is stored in:
+  - File: {userData}/prompter-history.json
+  - In-memory array capped at 500 entries
+  - Written via queued writes (write-after-write ordering enforced)
 ```
 
 ---
@@ -371,14 +393,8 @@ File permissions on SQLite DB:
     default-src 'self';
     script-src 'self';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob:;
-    font-src 'self' data:;
-    connect-src 'self';
-    media-src 'self' blob:;
-    frame-src 'none';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'none';
+    connect-src 'self' http://localhost:11434;
+    img-src 'self' data:;
   "
 />
 ```
@@ -387,88 +403,49 @@ File permissions on SQLite DB:
 
 | Directive | Why |
 |---|---|
-| `script-src 'self'` | No inline scripts (CSP evaluates the renderer). All JS from bundle only. |
-| `style-src 'self' 'unsafe-inline'` | Tailwind CSS injection requires inline styles. `unsafe-inline` is acceptable here because sandbox + contextIsolation prevent DOM manipulation from injected scripts. |
-| `connect-src 'self'` | Renderer must NOT make network requests directly. All network calls go through main process IPC. |
-| `media-src 'self' blob:` | Required for microphone MediaRecorder API. Blobs are in-memory only. |
-| `frame-src 'none'` | No iframes — prevents clickjacking and adware. |
-| `form-action 'none'` | No HTML forms — prevents form-based exfiltration. |
+| `default-src 'self'` | Baseline — only same-origin resources by default |
+| `script-src 'self'` | No inline scripts. All JS from bundle only |
+| `style-src 'self' 'unsafe-inline'` | Tailwind CSS injection requires inline styles. Acceptable because context isolation prevents DOM manipulation from injected scripts |
+| `connect-src 'self' http://localhost:11434` | Renderer may connect to local Ollama server directly. **No direct connections to cloud LLM APIs** — those go through main process IPC |
+| `img-src 'self' data:` | App icons and inline image data only |
 
 ### 4.2 BrowserWindow Hardening
 
 ```typescript
-// Additional window security
-const mainWindow = new BrowserWindow({
-  // ...
-  webPreferences: {
-    // ... settings from section 2.2
-
-    // Additional hardening
-    disableDialogs: true,              // no alert/confirm/prompt
-    navigateOnDragDrop: false,         // no file drag → navigation
-    enableRemoteModule: false,         // @electron/remote is disabled
-    safeDialogs: true,                 // prevent dialog abuse
-    safeDialogsMessage: 'Prompter — Dialog blocked for security',
-  }
+// src/main/main.ts — window hardening
+mainWindow.webContents.on('closed', () => {
+  mainWindow = null;
 });
 
-// Prevent navigation away from app
-mainWindow.webContents.on('will-navigate', (event, url) => {
-  // Only allow hash-based navigation within app
-  if (!url.startsWith('file://')) {
-    event.preventDefault();
-  }
-});
-
-// Prevent new window creation
-mainWindow.webContents.setWindowOpenHandler(() => {
-  return { action: 'deny' };
-});
+// Prevent navigation away from app — handled implicitly by loadFile/loadURL usage
+// No will-navigate handler: the app uses hash-based navigation from Vite dev server
+// or file:// protocol in production. External URLs cannot be navigated to because
+// loadURL is only called with the dev server URL or file:// path.
 ```
 
-### 4.3 Session Configuration
+### 4.3 Network Access
 
-```typescript
-// Enforce HTTPS-only
-app.on('ready', () => {
-  session.defaultSession.webRequest.onBeforeRequest(
-    { urls: ['http://*/*'] },
-    (details, callback) => {
-      // Allow localhost connections (Ollama, Whisper)
-      if (
-        details.url.startsWith('http://localhost') ||
-        details.url.startsWith('http://127.0.0.1')
-      ) {
-        return callback({ cancel: false });
-      }
-      // Block all other HTTP
-      if (!details.url.startsWith('https://')) {
-        console.warn(`[Security] Blocked HTTP request: ${details.url}`);
-        return callback({ cancel: true });
-      }
-      callback({ cancel: false });
-    }
-  );
-});
-```
+Network requests originate only from the main process:
 
-### 4.4 Additional Hardening
+| Endpoint | Protocol | Purpose | Allowed |
+|---|---|---|---|
+| `http://localhost:11434` | HTTP | Ollama API calls | Yes (localhost only) |
+| `https://api.openai.com` | HTTPS | OpenAI LLM + Whisper API | Yes (main process only) |
+| `https://api.anthropic.com` | HTTPS | Anthropic LLM API | Yes (main process only) |
+| All other destinations | — | — | No |
 
-```typescript
-// main.ts
-app.commandLine.appendSwitch('disable-http-cache');     // no disk cache of API responses
-app.commandLine.appendSwitch('no-proxy-server');         // prevent proxy-based MITM
-app.commandLine.appendSwitch('disable-ntp');              // no network time
+No CLI switches for HTTPS enforcement exist. The renderer CSP blocks direct connections. Cloud API calls in the main process use HTTPS URLs directly (Ollama client uses the user-configured endpoint, defaulting to `http://localhost:11434`).
 
-// Prevent renderer from accessing file:// protocol resources
-session.defaultSession.protocol.registerFileProtocol('safe-file', (request, callback) => {
-  // Only allow specific paths
-  const allowed = request.url.startsWith('safe-file://allowed/');
-  if (!allowed) {
-    callback({ error: -6 }); // ERR_FILE_NOT_FOUND
-  }
-});
-```
+### 4.4 Transparent Window Considerations
+
+The window uses `sandbox: false` because Chromium's sandbox interferes with transparent window compositing on some platforms. The following mitigations compensate:
+
+- `contextIsolation: true` — renderer cannot access Node.js APIs
+- `nodeIntegration: false` — no `require()` in renderer
+- CSP restricts script execution to bundled code only
+- Preload script exposes a strict typed API — no generic `ipcRenderer.send` access
+
+On Windows and Linux, `enable-transparent-visuals` is set as a command-line switch to enable DWM alpha channel / X composite extension. On Linux, GPU acceleration is disabled (`disable-gpu`) to avoid GPU process crashes.
 
 ---
 
@@ -482,78 +459,75 @@ session.defaultSession.protocol.registerFileProtocol('safe-file', (request, call
 │                                                               │
 │  Platform-specific backends:                                  │
 │  • macOS: Keychain (kSecAttrAccessibleWhenUnlockedThisDeviceOnly)│
-│  • Windows: DPAPI (CryptProtectData with CRYPTPROTECT_LOCAL_MACHINE)│
+│  • Windows: DPAPI (CryptProtectData)                          │
 │  • Linux: libsecret (Secret Service API via D-Bus)            │
 │                                                               │
-│  safeStorage.isEncryptionAvailable() → check before use        │
+│  safeStorage.isEncryptionAvailable() → check before use       │
 │                                                               │
-│  encrypt(plaintext: string) → Buffer                          │
-│  decrypt(ciphertext: Buffer) → string                         │
+│  encryptString(plaintext: string) → Buffer                    │
+│  decryptString(buffer: Buffer) → string                       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ### 5.2 Storage Schema
 
-```sql
--- Stored in settings table
-INSERT INTO settings (key, value) VALUES ('api_key_openai', '<hex_encoded_ciphertext>');
-INSERT INTO settings (key, value) VALUES ('api_key_anthropic', '<hex_encoded_ciphertext>');
+```json
+// prompter-keys.json — stored at {userData}/prompter-keys.json
+{
+  "openai": "<base64_encoded_ciphertext>",
+  "anthropic": "<base64_encoded_ciphertext>"
+}
 ```
 
 ### 5.3 Implementation
 
 ```typescript
-// store.ts — API key encryption
+// src/main/storage.ts — API key encryption
 import { safeStorage } from 'electron';
 
-export function encryptApiKey(plaintext: string): string {
-  if (!safeStorage.isEncryptionAvailable()) {
-    // Fallback: warn user and store obfuscated (NOT encrypted)
-    // This is a known limitation on headless Linux or specific environments
-    console.warn('[Security] safeStorage unavailable — API keys stored with reduced protection');
-    // Still at least obfuscate with a reversible transform
-    return Buffer.from(plaintext).toString('base64');
+export class StorageService {
+  saveApiKey(service: string, apiKey: string): void {
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error(
+        'System encryption unavailable — cannot securely store API key. ' +
+        'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).',
+      );
+    }
+    const encrypted = safeStorage.encryptString(apiKey);
+    keys[service] = encrypted.toString('base64');
+    fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
   }
-  const encrypted = safeStorage.encrypt(plaintext);
-  return encrypted.toString('hex');
-}
 
-export function decryptApiKey(encoded: string): string {
-  const buffer = Buffer.from(encoded, 'hex');
-  if (safeStorage.isEncryptionAvailable()) {
-    return safeStorage.decrypt(buffer).toString();
+  getApiKey(service: string): string | null {
+    const keys: Record<string, string> = JSON.parse(
+      fs.readFileSync(this.keysPath, 'utf-8'),
+    );
+    const stored = keys[service];
+    if (!stored || !safeStorage.isEncryptionAvailable()) return null;
+    return safeStorage.decryptString(Buffer.from(stored, 'base64'));
   }
-  // Fallback: base64 decode
-  return Buffer.from(encoded, 'base64').toString();
 }
 ```
 
 ### 5.4 Key Handling Rules
 
-1. **Never store plaintext keys** — Keys are encrypted before first write to SQLite
+1. **Never store plaintext keys** — Keys are encrypted before first write to `prompter-keys.json`
 2. **Decrypt only in main process** — Renderer never receives plaintext keys
 3. **Decrypt on demand** — Keys are decrypted per-request, then reference is released
-4. **No key caching** — Decrypted keys are not cached in memory
-5. **No console logging** — API keys are never logged (use `[REDACTED]` in logs)
+4. **No key caching** — Decrypted keys are not cached in memory beyond active config object
+5. **No console logging** — API keys are never logged
 6. **No error message leakage** — API errors redact the key from error messages
-7. **Key validation on save** — Basic format validation before encryption:
-   - OpenAI: starts with `sk-` or `sk-proj-`, minimum 20 chars
-   - Anthropic: starts with `sk-ant-`, minimum 20 chars
+7. **safeStorage must be available** — The app throws if `safeStorage.isEncryptionAvailable()` is false (no fallback)
 
 ### 5.5 Key Validation
 
 ```typescript
-// store.ts — key validation
-function validateApiKey(provider: string, key: string): boolean {
-  if (!key || typeof key !== 'string') return false;
+// src/main/ipc.ts — service name validation
+const VALID_SERVICES = new Set(['openai', 'anthropic']);
 
-  switch (provider) {
-    case 'openai':
-      return /^sk-(proj-)?[A-Za-z0-9]{20,}$/.test(key);
-    case 'anthropic':
-      return /^sk-ant-[A-Za-z0-9]{20,}$/.test(key);
-    default:
-      return false;
+function validateService(service: string): void {
+  if (!VALID_SERVICES.has(service)) {
+    throw new Error(`Invalid service: must be one of [${[...VALID_SERVICES].join(', ')}]`);
   }
 }
 ```
@@ -569,12 +543,12 @@ function validateApiKey(provider: string, key: string): boolean {
 | Telemetry / analytics | ❌ NONE | No tracking, no analytics SDK, no metrics collection |
 | Crash reporting | ❌ NONE | No Sentry, no crash reporter, no error upload |
 | User behavior tracking | ❌ NONE | No mouse movement, click tracking, or heatmaps |
-| Prompt history upload | ❌ NONE | All history stays in local SQLite |
-| Audio recording upload | ❌ NONE | Audio processed locally via Whisper, never sent to network |
+| Prompt history upload | ❌ NONE | All history stays in local JSON files |
+| Audio recording upload | ❌ NONE | Audio sent only to OpenAI Whisper API for transcription |
 | Advertising | ❌ NONE | No ads, no ad SDKs |
 | Third-party tracking | ❌ NONE | No Google Analytics, Facebook Pixel, or similar |
-| Auto-update with user data | ❌ NONE | Update check only sends app version (no user info) |
-| License validation | ❌ NONE | No phone-home license checks (v1 — open source) |
+| Auto-update | ❌ NONE | No auto-updater implemented |
+| License validation | ❌ NONE | No phone-home license checks |
 
 ### 6.2 What Prompter Does
 
@@ -582,26 +556,8 @@ function validateApiKey(provider: string, key: string): boolean {
 |---|---|---|
 | Cloud LLM calls | User's intent text sent to OpenAI/Anthropic API | User must consent by configuring API key and selecting cloud provider |
 | Ollama calls | User's intent text sent to local Ollama server | All traffic on localhost, never leaves machine |
-| Auto-update check | App version sent to GitHub Releases (or update server) | Version string only, no identifiers |
-| History storage | Raw input + generated prompt saved to local SQLite | Stored locally, user can delete at any time |
-
-### 6.3 User-Facing Privacy Disclosure
-
-A one-time privacy notice should be shown on first launch:
-
-```
-Prompter Privacy Notice
-
-• Your API keys are encrypted at rest using your operating system's keychain
-• Your prompt history is stored locally and never uploaded
-• Voice recordings are processed entirely on your machine
-• When using cloud LLMs (OpenAI/Anthropic), your input text is sent to
-  those services. Configure API keys and provider selection in Settings.
-• Prompter contains no analytics, telemetry, or crash reporting
-• Auto-update checks send only your app version number
-
-[Got it] [View Security Documentation]
-```
+| History storage | Raw input + generated prompt saved to local JSON | Stored locally, user can delete at any time |
+| STT transcription | Audio sent to OpenAI Whisper API (if configured) | Sent to OpenAI for processing when using cloud STT |
 
 ---
 
@@ -609,53 +565,24 @@ Prompter Privacy Notice
 
 ### 7.1 npm Audit Policy
 
-```json
-// .npmrc
+```ini
+.npmrc
 audit=true
 audit-level=high
-fund=false
 ```
 
-### 7.2 CI/CD Dependency Scanning
-
-```yaml
-# .github/workflows/ci.yml (security section)
-jobs:
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: npm audit
-        run: pnpm audit --audit-level=high
-        # Fail CI on moderate+ vulnerabilities
-
-      - name: SCA Scan (Socket.dev)
-        uses: socketdev/socket-action@latest
-        with:
-          token: ${{ secrets.SOCKET_TOKEN }}
-```
-
-### 7.3 Dependency Rules
+### 7.2 Dependency Rules
 
 | Rule | Policy |
 |---|---|
 | Lockfile | `pnpm-lock.yaml` committed to repository. CI uses `--frozen-lockfile` |
 | Exact versions | All dependencies pinned to exact versions in `package.json` |
 | Minimum dependencies | Review every dependency. No unnecessary transitive dependencies |
-| Native modules | `better-sqlite3` is the only native module. Verify prebuilt binaries |
+| Native modules | None — all dependencies are pure JS/TS |
 | Dev dependencies | Not included in production build (electron-builder filters dev deps) |
-| Deprecation | `npm doctor` check — no deprecated packages |
 | Known vulnerabilities | Zero tolerance for `HIGH` or `CRITICAL` in production dependencies |
 
-### 7.4 Approved Dependency Review
+### 7.3 Approved Dependency Review
 
 Before adding a new dependency, evaluate:
 
@@ -666,258 +593,99 @@ Before adding a new dependency, evaluate:
 5. Does it need native bindings? (Prefer pure JS/TS)
 6. Does it need network access? (Should not in renderer)
 
-### 7.5 Electron-Specific Dependencies
+### 7.4 Current Dependencies
 
-| Package | Version Pin | Notes |
+| Package | Role | Notes |
 |---|---|---|
-| `electron` | `^34.0.0` | Latest stable. Critical security updates tracked |
-| `better-sqlite3` | `^11.0.0` | Only native module. Prebuilt binaries recommended |
-| `electron-builder` | `^25.0.0` | Dev-only. Code signing config |
-| `electron-updater` | `^6.0.0` | Auto-update with signature verification |
+| `electron` | Desktop runtime | Latest stable. Critical security updates tracked |
+| `react` / `react-dom` ^19.0.0 | UI framework | Latest major |
+| `zustand` ^5.0.0 | State management | Lightweight, no Redux |
+| `gsap` ^3.12.0 | Animations | Client-side only |
+| `lucide-react` ^0.400.0 | Icons | Pure SVG icons |
+| `tailwindcss` ^4.0.0 | Styling | Dev dependency, CSS-only |
+| `vite` ^6.0.0 | Bundler | Dev dependency |
+| `electron-builder` | Distribution | Dev dependency, no code signing configured |
 
 ---
 
 ## 8. Build & Distribution Security
 
-### 8.1 Code Signing
+### 8.1 Current Status
 
-| Platform | Requirement | Tool |
+| Platform | Code Signing | Status |
 |---|---|---|
-| macOS | Developer ID Application certificate | `electron-builder` with `notarize: true` |
-| Windows | EV Code Signing certificate | `electron-builder` with `certificateFile` and `certificatePassword` |
-| Linux | No signing required (AppImage) | GPG signature for release artifacts recommended |
+| macOS | ❌ Not configured | electron-builder present but no signing config |
+| Windows | ❌ Not configured | electron-builder present but no signing config |
+| Linux | N/A | AppImage — no signing required |
+
+### 8.2 Build Pipeline
 
 ```yaml
-# electron-builder config (macOS example)
-mac:
-  hardenedRuntime: true
-  gatekeeperAssess: false
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
-  notarize:
-    teamId: ${APPLE_TEAM_ID}
+# Build pipeline steps (in package.json scripts)
+1. pnpm typecheck    # TypeScript type safety
+2. pnpm lint         # Biome linting
+3. pnpm test         # Vitest test suite
+4. pnpm build        # Vite production build
+5. pnpm dist:mac     # electron-builder (macOS AppImage/dmg)
+   pnpm dist:win     # electron-builder (Windows NSIS)
+   pnpm dist:linux   # electron-builder (Linux AppImage)
 ```
 
-#### macOS Entitlements (Minimal)
+### 8.3 Release Artifact Verification
 
-```xml
-<!-- build/entitlements.mac.plist -->
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <!-- Required for microphone access -->
-  <key>com.apple.security.device.audio-input</key>
-  <true/>
-  <!-- Required for safeStorage (keychain access) -->
-  <key>com.apple.security.personal-information.photos-library</key>
-  <false/>
-  <key>com.apple.security.personal-information.location</key>
-  <false/>
-  <!-- REQUIRED: Hardened runtime exceptions -->
-  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-  <true/>
-  <key>com.apple.security.cs.disable-library-validation</key>
-  <true/>
-  <!-- Not needed: network access, printing, USB, etc. -->
-</dict>
-</plist>
-```
-
-### 8.2 Auto-Update Integrity
-
-```typescript
-// update.ts — electron-updater with signature verification
-import { autoUpdater } from 'electron-updater';
-
-autoUpdater.setFeedURL({
-  provider: 'github',
-  owner: 'promptforge',
-  repo: 'promptforge',
-  // Releases must be signed
-});
-
-autoUpdater.on('update-available', (info) => {
-  // Verify update comes from official source
-  // electron-updater verifies the signature of the update manifest
-  // Additional: verify SHA256 hash of downloaded artifact
-  mainWindow.webContents.send('update:available', {
-    version: info.version,
-    releaseDate: info.releaseDate,
-  });
-});
-
-// Verify downloaded file integrity
-autoUpdater.on('download-progress', (progress) => {
-  // electron-updater validates checksum before applying
-});
-
-// Reject unsigned updates
-autoUpdater.allowDowngrade = false;
-autoUpdater.allowPrerelease = false;
-```
-
-### 8.3 Build Pipeline Security
-
-```yaml
-# Build pipeline security gates
-1. ✅ pnpm install --frozen-lockfile   # Reproducible dependency tree
-2. ✅ pnpm audit --audit-level=high    # No known vulnerabilities
-3. ✅ pnpm lint                        # Code quality
-4. ✅ pnpm typecheck                   # Type safety
-5. ✅ pnpm test                        # Test suite
-6. ✅ Code signing                     # macOS + Windows signatures
-7. ✅ Notarization                     # macOS notarization
-8. ✅ SHA256 checksum of release       # Integrity verification
-9. ✅ Release draft with signed checksums
-```
-
-### 8.4 Release Artifact Verification
-
-Users should verify downloaded releases:
+Users can verify downloaded releases:
 
 ```bash
-# User verification (published in release notes)
 # macOS
-shasum -a 256 Prompter-1.0.0.dmg
-# Compare with published checksum
-
+shasum -a 256 Prompter-*.dmg
 # Windows
-certutil -hashfile Prompter-Setup-1.0.0.exe SHA256
-# Compare with published checksum
-
+certutil -hashfile Prompter-Setup-*.exe SHA256
 # Linux
-sha256sum Prompter-1.0.0.AppImage
-# Compare with published checksum
+sha256sum Prompter-*.AppImage
 ```
 
 ---
 
-## 9. Incident Response Plan
+## 9. Security Checklist
 
-### 9.1 Vulnerability Disclosure
+### Current Implementation Status
 
-```
-Email: security@promptforge.dev
-PGP Key: [available at promptforge.dev/security.asc]
-Response SLA: 72 hours acknowledgment, 14 days for fix
-```
+- [x] **contextIsolation: true** — verified in `src/main/main.ts`
+- [x] **nodeIntegration: false** — verified in `src/main/main.ts`
+- [ ] **sandbox: true** — `sandbox: false` (required for transparent window)
+- [x] CSP meta tag present in `index.html` with all directives
+- [x] IPC channels are validated (service names, text lengths) in main process
+- [x] API keys encrypted with `safeStorage.encryptString` before writing to JSON
+- [x] API keys never logged, included in error messages, or sent to renderer
+- [x] Mic activation requires explicit user action (click event)
+- [x] Audio data not persisted to disk
+- [x] Cloud LLM calls use HTTPS with certificate validation
+- [x] Renderer CSP blocks direct network access to non-Ollama endpoints
+- [x] Lockfile (`pnpm-lock.yaml`) committed
+- [x] No analytics, telemetry, or crash reporting SDKs in dependencies
+- [x] No dev dependencies included in production build
 
-### 9.2 Incident Severity Levels
+### Areas for Future Improvement
 
-| Level | Example | Response |
-|---|---|---|
-| **Critical** | Remote code execution, API key leak | Immediate patch, user notification, forced update |
-| **High** | SQLite database accessible to other users | Patch within 7 days, advisory |
-| **Medium** | CSP bypass, minor information disclosure | Patch within 30 days |
-| **Low** | Dependency with low-severity advisory | Patch in next release cycle |
-
-### 9.3 Incident Response Steps
-
-1. **Triage** — Confirm severity, affected users, attack vector
-2. **Contain** — If cloud service: rotate keys, block endpoints. If local: advise users
-3. **Fix** — Patch in main branch, create release
-4. **Notify** — GitHub Security Advisory, release notes, forced update for critical
-5. **Post-mortem** — Root cause analysis, security control improvements
-
----
-
-## 10. Security Checklist for V1 Release
-
-### Pre-Release Verification
-
-- [ ] **contextIsolation: true** verified in BrowserWindow config
-- [ ] **nodeIntegration: false** verified in BrowserWindow config
-- [ ] **sandbox: true** enabled for renderer process
-- [ ] **webSecurity: true** verified
-- [ ] CSP meta tag present in `index.html` with all directives
-- [ ] IPC channels are validated (origin + input) in main process
-- [ ] API keys encrypted with `safeStorage` before writing to SQLite
-- [ ] API keys never logged, included in error messages, or sent to renderer
-- [ ] Mic activation requires explicit user action (click event)
-- [ ] Audio data discarded after transcription
-- [ ] All cloud LLM calls use HTTPS with certificate validation
-- [ ] Non-localhost HTTP connections blocked (except user-warned Ollama URL)
-- [ ] `will-navigate` handler prevents navigation to external URLs
-- [ ] `setWindowOpenHandler` returns `{ action: 'deny' }`
-- [ ] `disableDialogs: true` prevents alert/confirm abuse
-- [ ] `navigateOnDragDrop: false` prevents file-drop navigation
-- [ ] `enableRemoteModule: false` disables `@electron/remote`
-- [ ] Lockfile (`pnpm-lock.yaml`) committed and CI uses `--frozen-lockfile`
-- [ ] `npm audit` passes at `--audit-level=high` or better
-- [ ] No analytics, telemetry, or crash reporting SDKs in dependencies
-- [ ] No dev dependencies included in production build
-- [ ] macOS code signing configured and tested
-- [ ] Windows code signing configured and tested
-- [ ] Auto-updater configured with signature verification
-- [ ] Release checksums generated and published
-- [ ] Privacy notice shown on first launch
-- [ ] Dependency tree reviewed (no unnecessary packages)
-- [ ] `ELECTRON_HTTPS_ONLY` environment variable enforced
-- [ ] Renderer cannot access `file://` protocol to read arbitrary files
-
-### Regular Maintenance
-
-- [ ] Dependency audit run weekly (or on each CI run)
-- [ ] Electron version tracked for security releases
-- [ ] `safeStorage.isEncryptionAvailable()` checked at startup — warn user if unavailable
-- [ ] Security documentation reviewed each release cycle
+- [ ] Enable `sandbox: true` (requires non-transparent window or alternative compositing)
+- [ ] macOS code signing and notarization
+- [ ] Windows code signing
+- [ ] CSP `form-action 'none'` directive
+- [ ] `navigateOnDragDrop: false` hardening
+- [ ] Permission checks on IPC origin (verify sender is our window)
+- [ ] SCA tooling integration (Socket.dev or Snyk) in CI
+- [ ] `will-navigate` handler for external URL blocking
+- [ ] `setWindowOpenHandler` returning `{ action: 'deny' }`
+- [ ] Release checksums published
+- [ ] Dependency audit automated in CI
 
 ---
 
-## Appendix A: Quick Reference
-
-### Must-Have (Blocking for V1)
-
-```
-□ contextIsolation: true
-□ nodeIntegration: false
-□ sandbox: true
-□ CSP in index.html
-□ safeStorage for API keys
-□ Mic activation on user gesture only
-□ HTTPS-only for cloud calls
-□ IPC input validation
-□ No telemetry/analytics
-□ Lockfile committed
-□ npm audit clean
-□ Code signing (macOS + Windows)
-```
-
-### Should-Have (High Priority)
-
-```
-□ SCA tooling (Socket.dev or Snyk)
-□ Privacy notice on first launch
-□ macOS entitlements review
-□ Release checksums published
-□ Prevent navigation to external URLs
-□ Renderer disconnect from file:// protocol
-```
-
-### Nice-to-Have (Future)
-
-```
-□ Certificate pinning for cloud API endpoints
-□ Binary transparency log
-□ Electron Fuses for runtime security
-□ Custom update server (instead of GitHub)
-□ ASLR and DEP hardening flags
-□ Seccomp filter on Linux
-□ AppArmor/SELinux policy
-```
-
----
-
-## Appendix B: References
+## Appendix A: References
 
 - [Electron Security Guidelines](https://www.electronjs.org/docs/latest/tutorial/security)
 - [safeStorage Documentation](https://www.electronjs.org/docs/latest/api/safe-storage)
 - [OWASP Electron Security Cheatsheet](https://cheatsheetseries.owasp.org/cheatsheets/Electron_Security_Cheat_Sheet.html)
 - [OpenAI API Security](https://platform.openai.com/docs/guides/safety-best-practices)
 - [Anthropic API Security](https://docs.anthropic.com/claude/reference/security)
-- [electron-builder Code Signing](https://www.electron.build/code-signing)
 - [npm audit documentation](https://docs.npmjs.com/cli/v10/commands/npm-audit)
-- [Socket.dev SCA](https://socket.dev/)
-- [macOS Hardened Runtime](https://developer.apple.com/documentation/security/hardened_runtime)

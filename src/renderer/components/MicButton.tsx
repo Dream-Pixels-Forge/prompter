@@ -12,7 +12,7 @@ interface MicButtonProps {
 
 export function MicButton({ onTranscript, onInterim, disabled, large = false }: MicButtonProps) {
   const [state, setState] = useState<'idle' | 'listening' | 'processing'>('idle');
-  const [interimText, setInterimText] = useState('');
+  const [_interimText, setInterimText] = useState('');
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useAppStore((s) => s.showToast);
@@ -86,7 +86,8 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
 
   return (
     <div className="relative inline-flex flex-col items-center overflow-visible">
-      <button type="button"
+      <button
+        type="button"
         onClick={handleToggle}
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
@@ -107,7 +108,9 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
         {state === 'processing' ? (
           <Loader2 className={`${large ? 'w-6 h-6' : 'w-4 h-4'} text-white/48 animate-spin`} />
         ) : (
-          <Mic className={`${large ? 'w-6 h-6' : 'w-4 h-4'} ${state === 'listening' ? 'text-red-400' : 'text-white/48'}`} />
+          <Mic
+            className={`${large ? 'w-6 h-6' : 'w-4 h-4'} ${state === 'listening' ? 'text-red-400' : 'text-white/48'}`}
+          />
         )}
       </button>
     </div>

@@ -1,38 +1,32 @@
 import path from 'node:path';
-import { BrowserWindow, app, globalShortcut, screen } from 'electron';
+import { BrowserWindow, app, globalShortcut } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
 import { registerIpcHandlers } from './ipc';
-
-// Transparent window fixes per platform:
-// - Windows: enable-transparent-visuals enables DWM alpha channel
-// - Linux (X11): enables transparency via X composite extension
-if (process.platform === 'win32' || process.platform === 'linux') {
-  app.commandLine.appendSwitch('enable-transparent-visuals');
-}
 
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  // Enable transparent visuals for Win/Linux (required for transparent window)
+  if (process.platform === 'win32' || process.platform === 'linux') {
+    app.commandLine.appendSwitch('enable-transparent-visuals');
+  }
 
   mainWindow = new BrowserWindow({
-    x: screenWidth - 80 - 20,
-    y: screenHeight - 80 - 20,
-    width: 80,
-    height: 80,
+    width: 520,
+    height: 520,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     alwaysOnTop: true,
-    skipTaskbar: true,
     resizable: false,
     thickFrame: false,
     hasShadow: false,
+    center: true,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   });
 
@@ -50,9 +44,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  createWindow();
-  if (!mainWindow) return;
-  registerIpcHandlers(mainWindow);
+  setTimeout(() => {
+    createWindow();
+    if (!mainWindow) return;
+    registerIpcHandlers(mainWindow);
+  }, 300);
 
   // Global hotkey: Alt+Space to toggle
   globalShortcut.register('Alt+Space', () => {

@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 export function Toast() {
-  const { toastMessage, hideToast, isExpanded } = useAppStore();
+  const { toastMessage, hideToast } = useAppStore();
   const toastRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function Toast() {
   if (!toastMessage) return null;
 
   return (
-    <div ref={toastRef} className={`fixed z-60 right-6 ${isExpanded ? 'top-4' : 'bottom-24'}`}>
+    <div ref={toastRef} className="fixed z-60 right-6 top-4">
       <div className="flex items-center gap-2 px-3.5 py-2 bg-accent rounded-lg shadow-lg shadow-black/20">
         <Check className="w-3.5 h-3.5 text-surface" />
         <span className="text-xs text-surface font-medium">{toastMessage}</span>

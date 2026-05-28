@@ -90,7 +90,6 @@ body,
 
 body {
   font-family: var(--font-sans);
-  background: transparent;
   margin: 0;
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
@@ -164,8 +163,7 @@ body {
 }
 
 .glass-card {
-  background: rgba(24, 22, 26, 0.85);
-  backdrop-filter: blur(16px);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
 }

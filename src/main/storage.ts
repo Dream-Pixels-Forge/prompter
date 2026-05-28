@@ -5,8 +5,6 @@ import type { HistoryEntry } from '../shared/types';
 
 const HISTORY_FILE = 'prompter-history.json';
 const KEYS_FILE = 'prompter-keys.json';
-const BUBBLE_POS_FILE = 'prompter-bubble-pos.json';
-const BUBBLE_WIN_POS_FILE = 'prompter-bubble-win-pos.json';
 const SETTINGS_FILE = 'prompter-settings.json';
 
 export class StorageService {
@@ -14,8 +12,6 @@ export class StorageService {
   private history: HistoryEntry[] = [];
   private historyPath: string;
   private keysPath: string;
-  private bubblePosPath: string;
-  private bubbleWinPosPath: string;
   private settingsPath: string;
   private writeQueue: Promise<void> = Promise.resolve();
 
@@ -23,9 +19,7 @@ export class StorageService {
     this.userDataPath = app.getPath('userData');
     this.historyPath = path.join(this.userDataPath, HISTORY_FILE);
     this.keysPath = path.join(this.userDataPath, KEYS_FILE);
-    this.bubblePosPath = path.join(this.userDataPath, BUBBLE_POS_FILE);
     this.settingsPath = path.join(this.userDataPath, SETTINGS_FILE);
-    this.bubbleWinPosPath = path.join(this.userDataPath, BUBBLE_WIN_POS_FILE);
     this.loadHistory();
   }
 
@@ -149,49 +143,5 @@ export class StorageService {
         console.error('[Storage] Failed to save settings:', err);
       }
     });
-  }
-
-  // ── Bubble Position Persistence ──────────────────────────
-
-  getBubblePosition(): { bottom: number; right: number } | null {
-    try {
-      if (fs.existsSync(this.bubblePosPath)) {
-        const raw = fs.readFileSync(this.bubblePosPath, 'utf-8');
-        return JSON.parse(raw);
-      }
-    } catch (err) {
-      console.error('[Storage] Failed to read bubble position:', err);
-    }
-    return null;
-  }
-
-  saveBubblePosition(pos: { bottom: number; right: number }): void {
-    try {
-      fs.writeFileSync(this.bubblePosPath, JSON.stringify(pos), 'utf-8');
-    } catch (err) {
-      console.error('[Storage] Failed to save bubble position:', err);
-    }
-  }
-
-  // ── Bubble Window Position Persistence (screen X/Y) ──
-
-  getBubbleWindowPosition(): { x: number; y: number } | null {
-    try {
-      if (fs.existsSync(this.bubbleWinPosPath)) {
-        const raw = fs.readFileSync(this.bubbleWinPosPath, 'utf-8');
-        return JSON.parse(raw);
-      }
-    } catch (err) {
-      console.error('[Storage] Failed to read bubble window position:', err);
-    }
-    return null;
-  }
-
-  saveBubbleWindowPosition(pos: { x: number; y: number }): void {
-    try {
-      fs.writeFileSync(this.bubbleWinPosPath, JSON.stringify(pos), 'utf-8');
-    } catch (err) {
-      console.error('[Storage] Failed to save bubble window position:', err);
-    }
   }
 }

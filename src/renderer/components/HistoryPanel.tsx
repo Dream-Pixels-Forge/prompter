@@ -77,7 +77,8 @@ export function HistoryPanel() {
   if (selected) {
     return (
       <div className="space-y-3.5">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setSelected(null)}
           className="flex items-center gap-1.5 text-xs text-white/48 hover:text-white/72 transition-colors group"
         >
@@ -116,13 +117,15 @@ export function HistoryPanel() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleReuse(selected)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium rounded-md transition-colors active:scale-[0.97]"
           >
             <RotateCcw className="w-3 h-3" /> Reuse
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => {
               handleDelete(selected.id);
               setSelected(null);
@@ -149,7 +152,8 @@ export function HistoryPanel() {
           className="flex-1 bg-transparent text-sm text-white/80 placeholder-white/48 outline-none"
         />
         {query && (
-          <button type="button"
+          <button
+            type="button"
             onClick={() => {
               setQuery('');
               load();
@@ -167,7 +171,11 @@ export function HistoryPanel() {
           <span className="text-[11px] text-white/48">
             {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           </span>
-          <button type="button" onClick={handleClear} className="text-[11px] text-error/50 hover:text-error transition-colors">
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-[11px] text-error/50 hover:text-error transition-colors"
+          >
             Clear all
           </button>
         </div>
@@ -213,7 +221,8 @@ export function HistoryPanel() {
                   <span className="text-[10px] text-white/48 ml-auto">{formatDate(entry.createdAt)}</span>
                 </div>
               </div>
-              <button type="button"
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete(entry.id);

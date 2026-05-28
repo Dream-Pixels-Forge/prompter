@@ -155,7 +155,8 @@ export function InputArea() {
         <div className="flex items-center gap-2 px-2.5 py-1.5 sub-card">
           <Sparkles className="w-3 h-3 text-accent shrink-0" />
           <span className="text-xs text-white/68 truncate">{currentTemplate.name}</span>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setTemplate(null)}
             className="ml-auto text-xs text-white/48 hover:text-white/68 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
           >
@@ -167,7 +168,8 @@ export function InputArea() {
       {/* Framework selector dropdown */}
       {currentFramework && (
         <div ref={frameworkRef} className="relative">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setFrameworkOpen(!frameworkOpen)}
             className="flex items-center gap-1.5 group cursor-pointer"
           >
@@ -175,18 +177,28 @@ export function InputArea() {
             <span className="text-[11px] text-white/48 group-hover:text-white/68 transition-colors">
               Framework: <span className="text-accent font-medium">{currentFramework.name}</span>
             </span>
-            <ChevronDown className={`w-3 h-3 text-white/48 transition-transform duration-200 ${frameworkOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-3 h-3 text-white/48 transition-transform duration-200 ${frameworkOpen ? 'rotate-180' : ''}`}
+            />
           </button>
           {frameworkOpen && (
             <div className="absolute top-full left-0 mt-1.5 bg-surface border border-border rounded-lg shadow-xl overflow-hidden z-50 min-w-[200px] py-1">
               {frameworks.map((f) => (
-                <button key={f.id} type="button"
-                  onClick={() => { manualFrameworkRef.current = true; setFramework(f.id); setFrameworkOpen(false); }}
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => {
+                    manualFrameworkRef.current = true;
+                    setFramework(f.id);
+                    setFrameworkOpen(false);
+                  }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors hover:bg-white/[0.06] ${
                     selectedFramework === f.id ? 'text-white' : 'text-white/68'
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedFramework === f.id ? 'bg-accent' : 'bg-white/20'}`} />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedFramework === f.id ? 'bg-accent' : 'bg-white/20'}`}
+                  />
                   <span className={selectedFramework === f.id ? 'font-medium' : ''}>{f.name}</span>
                 </button>
               ))}
@@ -229,26 +241,28 @@ export function InputArea() {
 
       {/* Bottom bar */}
       <div className="flex items-center justify-center gap-2">
-          <button type="button"
-            onClick={handleReset}
-            disabled={!input && !output}
-            className="w-11 h-11 rounded-xl flex items-center justify-center sub-card hover:bg-white/[0.07] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            title="Reset"
-          >
-            <RotateCcw className="w-5 h-5 text-white/48" />
-          </button>
-          <MicButton onTranscript={handleTranscript} onInterim={handleInterim} disabled={isProcessing} large />
-          <button type="button"
-            onClick={handleGenerate}
-            disabled={!input.trim()}
-            className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={!input && !output}
+          className="w-11 h-11 rounded-xl flex items-center justify-center sub-card hover:bg-white/[0.07] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          title="Reset"
+        >
+          <RotateCcw className="w-5 h-5 text-white/48" />
+        </button>
+        <MicButton onTranscript={handleTranscript} onInterim={handleInterim} disabled={isProcessing} large />
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={!input.trim()}
+          className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600
                        hover:from-[#345585] hover:to-[#4A6A9A]
                        disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-brand-500 disabled:hover:to-brand-600
                        text-white transition-all duration-200 shadow-sm shadow-brand-500/20 active:scale-[0.97]"
-            title="Generate Prompt"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          title="Generate Prompt"
+        >
+          <Send className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

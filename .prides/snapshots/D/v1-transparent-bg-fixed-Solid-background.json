@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "phase": "D",
+  "label": "transparent-bg-fixed-Solid-background",
+  "data": {
+    "transparentRemoved": true,
+    "sandboxRestored": true,
+    "backgroundColor": "#18161a",
+    "gpuCrashFixed": "verified — no fatal GPU crash",
+    "windowGeometry": "520x520 centered at 700,280",
+    "typeCheck": "0 errors",
+    "tests": "25/25",
+    "build": "clean",
+    "launchStable": true
+  },
+  "created": "2026-05-28T03:46:30.280Z",
+  "immutable": true
+}

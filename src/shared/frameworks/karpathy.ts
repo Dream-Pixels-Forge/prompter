@@ -31,7 +31,7 @@ export const karpathyFramework: Framework = {
       label: 'Goal-Driven',
       placeholder: 'Define success criteria, loop until verified',
       defaultContent:
-        'The user\'s goal is: {goal}. Define what success looks like for this specific request. Verify against requirements. Loop until the goal is met.',
+        "The user's goal is: {goal}. Define what success looks like for this specific request. Verify against requirements. Loop until the goal is met.",
     },
   ],
 };

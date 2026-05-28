@@ -36,7 +36,8 @@ export function OutputPanel() {
   return (
     <div className="space-y-2.5">
       {/* Back to input */}
-      <button type="button"
+      <button
+        type="button"
         onClick={clearOutput}
         className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover transition-colors group"
       >
@@ -51,7 +52,8 @@ export function OutputPanel() {
           {framework && <FrameworkBadge framework={output.framework} />}
         </div>
         <div className="flex gap-0.5">
-          <button type="button"
+          <button
+            type="button"
             onClick={handleCopy}
             aria-label={copied ? 'Copied' : 'Copy to clipboard'}
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
@@ -62,7 +64,8 @@ export function OutputPanel() {
               <Copy className="w-3.5 h-3.5 text-white/48 group-hover:text-white/72" />
             )}
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={clearOutput}
             aria-label="Clear output"
             className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"

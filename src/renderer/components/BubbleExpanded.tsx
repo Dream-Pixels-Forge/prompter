@@ -20,46 +20,17 @@ const tabs: { key: AppTab; label: string; icon: typeof PenLine }[] = [
 ];
 
 export function BubbleExpanded() {
-  const { setExpanded, isProcessing, activeTab, setActiveTab } = useAppStore();
+  const { isProcessing, activeTab, setActiveTab } = useAppStore();
   const { output } = usePromptStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const mountedRef = useRef(false);
 
   // Apply frameless window drag regions (Electron-specific CSS)
   useEffect(() => {
     headerRef.current?.style.setProperty('-webkit-app-region', 'drag');
     closeBtnRef.current?.style.setProperty('-webkit-app-region', 'no-drag');
-  }, []);
-
-  // Entrance animation — scale from bubble origin (bottom-right)
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-
-    const card = cardRef.current;
-    const body = bodyRef.current;
-    if (!card) return;
-
-    if (!prefersReduced()) {
-      const ctx = gsap.context(() => {
-        gsap.fromTo(
-          card,
-          { scale: 0.85, opacity: 0, y: 12, transformOrigin: 'bottom right' },
-          { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.4)', willChange: 'transform, opacity' },
-        );
-        if (body) {
-          gsap.fromTo(
-            body,
-            { opacity: 0 },
-            { opacity: 1, duration: 0.25, delay: 0.12, ease: 'power2.out', willChange: 'opacity' },
-          );
-        }
-      });
-      return () => ctx.revert();
-    }
   }, []);
 
   // Fade-only transition on tab switch (no jarring slide between different content)
@@ -89,9 +60,10 @@ export function BubbleExpanded() {
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
           <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
         </div>
-        <button type="button"
+        <button
+          type="button"
           ref={closeBtnRef}
-          onClick={() => setExpanded(false)}
+          onClick={() => window.api.window.toggle()}
           aria-label="Close"
           className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
         >
@@ -102,7 +74,8 @@ export function BubbleExpanded() {
       {/* Tabs with icons */}
       <div className="flex gap-1 px-3 pt-3 pb-1 border-b border-white/[0.04]">
         {tabs.map(({ key, label, icon: Icon }) => (
-          <button type="button"
+          <button
+            type="button"
             key={key}
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md capitalize transition-all duration-200 ${

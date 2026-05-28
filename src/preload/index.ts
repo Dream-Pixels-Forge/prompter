@@ -47,12 +47,6 @@ contextBridge.exposeInMainWorld('api', {
       };
     },
   },
-  bubble: {
-    getPosition: () => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_GET),
-    setPosition: (pos: { bottom: number; right: number }) => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_POS_SET, pos),
-    getWindowPosition: () => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_WIN_POS_GET),
-    setWindowPosition: (pos: { x: number; y: number }) => ipcRenderer.invoke(IPC_CHANNELS.BUBBLE_WIN_POS_SET, pos),
-  },
   app: {
     quit: () => ipcRenderer.invoke(IPC_CHANNELS.APP_QUIT),
   },
