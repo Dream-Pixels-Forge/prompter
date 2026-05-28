@@ -17,6 +17,9 @@ export interface PrompterApi {
     get: () => Promise<Partial<AppSettings>>;
     set: (settings: Partial<AppSettings>) => Promise<boolean>;
   };
+  provider: {
+    check: (providerId: string) => Promise<{ available: boolean; message?: string }>;
+  };
   ollama: {
     check: () => Promise<OllamaStatus>;
   };
@@ -32,7 +35,7 @@ export interface PrompterApi {
   };
   store: {
     saveApiKey: (service: string, key: string) => Promise<boolean>;
-    getApiKey: (service: string) => Promise<string | null>;
+    hasApiKey: (service: string) => Promise<boolean>;
   };
   hotkey: {
     onTriggered: (callback: (action: string) => void) => () => void;

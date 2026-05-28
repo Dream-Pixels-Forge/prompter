@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "phase": "E",
+  "label": "provider-architecture-design",
+  "data": {
+    "designDoc": ".prides/context/E/provider-architecture-design.md",
+    "keyDecisions": [
+      "Unified interface: all providers reduce to {model, apiKey?, endpoint?}",
+      "Registry pattern (like frameworks.ts) - minimal boilerplate",
+      "API keys stay in Electron safeStorage (already generic)",
+      "AppSettings becomes dynamic Record<string, ProviderConfig>",
+      "Searchable categorized provider switcher with Cmd+P shortcut",
+      "Only active provider shows expanded config",
+      "New provider cost: 1 definition entry + 1 implementation file (~40 lines)",
+      "ProviderEngine class replaces switch statement in orchestrator"
+    ],
+    "filesChanged": [
+      "src/shared/types.ts",
+      "src/shared/api-types.ts",
+      "src/shared/providers.ts (NEW)",
+      "src/shared/provider-definitions.ts (NEW)",
+      "src/main/llm/provider-registry.ts (NEW)",
+      "src/main/llm/provider-engine.ts (NEW)",
+      "src/main/llm/index.ts (NEW)",
+      "src/main/llm/orchestrator.ts (REFACTOR)",
+      "src/main/llm/implementations/*.ts (REFACTOR + NEW)",
+      "src/main/ipc.ts",
+      "src/renderer/components/SettingsPanel.tsx (REFACTOR)",
+      "src/renderer/components/ProviderSwitcher.tsx (NEW)",
+      "src/renderer/components/ProviderConfigCard.tsx (NEW)",
+      "src/renderer/stores/settings-store.ts (REFACTOR)"
+    ],
+    "phaseOrder": [
+      "Phase 1: Foundation - create registry, refactor existing providers",
+      "Phase 2: Explosion - add 10+ providers incrementally",
+      "Phase 3: UI redesign - searchable switcher + dynamic cards",
+      "Phase 4: Polish - recently used, configured badges, OpenRouter mode"
+    ]
+  },
+  "created": "2026-05-28T04:47:51.500Z",
+  "immutable": true
+}

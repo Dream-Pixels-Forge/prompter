@@ -1,0 +1,22 @@
+{
+  "id": "ISS-0008",
+  "title": "Create ProviderSwitcher.tsx — Searchable categorized provider palette",
+  "description": "Create src/renderer/components/ProviderSwitcher.tsx. A searchable, categorized provider selector with: Cmd+P/Ctrl+P global shortcut, categorized providers (Cloud/Local/Router), fuzzy search, keyboard navigation (Up/Down/Enter/Escape), active provider indicator (filled dot), configured badge (green checkmark). See CONTEXT for full design spec.",
+  "phase": "E",
+  "agent": "implement-uiux",
+  "severity": "high",
+  "status": "closed",
+  "blocking": true,
+  "assignee": null,
+  "tags": [
+    "phase3",
+    "ui",
+    "provider-switcher"
+  ],
+  "created": "2026-05-28T09:28:40.562Z",
+  "updated": "2026-05-28T10:17:16.801Z",
+  "closedAt": "2026-05-28T10:17:16.801Z",
+  "closedBy": "prides-coordinator",
+  "resolution": "Created ProviderSwitcher.tsx — searchable, categorized provider palette with keyboard navigation, fuzzy search, and configured badges.",
+  "comments": []
+}

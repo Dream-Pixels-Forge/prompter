@@ -106,6 +106,16 @@ export class StorageService {
     fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
   }
 
+  hasApiKey(service: string): boolean {
+    try {
+      if (!fs.existsSync(this.keysPath)) return false;
+      const keys: Record<string, string> = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
+      return !!keys[service];
+    } catch {
+      return false;
+    }
+  }
+
   getApiKey(service: string): string | null {
     try {
       if (!fs.existsSync(this.keysPath)) return null;

@@ -4,7 +4,7 @@ export const IPC_CHANNELS = {
   LLM_GENERATE: 'llm:generate',
   CLIPBOARD_WRITE: 'clipboard:write',
   STT_START: 'stt:start',
-  STORE_GET_API_KEY: 'store:getApiKey',
+  STORE_HAS_API_KEY: 'store:hasApiKey',
   STORE_SAVE_API_KEY: 'store:saveApiKey',
   HISTORY_INSERT: 'history:insert',
   HISTORY_LIST: 'history:list',
@@ -20,6 +20,7 @@ export const IPC_CHANNELS = {
   WINDOW_RESIZE: 'window:resize',
   WINDOW_POS_GET: 'window:pos:get',
   APP_QUIT: 'app:quit',
+  PROVIDER_CHECK: 'provider:check',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────
@@ -69,7 +70,7 @@ export interface GenerateResponse {
 
 // ── LLM Orchestrator ──────────────────────────────────
 
-export type ProviderType = 'ollama' | 'openai' | 'anthropic';
+export type ProviderType = string; // Open string — any registered provider ID
 
 export interface LLMProvider {
   type: ProviderType;
@@ -110,13 +111,15 @@ export interface HistoryEntry {
 // ── Settings ──────────────────────────────────────────
 
 export interface AppSettings {
-  activeProvider: ProviderType;
-  ollamaEndpoint: string;
-  ollamaModel: string;
-  openaiModel: string;
-  openaiApiKey: string;
-  anthropicModel: string;
-  anthropicApiKey: string;
+  /** Currently active provider ID */
+  activeProvider: string;
+  /** Per-provider runtime config, keyed by provider ID */
+  providerConfigs: Record<string, { model: string; endpoint?: string }>;
+  /** Recently used providers (list of IDs, newest first) */
+  recentProviders: string[];
+  /** Settings file format version for migrations */
+  version: number;
+  /** Hotkeys */
   hotkeyToggle: string;
   hotkeyMic: string;
 }
@@ -134,8 +137,10 @@ export interface WindowBounds {
 
 export type AppTab = 'compose' | 'templates' | 'history' | 'settings';
 
+/** @deprecated Use provider-definitions.ts models instead */
 export const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini'];
 
+/** @deprecated Use provider-definitions.ts models instead */
 export const ANTHROPIC_MODELS = [
   'claude-sonnet-4-20250514',
   'claude-sonnet-4',

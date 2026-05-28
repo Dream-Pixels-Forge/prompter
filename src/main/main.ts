@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { BrowserWindow, app, globalShortcut } from 'electron';
+import { BrowserWindow, app, globalShortcut, session, shell } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
 import { registerIpcHandlers } from './ipc';
 
@@ -26,7 +26,7 @@ function createWindow() {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
@@ -38,12 +38,37 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
+  // Security: prevent window navigation (phishing protection)
+  mainWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault();
+  });
+
+  // Security: open external links in the OS default browser, not inside the app
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
+  // Security: enforce CSP at the session level (defense-in-depth beyond meta tag)
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
+        ],
+      },
+    });
+  });
+
   setTimeout(() => {
     createWindow();
     if (!mainWindow) return;

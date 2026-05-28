@@ -1,0 +1,21 @@
+{
+  "id": "ISS-0007",
+  "title": "Update ipc.ts — Dynamic OLLAMA_CHECK, STT, and PROVIDER_CHECK handler",
+  "description": "1. Update OLLAMA_CHECK handler to read endpoint from providerConfigs.ollama instead of settings.ollamaEndpoint. 2. Update STT handler to look up openaiApiKey from providerConfigs or runtime key store. 3. Add PROVIDER_CHECK IPC handler that calls engine.check(providerId) for the new dynamic provider check. See CONTEXT for full requirements.",
+  "phase": "E",
+  "agent": "implement-coder",
+  "severity": "high",
+  "status": "closed",
+  "blocking": true,
+  "assignee": null,
+  "tags": [
+    "phase3",
+    "ipc"
+  ],
+  "created": "2026-05-28T09:28:38.645Z",
+  "updated": "2026-05-28T10:06:03.354Z",
+  "closedAt": "2026-05-28T10:06:03.354Z",
+  "closedBy": "prides-coordinator",
+  "resolution": "ipc.ts updated: OLLAMA_CHECK reads from providerConfigs.ollama, STT reads from providerApiKeys, PROVIDER_CHECK handler added using engine.check().",
+  "comments": []
+}

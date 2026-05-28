@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('api', {
     get: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),
     set: (settings: Partial<AppSettings>) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET, settings),
   },
+  provider: {
+    check: (providerId: string) => ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_CHECK, providerId),
+  },
   ollama: {
     check: () => ipcRenderer.invoke(IPC_CHANNELS.OLLAMA_CHECK),
   },
@@ -36,7 +39,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   store: {
     saveApiKey: (service: string, key: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_SAVE_API_KEY, service, key),
-    getApiKey: (service: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_GET_API_KEY, service),
+    hasApiKey: (service: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_HAS_API_KEY, service),
   },
   hotkey: {
     onTriggered: (callback: (action: string) => void) => {

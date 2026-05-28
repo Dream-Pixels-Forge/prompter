@@ -32,6 +32,6 @@ export async function saveApiKey(service: string, key: string): Promise<boolean>
   return window.api.store.saveApiKey(service, key);
 }
 
-export async function getApiKey(service: string): Promise<string | null> {
-  return window.api.store.getApiKey(service);
+export async function hasApiKey(service: string): Promise<boolean> {
+  return window.api.store.hasApiKey(service);
 }
