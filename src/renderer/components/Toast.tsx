@@ -1,5 +1,4 @@
 import { useAppStore } from '@/renderer/stores/app-store';
-import gsap from 'gsap';
 import { Check } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
@@ -10,21 +9,16 @@ export function Toast() {
   useEffect(() => {
     if (toastMessage && toastRef.current) {
       const el = toastRef.current;
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        gsap.fromTo(
-          el,
-          { y: 12, opacity: 0, scale: 0.95 },
-          { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', willChange: 'transform, opacity' },
-        );
-      }
+      el.classList.add('toast-enter');
       const timer = setTimeout(() => {
-        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          gsap
-            .to(el, { y: 8, opacity: 0, duration: 0.2, ease: 'power2.in', willChange: 'transform, opacity' })
-            .then(hideToast);
-        } else {
+        el.classList.remove('toast-enter');
+        el.classList.add('toast-exit');
+        // Wait for exit animation to complete before hiding
+        const onAnimEnd = () => {
+          el.removeEventListener('animationend', onAnimEnd);
           hideToast();
-        }
+        };
+        el.addEventListener('animationend', onAnimEnd);
       }, 2000);
       return () => clearTimeout(timer);
     }

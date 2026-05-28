@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "phase": "D",
+  "label": "Deploy: commit, push, CI, dist build",
+  "data": {
+    "commit": "292b679",
+    "branch": "main",
+    "files_changed": 41,
+    "typecheck": 0,
+    "lint": 0,
+    "tests": "25/25",
+    "build": "clean",
+    "ci_triggered": true,
+    "dist_artifacts": [
+      "Prompter-0.2.0.AppImage (117 MB)",
+      "Prompter-0.2.0-amd64.deb (90 MB)",
+      "linux-unpacked/"
+    ],
+    "version_in_package": "0.2.0"
+  },
+  "created": "2026-05-28T04:09:00.506Z",
+  "immutable": true
+}

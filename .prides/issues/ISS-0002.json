@@ -1,0 +1,18 @@
+{
+  "id": "ISS-0002",
+  "title": "300ms artificial startup delay in main.ts",
+  "description": "setTimeout(() => { createWindow(); ... }, 300) adds a hard 300ms delay to cold start. Change to setTimeout(0) or setImmediate(). Check it doesn't mask a race condition first.",
+  "phase": "D",
+  "agent": "deploy-performance",
+  "severity": "medium",
+  "status": "closed",
+  "blocking": false,
+  "assignee": null,
+  "tags": [],
+  "created": "2026-05-28T04:14:40.571Z",
+  "updated": "2026-05-28T04:21:41.858Z",
+  "closedAt": "2026-05-28T04:21:41.858Z",
+  "closedBy": "implement-coder",
+  "resolution": "Changed setTimeout 300ms to 0ms in src/main/main.ts. Yields to event loop without artificial delay.",
+  "comments": []
+}

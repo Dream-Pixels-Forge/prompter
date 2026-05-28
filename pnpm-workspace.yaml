@@ -3,3 +3,4 @@ allowBuilds:
   electron: true
   electron-winstaller: true
   esbuild: true
+  ttf2woff2: true
