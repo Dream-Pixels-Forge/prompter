@@ -37,12 +37,6 @@ export interface PrompterApi {
   hotkey: {
     onTriggered: (callback: (action: string) => void) => () => void;
   };
-  bubble: {
-    getPosition: () => Promise<{ bottom: number; right: number } | null>;
-    setPosition: (pos: { bottom: number; right: number }) => Promise<boolean>;
-    getWindowPosition: () => Promise<{ x: number; y: number } | null>;
-    setWindowPosition: (pos: { x: number; y: number }) => Promise<boolean>;
-  };
   app: {
     quit: () => Promise<void>;
   };

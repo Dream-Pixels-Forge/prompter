@@ -35,12 +35,6 @@ let tray: Tray | null = null;
 export function registerIpcHandlers(win: BrowserWindow) {
   storage = new StorageService();
 
-  // Apply saved bubble window position on startup
-  const savedWinPos = storage.getBubbleWindowPosition();
-  if (savedWinPos) {
-    setWindowPosition(win, savedWinPos.x, savedWinPos.y);
-  }
-
   // ── Load persisted settings on start ──
   settings = storage.loadSettings() as Partial<AppSettings>;
   updateConfig(settings);
@@ -76,30 +70,15 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return win.isVisible();
   });
 
-  // ── Window resize (bubble ↔ expanded) ──
+  // ── Window resize ──
   ipcMain.on(IPC_CHANNELS.WINDOW_RESIZE, (_event, width: number, height: number) => {
     win.setSize(width, height);
-    // Only center when expanding to the card — never when collapsing to bubble
-    // so the bubble stays at the user's placed position
-    if (width > 80 || height > 80) {
-      win.center();
-    }
   });
 
   // ── Window Position (current position, used during drag) ──
   ipcMain.handle(IPC_CHANNELS.WINDOW_POS_GET, () => {
     const bounds = win.getBounds();
     return { x: bounds.x, y: bounds.y };
-  });
-
-  // ── Bubble Window Position Persistence ──
-  ipcMain.handle(IPC_CHANNELS.BUBBLE_WIN_POS_GET, () => {
-    return storage.getBubbleWindowPosition();
-  });
-
-  ipcMain.handle(IPC_CHANNELS.BUBBLE_WIN_POS_SET, (_event, pos: { x: number; y: number }) => {
-    storage.saveBubbleWindowPosition(pos);
-    return true;
   });
 
   // ── Settings (in-memory) ──
@@ -148,16 +127,6 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   ipcMain.handle(IPC_CHANNELS.HISTORY_CLEAR, () => {
     storage.clearHistory();
-    return true;
-  });
-
-  // ── Bubble Position ──
-  ipcMain.handle(IPC_CHANNELS.BUBBLE_POS_GET, () => {
-    return storage.getBubblePosition();
-  });
-
-  ipcMain.handle(IPC_CHANNELS.BUBBLE_POS_SET, (_event, pos: { bottom: number; right: number }) => {
-    storage.saveBubblePosition(pos);
     return true;
   });
 

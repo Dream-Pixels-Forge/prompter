@@ -6,8 +6,8 @@ import {
   BookOpen,
   Bot,
   Calendar,
-  ChefHat,
   CheckSquare,
+  ChefHat,
   Database,
   FileText,
   GitPullRequest,
@@ -68,22 +68,58 @@ const CATEGORIES = [
   {
     id: 'dev',
     label: 'Dev',
-    ids: ['mcp-server', 'code-review', 'agent-prompt', 'architecture', 'cli-tool', 'db-schema', 'test-plan', 'api-docs'],
+    ids: [
+      'mcp-server',
+      'code-review',
+      'agent-prompt',
+      'architecture',
+      'cli-tool',
+      'db-schema',
+      'test-plan',
+      'api-docs',
+    ],
   },
   {
     id: 'content',
     label: 'Content',
-    ids: ['blog-post', 'video-gen', 'social-media', 'newsletter', 'seo-content', 'tutorial', 'podcast-script', 'cooking-book'],
+    ids: [
+      'blog-post',
+      'video-gen',
+      'social-media',
+      'newsletter',
+      'seo-content',
+      'tutorial',
+      'podcast-script',
+      'cooking-book',
+    ],
   },
   {
     id: 'business',
     label: 'Business',
-    ids: ['saas-landing', 'data-analysis', 'prd', 'support-agent', 'pitch-deck', 'product-launch', 'email-campaign', 'competitor-analysis'],
+    ids: [
+      'saas-landing',
+      'data-analysis',
+      'prd',
+      'support-agent',
+      'pitch-deck',
+      'product-launch',
+      'email-campaign',
+      'competitor-analysis',
+    ],
   },
   {
     id: 'misc',
     label: 'Misc',
-    ids: ['ux-brief', 'research-paper', 'resume', 'meeting-notes', 'job-posting', 'onboarding', 'legal-template', 'cover-letter'],
+    ids: [
+      'ux-brief',
+      'research-paper',
+      'resume',
+      'meeting-notes',
+      'job-posting',
+      'onboarding',
+      'legal-template',
+      'cover-letter',
+    ],
   },
 ];
 
@@ -120,7 +156,8 @@ export function TemplateBrowser() {
       {/* Tabs */}
       <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5">
         {CATEGORIES.map((c) => (
-          <button type="button"
+          <button
+            type="button"
             key={c.id}
             onClick={() => setActiveCategory(c.id)}
             className={`flex-1 text-[10px] font-medium py-1.5 rounded-md transition-colors ${

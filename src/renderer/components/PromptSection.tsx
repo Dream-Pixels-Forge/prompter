@@ -31,7 +31,8 @@ export function PromptSection({ label, content }: Props) {
       {/* Section header */}
       <div className="flex items-center justify-between px-3 py-2 bg-white/[0.02] border-b border-white/[0.04]">
         <span className="text-[11px] font-semibold text-white/68 uppercase tracking-wider">{label}</span>
-        <button type="button"
+        <button
+          type="button"
           onClick={handleCopy}
           className="w-5 h-5 rounded-md flex items-center justify-center hover:bg-white/[0.08] transition-colors group"
         >

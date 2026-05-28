@@ -17,12 +17,8 @@ export const IPC_CHANNELS = {
   SETTINGS_SET: 'settings:set',
   OLLAMA_CHECK: 'ollama:check',
   HOTKEY_TRIGGERED: 'hotkey:triggered',
-  BUBBLE_POS_GET: 'bubble:pos:get',
-  BUBBLE_POS_SET: 'bubble:pos:set',
   WINDOW_RESIZE: 'window:resize',
   WINDOW_POS_GET: 'window:pos:get',
-  BUBBLE_WIN_POS_GET: 'bubble:winpos:get',
-  BUBBLE_WIN_POS_SET: 'bubble:winpos:set',
   APP_QUIT: 'app:quit',
 } as const;
 
@@ -94,12 +90,6 @@ export interface LLMGenerateOptions {
   apiKey?: string;
 }
 
-export interface StreamChunk {
-  type: 'chunk' | 'done' | 'error';
-  text?: string;
-  error?: string;
-}
-
 export interface OllamaStatus {
   available: boolean;
   version?: string;
@@ -142,7 +132,6 @@ export interface WindowBounds {
 
 // ── UI State ──────────────────────────────────────────
 
-export type BubbleState = 'dormant' | 'expanded' | 'listening' | 'processing';
 export type AppTab = 'compose' | 'templates' | 'history' | 'settings';
 
 export const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini'];

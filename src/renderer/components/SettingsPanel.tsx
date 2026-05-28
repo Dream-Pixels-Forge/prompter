@@ -9,109 +9,20 @@ function ModelDropdown({
   options,
   onChange,
 }: { value: string; options: string[]; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [focusIndex, setFocusIndex] = useState(-1);
-  const ref = useRef<HTMLDivElement>(null);
-  const listId = useRef(`list-${Math.random().toString(36).slice(2, 8)}`).current;
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        setOpen(true);
-        setFocusIndex(options.indexOf(value));
-      }
-      return;
-    }
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setFocusIndex((i) => Math.min(i + 1, options.length - 1));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setFocusIndex((i) => Math.max(i - 1, 0));
-        break;
-      case 'Home':
-        e.preventDefault();
-        setFocusIndex(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        setFocusIndex(options.length - 1);
-        break;
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        if (focusIndex >= 0) {
-          onChange(options[focusIndex]);
-          setOpen(false);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setOpen(false);
-        break;
-    }
-  };
-
   return (
-    <div ref={ref} className="relative">
-      <button type="button"
-        onClick={() => setOpen(!open)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listId : undefined}
-        aria-label={`Selected model: ${value}`}
-        onKeyDown={handleKeyDown}
-        className="input-base w-full flex items-center justify-between gap-1.5 text-xs"
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input-base w-full appearance-none cursor-pointer pr-7 text-xs"
       >
-        <span className="truncate text-white/80">{value}</span>
-        <ChevronDown className={`w-3 h-3 text-white/48 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div
-          id={listId}
-          role="listbox"
-          aria-activedescendant={focusIndex >= 0 ? `${listId}-${focusIndex}` : undefined}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
-          className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-lg shadow-xl z-50 max-h-[160px] overflow-y-auto"
-        >
-          {options.map((opt, i) => (
-            <div
-              key={opt}
-              id={`${listId}-${i}`}
-              role="option"
-              tabIndex={-1}
-              aria-selected={opt === value}
-              onClick={() => {
-                onChange(opt);
-                setOpen(false);
-              }}
-              onMouseEnter={() => setFocusIndex(i)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onChange(opt); setOpen(false); } }}
-              className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
-                opt === value
-                  ? 'bg-brand-500/15 text-white'
-                  : i === focusIndex
-                    ? 'bg-white/[0.06] text-white'
-                    : 'text-white/68 hover:text-white hover:bg-white/[0.04]'
-              }`}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/48" />
     </div>
   );
 }
@@ -186,7 +97,8 @@ export function SettingsPanel() {
           <span className="text-xs font-medium text-white/68 uppercase tracking-wider">Provider</span>
         </div>
         <div ref={providerRef} className="relative">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setProviderOpen(!providerOpen)}
             className="w-full flex items-center gap-2.5 px-3 py-2 sub-card hover:border-white/[0.1] transition-all text-left"
           >
@@ -202,7 +114,8 @@ export function SettingsPanel() {
           {providerOpen && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-lg shadow-xl overflow-hidden z-50">
               {PROVIDERS.map(({ type, label, description }) => (
-                <button type="button"
+                <button
+                  type="button"
                   key={type}
                   onClick={() => {
                     handleChange('activeProvider', type);
@@ -297,7 +210,8 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('openaiApiKey', e.target.value)}
                 className="input-base flex-1 text-xs"
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={handleSaveKey}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/68 shrink-0"
               >
@@ -334,7 +248,8 @@ export function SettingsPanel() {
                 onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
                 className="input-base flex-1 text-xs"
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={handleSaveKey}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/68 shrink-0"
               >

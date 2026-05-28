@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "phase": "R",
+  "label": "comprehensive-review-v0.2.0",
+  "data": {
+    "project": "Prompter",
+    "version": "0.2.0",
+    "phase": "Implement (bug fixes in progress)",
+    "type": "Electron desktop widget",
+    "branch": "develop",
+    "commitsAhead": 0,
+    "filesModified": 4,
+    "typeCheck": "PASS (zero errors)",
+    "tests": "26/26 PASS (5 suites)",
+    "lintErrors": 15,
+    "totalIssuesClosed": 84,
+    "openIssues": 0,
+    "buildConfigs": [
+      "Linux",
+      "macOS",
+      "Windows"
+    ]
+  },
+  "created": "2026-05-28T03:04:18.236Z",
+  "immutable": true
+}
