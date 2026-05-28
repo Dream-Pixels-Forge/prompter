@@ -16,6 +16,7 @@ concurrency:
 
 env:
   NODE_VERSION: "24"
+  PNPM_VERSION: "11.1.1"
 
 jobs:
   # ── TypeScript check + security audit ─────────────────
@@ -27,6 +28,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -64,6 +67,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
