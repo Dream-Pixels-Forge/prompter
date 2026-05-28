@@ -16,6 +16,7 @@ permissions:
 env:
   NODE_VERSION: "24"
   PNPM_VERSION: "11.1.1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   verify:
