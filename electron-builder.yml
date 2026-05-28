@@ -117,9 +117,3 @@ appImage:
   category: Utility
   synopsis: ${productName}
 
-# ── Publish (GitHub Releases) ──────────────────────────
-publish:
-  provider: github
-  owner: Dream-Pixels-Forge
-  repo: prompter
-  releaseType: draft
