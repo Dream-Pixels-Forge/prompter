@@ -44,3 +44,8 @@
 {"event":"issue_close","id":"ISS-0002","closedBy":"implement-coder","resolution":"Changed setTimeout 300ms to 0ms in src/main/main.ts. Yields to event loop without artificial delay.","timestamp":"2026-05-28T04:21:41.858Z"}
 {"event":"issue_close","id":"ISS-0003","closedBy":"implement-coder","resolution":"Changed minify: false to minify: 'esbuild' in both main and preload vite configs. main.js reduced from 32KB to 20KB.","timestamp":"2026-05-28T04:21:42.398Z"}
 {"event":"issue_close","id":"ISS-0004","closedBy":"implement-coder","resolution":"All 4 Inter fonts converted from TTF to WOFF2 using ttf2woff2. globals.css updated with WOFF2 primary + TTF fallback. Font size reduced 65% (1.3MB → 453KB).","timestamp":"2026-05-28T04:21:43.148Z"}
+{"event":"gate_check","gate":"D→E","blocked":true,"passes":0,"failures":3,"timestamp":"2026-05-28T04:27:44.185Z"}
+{"event":"gate_check","gate":"D→E","blocked":true,"passes":0,"failures":3,"timestamp":"2026-05-28T04:28:59.149Z"}
+{"event":"gate_check","gate":"D→E","blocked":false,"passes":3,"failures":0,"timestamp":"2026-05-28T04:29:04.834Z"}
+{"event":"transition","from":"D","to":"E","reason":"Deploy phase complete: v0.3.0 committed+pushed, CI fixed, dist artifacts built, perf issues resolved (GSAP removed, startup delay fixed, minification enabled, WOFF2 fonts). Gate D→E passed all checks.","timestamp":"2026-05-28T04:29:09.980Z"}
+{"event":"heartbeat","agent":"prides-coordinator","phase":"E","status":"healthy","timestamp":"2026-05-28T04:29:17.679Z"}
