@@ -86,7 +86,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2 libdrm-dev libgbm-dev libwebkit2gtk-4.1-dev
+          sudo apt-get install -y -qq libgtk-3-dev libnotify-dev libnss3 libxss1 libasound2t64 libdrm-dev libgbm-dev libwebkit2gtk-4.1-dev
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
