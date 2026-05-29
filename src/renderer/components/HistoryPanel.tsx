@@ -1,4 +1,4 @@
-import { clearHistory, deleteHistory, listHistory, searchHistory } from '@/renderer/lib/llm';
+import { clearHistory, deleteHistory, exportHistory, listHistory, searchHistory } from '@/renderer/lib/llm';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import type { HistoryEntry } from '@/shared/types';
@@ -26,17 +26,23 @@ export function HistoryPanel() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<HistoryEntry | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const { setInput, setFramework, setTemplate } = usePromptStore();
-  const { setActiveTab } = useAppStore();
+  const { setActiveTab, showToast } = useAppStore();
   const load = useCallback(async (q?: string) => {
     setLoading(true);
+    setPage(0);
+    setHasMore(true);
     try {
       if (q?.trim()) {
         const data = await searchHistory(q.trim());
         setEntries(data);
+        setHasMore(false);
       } else {
-        const data = await listHistory(50, 0);
+        const data = await listHistory(20, 0);
         setEntries(data);
+        if (data.length < 20) setHasMore(false);
       }
     } catch (err) {
       console.warn('[HistoryPanel] Failed to load history:', err);
@@ -44,6 +50,21 @@ export function HistoryPanel() {
       setLoading(false);
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    setLoading(true);
+    try {
+      const data = await listHistory(20, nextPage * 20);
+      setEntries((prev) => [...prev, ...data]);
+      if (data.length < 20) setHasMore(false);
+    } catch (err) {
+      console.warn('[HistoryPanel] Failed to load more:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
 
   useEffect(() => {
     load();
@@ -57,13 +78,21 @@ export function HistoryPanel() {
   const handleSearch = () => load(query);
 
   const handleDelete = async (id: string) => {
-    await deleteHistory(id);
-    load(query);
+    try {
+      await deleteHistory(id);
+      load(query);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
   const handleClear = async () => {
-    await clearHistory();
-    load();
+    try {
+      await clearHistory();
+      load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Clear failed');
+    }
   };
 
   const handleReuse = (entry: HistoryEntry) => {
@@ -165,19 +194,35 @@ export function HistoryPanel() {
         )}
       </div>
 
-      {/* Count + clear */}
+      {/* Count + export + clear */}
       {entries.length > 0 && (
         <div className="flex items-center justify-between px-0.5">
           <span className="text-[11px] text-white/48">
             {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           </span>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="text-[11px] text-error/50 hover:text-error transition-colors"
-          >
-            Clear all
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const filePath = await exportHistory();
+                  if (filePath) showToast(`Exported to ${filePath}`);
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : 'Export failed');
+                }
+              }}
+              className="text-[11px] text-white/48 hover:text-white/68 transition-colors"
+            >
+              Export
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-[11px] text-error/50 hover:text-error transition-colors"
+            >
+              Clear all
+            </button>
+          </div>
         </div>
       )}
 
@@ -234,6 +279,19 @@ export function HistoryPanel() {
               </button>
             </button>
           ))
+        )}
+
+        {/* Load more */}
+        {hasMore && !loading && (
+          <div className="flex justify-center pt-2 pb-1">
+            <button
+              type="button"
+              onClick={loadMore}
+              className="text-xs text-white/48 hover:text-white/68 transition-colors px-3 py-1.5 rounded-md hover:bg-white/[0.04]"
+            >
+              Load more
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -35,6 +35,14 @@ function ensureEngine(): void {
   }
 }
 
+export function reinitEngine(): void {
+  engineInitialized = false;
+  initEngine({
+    getApiKey: (service: string) => activeConfig.providerApiKeys[service] || null,
+  });
+  engineInitialized = true;
+}
+
 export function getConfig(): Partial<AppSettings> {
   return {
     activeProvider: activeConfig.activeProvider,
@@ -56,11 +64,30 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
   }
 
   // New format (providerApiKeys)
+  let keysChanged = false;
   if (c.providerApiKeys && typeof c.providerApiKeys === 'object') {
     const incoming = c.providerApiKeys as Record<string, string>;
     for (const [id, key] of Object.entries(incoming)) {
-      if (key) activeConfig.providerApiKeys[id] = key;
+      if (key) {
+        activeConfig.providerApiKeys[id] = key;
+        keysChanged = true;
+      }
     }
+  }
+
+  // Legacy flat fields — migrate to new format
+  if (typeof c.openaiApiKey === 'string') {
+    activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
+    keysChanged = true;
+  }
+  if (typeof c.anthropicApiKey === 'string') {
+    activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
+    keysChanged = true;
+  }
+
+  // Re-init engine when API keys change so the new keys take effect
+  if (keysChanged && engineInitialized) {
+    reinitEngine();
   }
 
   // Legacy flat fields — migrate to new format
@@ -82,9 +109,6 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
       endpoint: activeConfig.providerConfigs.anthropic.endpoint,
     };
   }
-  if (typeof c.openaiApiKey === 'string') activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
-  if (typeof c.anthropicApiKey === 'string') activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
-
   // Active provider
   if (typeof c.activeProvider === 'string') activeConfig.activeProvider = c.activeProvider;
 }

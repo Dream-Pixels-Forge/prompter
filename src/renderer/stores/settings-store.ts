@@ -58,37 +58,42 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   ollamaModels: [],
 
   loadSettings: async () => {
-    const saved = (await window.api.settings.get()) as Partial<AppSettings> & Record<string, unknown>;
+    try {
+      const saved = (await window.api.settings.get()) as Partial<AppSettings> & Record<string, unknown>;
 
-    // Migration is handled by the main process orchestrator — renderer just reads the result
+      // Migration is handled by the main process orchestrator — renderer just reads the result
 
-    // Version migration to v2 (new settings fields)
-    if ((saved.version as number) < 2) {
-      saved.version = 2;
+      // Version migration to v2 (new settings fields)
+      if ((saved.version as number) < 2) {
+        saved.version = 2;
+      }
+
+      // Check which providers have API keys (boolean only — actual keys never enter the renderer)
+      const keyEntries = await Promise.all(
+        PROVIDER_DEFINITIONS.map(async (def) => [def.id, await checkKeyExists(def.id)] as [string, boolean]),
+      );
+      const hasApiKeys: Record<string, boolean> = {};
+      for (const [id, exists] of keyEntries) {
+        if (exists) hasApiKeys[id] = true;
+      }
+
+      set({
+        activeProvider: (saved.activeProvider as string) || defaults.activeProvider,
+        providerConfigs: (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {},
+        hasApiKeys,
+        recentProviders: (saved.recentProviders as string[]) || defaults.recentProviders,
+        version: (saved.version as number) || 1,
+        hotkeyToggle: (saved.hotkeyToggle as string) || defaults.hotkeyToggle,
+        hotkeyMic: (saved.hotkeyMic as string) || defaults.hotkeyMic,
+        launchOnStartup: (saved.launchOnStartup as boolean) ?? defaults.launchOnStartup,
+        autoHideDelay: (saved.autoHideDelay as number) ?? defaults.autoHideDelay,
+        theme: (saved.theme as 'dark' | 'light' | 'system') ?? defaults.theme,
+        loaded: true,
+      });
+    } catch (err) {
+      console.error('[settings] Failed to load settings:', err);
+      set({ loaded: true });
     }
-
-    // Check which providers have API keys (boolean only — actual keys never enter the renderer)
-    const keyEntries = await Promise.all(
-      PROVIDER_DEFINITIONS.map(async (def) => [def.id, await checkKeyExists(def.id)] as [string, boolean]),
-    );
-    const hasApiKeys: Record<string, boolean> = {};
-    for (const [id, exists] of keyEntries) {
-      if (exists) hasApiKeys[id] = true;
-    }
-
-    set({
-      activeProvider: (saved.activeProvider as string) || defaults.activeProvider,
-      providerConfigs: (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {},
-      hasApiKeys,
-      recentProviders: (saved.recentProviders as string[]) || defaults.recentProviders,
-      version: (saved.version as number) || 1,
-      hotkeyToggle: (saved.hotkeyToggle as string) || defaults.hotkeyToggle,
-      hotkeyMic: (saved.hotkeyMic as string) || defaults.hotkeyMic,
-      launchOnStartup: (saved.launchOnStartup as boolean) ?? defaults.launchOnStartup,
-      autoHideDelay: (saved.autoHideDelay as number) ?? defaults.autoHideDelay,
-      theme: (saved.theme as 'dark' | 'light' | 'system') ?? defaults.theme,
-      loaded: true,
-    });
   },
 
   updateSetting: (key, value) => {
@@ -96,24 +101,34 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   saveSettings: async () => {
-    const state = get();
-    const settings: AppSettings = {
-      activeProvider: state.activeProvider,
-      providerConfigs: state.providerConfigs,
-      recentProviders: state.recentProviders,
-      version: state.version,
-      hotkeyToggle: state.hotkeyToggle,
-      hotkeyMic: state.hotkeyMic,
-      launchOnStartup: state.launchOnStartup,
-      autoHideDelay: state.autoHideDelay,
-      theme: state.theme,
-    };
-    await window.api.settings.set(settings);
+    try {
+      const state = get();
+      const settings: AppSettings = {
+        activeProvider: state.activeProvider,
+        providerConfigs: state.providerConfigs,
+        recentProviders: state.recentProviders,
+        version: state.version,
+        hotkeyToggle: state.hotkeyToggle,
+        hotkeyMic: state.hotkeyMic,
+        launchOnStartup: state.launchOnStartup,
+        autoHideDelay: state.autoHideDelay,
+        theme: state.theme,
+      };
+      await window.api.settings.set(settings);
+    } catch (err) {
+      console.error('[settings] Failed to save settings:', err);
+      throw err;
+    }
   },
 
   checkOllamaStatus: async () => {
-    const result = await window.api.ollama.check();
-    set({ ollamaAvailable: result.available, ollamaModels: result.models ?? [] });
+    try {
+      const result = await window.api.ollama.check();
+      set({ ollamaAvailable: result.available, ollamaModels: result.models ?? [] });
+    } catch (err) {
+      console.warn('[settings] Failed to check Ollama status:', err);
+      set({ ollamaAvailable: false, ollamaModels: [] });
+    }
   },
 
   saveProviderKey: async (providerId: string, _key: string) => {

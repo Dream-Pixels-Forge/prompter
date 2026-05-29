@@ -63,8 +63,6 @@ export function getEngine(): ProviderEngine {
 }
 
 export function initEngine(keyStore: KeyStore): ProviderEngine {
-  if (!_engine) {
-    _engine = createProviderEngine(keyStore);
-  }
+  _engine = createProviderEngine(keyStore);
   return _engine;
 }
