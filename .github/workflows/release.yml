@@ -45,7 +45,7 @@ jobs:
         run: pnpm build
 
       - name: Package
-        run: pnpm dist:linux -- --publish never
+        run: pnpm dist:linux
         env:
           NODE_ENV: production
 
