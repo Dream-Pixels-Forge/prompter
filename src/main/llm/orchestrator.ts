@@ -1,8 +1,7 @@
 import { getFramework } from '../../shared/frameworks';
 import { PROVIDER_DEFINITIONS } from '../../shared/provider-definitions';
 import type { AppSettings, GenerateRequest, GenerateResponse } from '../../shared/types';
-import { createProviderEngine } from './index';
-import type { ProviderEngine } from './provider-engine';
+import { getEngine, initEngine } from './index';
 
 // Dynamic runtime configuration — no hardcoded provider fields
 interface RuntimeConfig {
@@ -25,15 +24,22 @@ const activeConfig: RuntimeConfig = {
   providerApiKeys: {},
 };
 
-let engine: ProviderEngine | null = null;
+let engineInitialized = false;
 
-function getEngine(): ProviderEngine {
-  if (!engine) {
-    engine = createProviderEngine({
+function ensureEngine(): void {
+  if (!engineInitialized) {
+    initEngine({
       getApiKey: (service: string) => activeConfig.providerApiKeys[service] || null,
     });
+    engineInitialized = true;
   }
-  return engine;
+}
+
+export function getConfig(): Partial<AppSettings> {
+  return {
+    activeProvider: activeConfig.activeProvider,
+    providerConfigs: activeConfig.providerConfigs,
+  };
 }
 
 export function updateConfig(config: Partial<AppSettings> | Record<string, unknown>) {
@@ -93,7 +99,7 @@ function resolveProviderConfig(provider: string) {
   };
 }
 
-export async function generatePrompt(req: GenerateRequest): Promise<GenerateResponse> {
+export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal): Promise<GenerateResponse> {
   const framework = getFramework(req.framework);
   if (!framework) throw new Error(`Unknown framework: ${req.framework}`);
 
@@ -108,8 +114,10 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   let llmOutput: string;
 
   try {
-    llmOutput = await callLLM(provider, structuredPrompt);
+    llmOutput = await callLLM(provider, structuredPrompt, signal);
   } catch (err) {
+    // If cancelled, propagate the error — don't fall back to local generation
+    if (err instanceof Error && err.name === 'AbortError') throw err;
     console.warn(`LLM ${provider} failed, using local fallback:`, err);
     return { sections, raw: structuredPrompt, framework: req.framework, template: req.template };
   }
@@ -127,14 +135,16 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   };
 }
 
-async function callLLM(provider: string, prompt: string): Promise<string> {
+async function callLLM(provider: string, prompt: string, signal?: AbortSignal): Promise<string> {
   const { model, endpoint, apiKey } = resolveProviderConfig(provider);
+  ensureEngine();
   return getEngine().generate({
     providerId: provider,
     model,
     prompt,
     endpoint,
     apiKey,
+    signal,
   });
 }
 

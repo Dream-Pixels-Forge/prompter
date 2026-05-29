@@ -11,6 +11,7 @@ export const IPC_CHANNELS = {
   HISTORY_SEARCH: 'history:search',
   HISTORY_DELETE: 'history:delete',
   HISTORY_CLEAR: 'history:clear',
+  HISTORY_EXPORT: 'history:export',
   WINDOW_SET_BOUNDS: 'window:setBounds',
   WINDOW_TOGGLE: 'window:toggle',
   SETTINGS_GET: 'settings:get',
@@ -21,6 +22,8 @@ export const IPC_CHANNELS = {
   WINDOW_POS_GET: 'window:pos:get',
   APP_QUIT: 'app:quit',
   PROVIDER_CHECK: 'provider:check',
+  TRAY_NAVIGATE: 'tray:navigate',
+  LLM_CANCEL: 'llm:cancel',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────
@@ -72,25 +75,6 @@ export interface GenerateResponse {
 
 export type ProviderType = string; // Open string — any registered provider ID
 
-export interface LLMProvider {
-  type: ProviderType;
-  model: string;
-  baseUrl?: string;
-}
-
-export interface LLMConfig {
-  provider: LLMProvider;
-  fallbackProvider?: LLMProvider;
-  apiKey?: string;
-}
-
-export interface LLMGenerateOptions {
-  provider: ProviderType;
-  model: string;
-  baseUrl?: string;
-  apiKey?: string;
-}
-
 export interface OllamaStatus {
   available: boolean;
   version?: string;
@@ -122,28 +106,16 @@ export interface AppSettings {
   /** Hotkeys */
   hotkeyToggle: string;
   hotkeyMic: string;
+  /** Launch on system startup */
+  launchOnStartup: boolean;
+  /** Seconds before the expanded bubble auto-hides */
+  autoHideDelay: number;
+  /** UI color theme */
+  theme: 'dark' | 'light' | 'system';
 }
 
 // ── Window State ──────────────────────────────────────
 
-export interface WindowBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 // ── UI State ──────────────────────────────────────────
 
 export type AppTab = 'compose' | 'templates' | 'history' | 'settings';
-
-/** @deprecated Use provider-definitions.ts models instead */
-export const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini'];
-
-/** @deprecated Use provider-definitions.ts models instead */
-export const ANTHROPIC_MODELS = [
-  'claude-sonnet-4-20250514',
-  'claude-sonnet-4',
-  'claude-haiku-3-5-20241022',
-  'claude-opus-4-20250514',
-];

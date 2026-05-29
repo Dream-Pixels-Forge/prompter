@@ -13,6 +13,9 @@ interface SettingsStore {
   version: number;
   hotkeyToggle: string;
   hotkeyMic: string;
+  launchOnStartup: boolean;
+  autoHideDelay: number;
+  theme: 'dark' | 'light' | 'system';
   ollamaAvailable: boolean;
   ollamaModels: string[];
 
@@ -34,6 +37,9 @@ const defaults: AppSettings = {
   version: 1,
   hotkeyToggle: 'Alt+Space',
   hotkeyMic: 'Alt+M',
+  launchOnStartup: false,
+  autoHideDelay: 5,
+  theme: 'dark',
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -45,26 +51,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   version: defaults.version,
   hotkeyToggle: defaults.hotkeyToggle,
   hotkeyMic: defaults.hotkeyMic,
+  launchOnStartup: defaults.launchOnStartup,
+  autoHideDelay: defaults.autoHideDelay,
+  theme: defaults.theme,
   ollamaAvailable: false,
   ollamaModels: [],
 
   loadSettings: async () => {
     const saved = (await window.api.settings.get()) as Partial<AppSettings> & Record<string, unknown>;
 
-    // Migration from old flat format (version === undefined)
-    if (saved.version === undefined) {
-      const migrated: Record<string, { model: string; endpoint?: string }> = {};
-      if (saved.ollamaModel) {
-        migrated.ollama = {
-          model: saved.ollamaModel as string,
-          endpoint: (saved.ollamaEndpoint as string) || undefined,
-        };
-      }
-      if (saved.openaiModel) migrated.openai = { model: saved.openaiModel as string };
-      if (saved.anthropicModel) migrated.anthropic = { model: saved.anthropicModel as string };
-      saved.providerConfigs = migrated;
-      saved.version = 1;
-      saved.recentProviders = ['ollama', 'openai', 'anthropic'].filter((id) => migrated[id]);
+    // Migration is handled by the main process orchestrator — renderer just reads the result
+
+    // Version migration to v2 (new settings fields)
+    if ((saved.version as number) < 2) {
+      saved.version = 2;
     }
 
     // Check which providers have API keys (boolean only — actual keys never enter the renderer)
@@ -84,6 +84,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       version: (saved.version as number) || 1,
       hotkeyToggle: (saved.hotkeyToggle as string) || defaults.hotkeyToggle,
       hotkeyMic: (saved.hotkeyMic as string) || defaults.hotkeyMic,
+      launchOnStartup: (saved.launchOnStartup as boolean) ?? defaults.launchOnStartup,
+      autoHideDelay: (saved.autoHideDelay as number) ?? defaults.autoHideDelay,
+      theme: (saved.theme as 'dark' | 'light' | 'system') ?? defaults.theme,
       loaded: true,
     });
   },
@@ -101,6 +104,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       version: state.version,
       hotkeyToggle: state.hotkeyToggle,
       hotkeyMic: state.hotkeyMic,
+      launchOnStartup: state.launchOnStartup,
+      autoHideDelay: state.autoHideDelay,
+      theme: state.theme,
     };
     await window.api.settings.set(settings);
   },

@@ -51,7 +51,7 @@ export const anthropicImpl: ProviderImplementation = {
       }
       return text;
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
+      if (err instanceof DOMException && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
         throw new Error('Anthropic request timed out after 60 seconds');
       }
       throw err;

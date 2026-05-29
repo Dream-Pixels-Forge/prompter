@@ -51,3 +51,20 @@ export function createProviderEngine(keyStore: KeyStore): ProviderEngine {
   const registry = createProviderRegistry();
   return new ProviderEngine(registry, keyStore);
 }
+
+// Singleton engine instance for reuse across IPC handlers
+let _engine: ProviderEngine | null = null;
+
+export function getEngine(): ProviderEngine {
+  if (!_engine) {
+    throw new Error('ProviderEngine not initialized. Call initEngine() first.');
+  }
+  return _engine;
+}
+
+export function initEngine(keyStore: KeyStore): ProviderEngine {
+  if (!_engine) {
+    _engine = createProviderEngine(keyStore);
+  }
+  return _engine;
+}

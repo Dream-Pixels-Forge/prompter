@@ -44,9 +44,9 @@ export class StorageService {
   }
 
   private persistHistory(): void {
-    const data = JSON.stringify(this.history, null, 2);
     this.enqueueWrite(() => {
       try {
+        const data = JSON.stringify(this.history, null, 2);
         fs.writeFileSync(this.historyPath, data, 'utf-8');
       } catch (err) {
         console.error('[Storage] Failed to save history:', err);
