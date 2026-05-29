@@ -3,7 +3,7 @@ import type { AppSettings, AppTab, GenerateRequest, GenerateResponse, HistoryEnt
 export interface PrompterApi {
   llm: {
     generate: (req: GenerateRequest) => Promise<GenerateResponse>;
-    cancel: () => Promise<void>;
+    cancel: () => Promise<boolean>;
   };
   clipboard: {
     write: (text: string) => Promise<boolean>;

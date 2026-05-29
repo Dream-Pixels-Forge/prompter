@@ -74,16 +74,6 @@ export function ProviderSettings() {
             onSetActive={() => {}}
           />
         )}
-
-        {/* Other providers — collapsed */}
-        {PROVIDER_DEFINITIONS.filter((p) => p.id !== store.activeProvider).map((def) => (
-          <ProviderConfigCard
-            key={def.id}
-            providerId={def.id}
-            isActive={false}
-            onSetActive={() => handleSelect(def.id)}
-          />
-        ))}
       </div>
     </section>
   );

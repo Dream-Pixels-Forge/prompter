@@ -3,6 +3,12 @@ import { BrowserWindow, app, globalShortcut, session, shell } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
 import { registerIpcHandlers } from './ipc';
 
+// Disable GPU acceleration in headless/CI environments where GPU isn't available
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('in-process-gpu');
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+
 let mainWindow: BrowserWindow | null = null;
 
 // Track whether the app is intentionally quitting (not just hiding to tray)
