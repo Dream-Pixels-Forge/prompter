@@ -1,8 +1,9 @@
-import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry, OllamaStatus } from './types';
+import type { AppSettings, AppTab, GenerateRequest, GenerateResponse, HistoryEntry, OllamaStatus } from './types';
 
 export interface PrompterApi {
   llm: {
     generate: (req: GenerateRequest) => Promise<GenerateResponse>;
+    cancel: () => Promise<void>;
   };
   clipboard: {
     write: (text: string) => Promise<boolean>;
@@ -32,6 +33,7 @@ export interface PrompterApi {
     search: (query: string) => Promise<HistoryEntry[]>;
     delete: (id: string) => Promise<boolean>;
     clear: () => Promise<boolean>;
+    exportAll: () => Promise<string | null>;
   };
   store: {
     saveApiKey: (service: string, key: string) => Promise<boolean>;
@@ -39,6 +41,9 @@ export interface PrompterApi {
   };
   hotkey: {
     onTriggered: (callback: (action: string) => void) => () => void;
+  };
+  tray: {
+    onNavigate: (callback: (tab: AppTab) => void) => () => void;
   };
   app: {
     quit: () => Promise<void>;

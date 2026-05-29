@@ -1,10 +1,10 @@
 import { frameworks, getFramework } from '@/renderer/lib/frameworks';
 import { analyzeIntent } from '@/renderer/lib/intent-parser';
-import { generatePrompt, insertHistory } from '@/renderer/lib/llm';
+import { cancelGeneration, generatePrompt, insertHistory } from '@/renderer/lib/llm';
 import { getTemplate, templates } from '@/renderer/lib/templates';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { ChevronDown, RotateCcw, Send, Sparkles } from 'lucide-react';
+import { ChevronDown, RotateCcw, Send, Sparkles, Square } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MicButton } from './MicButton';
 
@@ -102,6 +102,8 @@ export function InputArea() {
       }).catch((err) => console.error('[History] insert failed:', err));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Generation failed';
+      // Silent abort — user initiated cancellation, no error toast
+      if (message === 'CANCELLED') return;
       setError(message);
       showToast(message);
     } finally {
@@ -251,18 +253,30 @@ export function InputArea() {
           <RotateCcw className="w-5 h-5 text-white/48" />
         </button>
         <MicButton onTranscript={handleTranscript} onInterim={handleInterim} disabled={isProcessing} large />
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={!input.trim()}
-          className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600
-                       hover:from-[#345585] hover:to-[#4A6A9A]
-                       disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-brand-500 disabled:hover:to-brand-600
-                       text-white transition-all duration-200 shadow-sm shadow-brand-500/20 active:scale-[0.97]"
-          title="Generate Prompt"
-        >
-          <Send className="w-5 h-5" />
-        </button>
+        {isProcessing ? (
+          <button
+            type="button"
+            onClick={() => cancelGeneration()}
+            className="w-11 h-11 rounded-xl flex items-center justify-center bg-red-500/80 hover:bg-red-500
+                         text-white transition-all duration-200 shadow-sm active:scale-[0.97]"
+            title="Stop Generation"
+          >
+            <Square className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={!input.trim()}
+            className="w-11 h-11 rounded-xl flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600
+                         hover:from-[#345585] hover:to-[#4A6A9A]
+                         disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:from-brand-500 disabled:hover:to-brand-600
+                         text-white transition-all duration-200 shadow-sm shadow-brand-500/20 active:scale-[0.97]"
+            title="Generate Prompt"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        )}
       </div>
     </div>
   );

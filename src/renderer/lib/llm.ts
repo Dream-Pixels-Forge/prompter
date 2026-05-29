@@ -4,6 +4,10 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   return window.api.llm.generate(req);
 }
 
+export async function cancelGeneration(): Promise<void> {
+  await window.api.llm.cancel();
+}
+
 // ── History API ──────────────────────────────────────
 
 export async function insertHistory(entry: HistoryEntry): Promise<boolean> {
@@ -24,6 +28,10 @@ export async function deleteHistory(id: string): Promise<boolean> {
 
 export async function clearHistory(): Promise<boolean> {
   return window.api.history.clear();
+}
+
+export async function exportHistory(): Promise<string | null> {
+  return window.api.history.exportAll();
 }
 
 // ── Encryption Store API ────────────────────────────

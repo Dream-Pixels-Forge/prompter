@@ -19,7 +19,7 @@ export default defineConfig({
               external: ['electron'],
             },
             minify: 'esbuild',
-            sourcemap: true,
+            sourcemap: process.env.NODE_ENV !== 'production',
             emptyOutDir: true,
           },
           resolve: {
@@ -39,7 +39,7 @@ export default defineConfig({
               external: ['electron'],
             },
             minify: 'esbuild',
-            sourcemap: true,
+            sourcemap: process.env.NODE_ENV !== 'production',
             emptyOutDir: true,
           },
           resolve: {
@@ -54,7 +54,7 @@ export default defineConfig({
   build: {
     outDir: 'dist/renderer',
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV !== 'production',
     rollupOptions: {
       input: 'index.html',
     },

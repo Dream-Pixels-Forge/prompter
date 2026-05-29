@@ -1,7 +1,10 @@
+import { useAutoHide } from '@/renderer/hooks/useAutoHide';
+import { cancelGeneration } from '@/renderer/lib/llm';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
+import { useSettingsStore } from '@/renderer/stores/settings-store';
 import type { AppTab } from '@/shared/types';
-import { Clock, Layout, PenLine, Settings, X } from 'lucide-react';
+import { Clock, Layout, PenLine, Settings, Square, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { HistoryPanel } from './HistoryPanel';
 import { InputArea } from './InputArea';
@@ -23,12 +26,32 @@ export function BubbleExpanded() {
   const bodyRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const autoHideDelay = useSettingsStore((s) => s.autoHideDelay);
+  const theme = useSettingsStore((s) => s.theme);
+  const { opacity, resetTimer } = useAutoHide((autoHideDelay || 5) * 1000);
+
+  // Apply theme
+  useEffect(() => {
+    let resolved = theme;
+    if (theme === 'system') {
+      resolved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', resolved);
+  }, [theme]);
 
   // Apply frameless window drag regions (Electron-specific CSS)
   useEffect(() => {
     headerRef.current?.style.setProperty('-webkit-app-region', 'drag');
     closeBtnRef.current?.style.setProperty('-webkit-app-region', 'no-drag');
   }, []);
+
+  // Listen for tray-driven navigation (e.g., Quick Capture, Recent History from tray menu)
+  useEffect(() => {
+    const unsub = window.api.tray.onNavigate((tab) => {
+      setActiveTab(tab);
+    });
+    return () => unsub();
+  }, [setActiveTab]);
 
   // Fade-only transition on tab switch (no jarring slide between different content)
   // biome-ignore lint/correctness/useExhaustiveDependencies: activeTab triggers re-run on tab switch
@@ -45,7 +68,10 @@ export function BubbleExpanded() {
     <div
       ref={cardRef}
       className="fixed inset-0 glass-card
-                 flex flex-col overflow-hidden z-50"
+                  flex flex-col overflow-hidden z-50"
+      style={{ opacity, transition: 'opacity 0.5s ease' }}
+      onMouseEnter={resetTimer}
+      onMouseMove={resetTimer}
     >
       {/* Header — draggable for frameless window */}
       <div ref={headerRef} className="relative flex items-center justify-between px-4 py-3 border-b border-border">
@@ -96,12 +122,23 @@ export function BubbleExpanded() {
         {activeTab === 'settings' && <SettingsPanel />}
       </div>
 
-      {/* Inline processing indicator */}
+      {/* Inline processing indicator with stop button */}
       {isProcessing && (
         <div className="px-3 py-2 border-t border-border">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full border-2 border-accent/40 border-t-accent animate-spin" />
             <span className="text-xs text-white/68">Structuring your prompt...</span>
+            <button
+              type="button"
+              onClick={() => cancelGeneration()}
+              className="ml-auto flex items-center gap-1.5 px-2 py-1 rounded-md
+                         bg-red-500/70 hover:bg-red-500 text-white text-xs
+                         transition-colors"
+              title="Stop Generation"
+            >
+              <Square className="w-3 h-3" />
+              Stop
+            </button>
           </div>
         </div>
       )}
