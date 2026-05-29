@@ -3,6 +3,7 @@ import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry, Olla
 export interface PrompterApi {
   llm: {
     generate: (req: GenerateRequest) => Promise<GenerateResponse>;
+    cancel: () => Promise<boolean>;
   };
   clipboard: {
     write: (text: string) => Promise<boolean>;
@@ -32,6 +33,7 @@ export interface PrompterApi {
     search: (query: string) => Promise<HistoryEntry[]>;
     delete: (id: string) => Promise<boolean>;
     clear: () => Promise<boolean>;
+    exportAll: () => Promise<string | null>;
   };
   store: {
     saveApiKey: (service: string, key: string) => Promise<boolean>;

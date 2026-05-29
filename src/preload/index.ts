@@ -7,6 +7,7 @@ import { IPC_CHANNELS } from '../shared/types';
 contextBridge.exposeInMainWorld('api', {
   llm: {
     generate: (req: GenerateRequest) => ipcRenderer.invoke(IPC_CHANNELS.LLM_GENERATE, req),
+    cancel: () => ipcRenderer.invoke(IPC_CHANNELS.LLM_CANCEL),
   },
   clipboard: {
     write: (text: string) => ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_WRITE, text),
@@ -36,6 +37,7 @@ contextBridge.exposeInMainWorld('api', {
     search: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
     delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id),
     clear: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
+    exportAll: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_EXPORT),
   },
   store: {
     saveApiKey: (service: string, key: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_SAVE_API_KEY, service, key),
