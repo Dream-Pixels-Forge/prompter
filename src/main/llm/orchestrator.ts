@@ -1,31 +1,129 @@
 import { getFramework } from '../../shared/frameworks';
-import type { GenerateRequest, GenerateResponse, ProviderType } from '../../shared/types';
-import { generateAnthropic } from './anthropic';
-import { checkOllamaStatus, generateOllama } from './ollama';
-import { generateOpenAI } from './openai';
+import { PROVIDER_DEFINITIONS } from '../../shared/provider-definitions';
+import type { AppSettings, GenerateRequest, GenerateResponse } from '../../shared/types';
+import { getEngine, initEngine } from './index';
 
-const DEFAULTS = {
-  ollamaEndpoint: 'http://localhost:11434',
-  ollamaModel: 'llama3.2',
-  openaiModel: 'gpt-4o',
-  anthropicModel: 'claude-sonnet-4-20250514',
-};
-
-let activeConfig = {
-  activeProvider: 'ollama' as ProviderType,
-  ollamaEndpoint: DEFAULTS.ollamaEndpoint,
-  ollamaModel: DEFAULTS.ollamaModel,
-  openaiModel: DEFAULTS.openaiModel,
-  openaiApiKey: '',
-  anthropicModel: DEFAULTS.anthropicModel,
-  anthropicApiKey: '',
-};
-
-export function updateConfig(config: Partial<typeof activeConfig>) {
-  activeConfig = { ...activeConfig, ...config };
+// Dynamic runtime configuration — no hardcoded provider fields
+interface RuntimeConfig {
+  activeProvider: string;
+  providerConfigs: Record<string, { model: string; endpoint?: string }>;
+  providerApiKeys: Record<string, string>;
 }
 
-export async function generatePrompt(req: GenerateRequest): Promise<GenerateResponse> {
+function buildDefaults(): RuntimeConfig['providerConfigs'] {
+  const configs: RuntimeConfig['providerConfigs'] = {};
+  for (const def of PROVIDER_DEFINITIONS) {
+    configs[def.id] = { model: def.defaultModel, endpoint: def.defaultEndpoint };
+  }
+  return configs;
+}
+
+const activeConfig: RuntimeConfig = {
+  activeProvider: 'ollama',
+  providerConfigs: buildDefaults(),
+  providerApiKeys: {},
+};
+
+let engineInitialized = false;
+
+function ensureEngine(): void {
+  if (!engineInitialized) {
+    initEngine({
+      getApiKey: (service: string) => activeConfig.providerApiKeys[service] || null,
+    });
+    engineInitialized = true;
+  }
+}
+
+export function reinitEngine(): void {
+  engineInitialized = false;
+  initEngine({
+    getApiKey: (service: string) => activeConfig.providerApiKeys[service] || null,
+  });
+  engineInitialized = true;
+}
+
+export function getConfig(): Partial<AppSettings> {
+  return {
+    activeProvider: activeConfig.activeProvider,
+    providerConfigs: activeConfig.providerConfigs,
+  };
+}
+
+export function updateConfig(config: Partial<AppSettings> | Record<string, unknown>) {
+  const c = config as Record<string, unknown>;
+
+  // New format (providerConfigs map)
+  if (c.providerConfigs && typeof c.providerConfigs === 'object') {
+    const incoming = c.providerConfigs as Record<string, { model?: string; endpoint?: string }>;
+    for (const [id, cfg] of Object.entries(incoming)) {
+      if (activeConfig.providerConfigs[id]) {
+        activeConfig.providerConfigs[id] = { ...activeConfig.providerConfigs[id], ...cfg };
+      }
+    }
+  }
+
+  // New format (providerApiKeys)
+  let keysChanged = false;
+  if (c.providerApiKeys && typeof c.providerApiKeys === 'object') {
+    const incoming = c.providerApiKeys as Record<string, string>;
+    for (const [id, key] of Object.entries(incoming)) {
+      if (key) {
+        activeConfig.providerApiKeys[id] = key;
+        keysChanged = true;
+      }
+    }
+  }
+
+  // Legacy flat fields — migrate to new format
+  if (typeof c.openaiApiKey === 'string') {
+    activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
+    keysChanged = true;
+  }
+  if (typeof c.anthropicApiKey === 'string') {
+    activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
+    keysChanged = true;
+  }
+
+  // Re-init engine when API keys change so the new keys take effect
+  if (keysChanged && engineInitialized) {
+    reinitEngine();
+  }
+
+  // Legacy flat fields — migrate to new format
+  if (typeof c.ollamaModel === 'string') {
+    activeConfig.providerConfigs.ollama = {
+      model: c.ollamaModel as string,
+      endpoint: (c.ollamaEndpoint as string) || activeConfig.providerConfigs.ollama.endpoint,
+    };
+  }
+  if (typeof c.openaiModel === 'string') {
+    activeConfig.providerConfigs.openai = {
+      model: c.openaiModel as string,
+      endpoint: activeConfig.providerConfigs.openai.endpoint,
+    };
+  }
+  if (typeof c.anthropicModel === 'string') {
+    activeConfig.providerConfigs.anthropic = {
+      model: c.anthropicModel as string,
+      endpoint: activeConfig.providerConfigs.anthropic.endpoint,
+    };
+  }
+  // Active provider
+  if (typeof c.activeProvider === 'string') activeConfig.activeProvider = c.activeProvider;
+}
+
+function resolveProviderConfig(provider: string) {
+  const cfg = activeConfig.providerConfigs[provider];
+  if (!cfg) throw new Error(`Unknown provider: '${provider}'`);
+  return {
+    model: cfg.model,
+    endpoint: cfg.endpoint,
+    apiKey: activeConfig.providerApiKeys[provider],
+  };
+}
+
+export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal): Promise<GenerateResponse> {
   const framework = getFramework(req.framework);
   if (!framework) throw new Error(`Unknown framework: ${req.framework}`);
 
@@ -40,8 +138,10 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   let llmOutput: string;
 
   try {
-    llmOutput = await callLLM(provider, structuredPrompt);
+    llmOutput = await callLLM(provider, structuredPrompt, signal);
   } catch (err) {
+    // If cancelled, propagate the error — don't fall back to local generation
+    if (err instanceof Error && err.name === 'AbortError') throw err;
     console.warn(`LLM ${provider} failed, using local fallback:`, err);
     return { sections, raw: structuredPrompt, framework: req.framework, template: req.template };
   }
@@ -59,19 +159,17 @@ export async function generatePrompt(req: GenerateRequest): Promise<GenerateResp
   };
 }
 
-async function callLLM(provider: ProviderType, prompt: string): Promise<string> {
-  switch (provider) {
-    case 'ollama':
-      return generateOllama({ model: activeConfig.ollamaModel, prompt, baseUrl: activeConfig.ollamaEndpoint });
-    case 'openai':
-      if (!activeConfig.openaiApiKey) throw new Error('OpenAI API key not configured');
-      return generateOpenAI({ model: activeConfig.openaiModel, prompt, apiKey: activeConfig.openaiApiKey });
-    case 'anthropic':
-      if (!activeConfig.anthropicApiKey) throw new Error('Anthropic API key not configured');
-      return generateAnthropic({ model: activeConfig.anthropicModel, prompt, apiKey: activeConfig.anthropicApiKey });
-    default:
-      throw new Error(`Unknown provider: ${provider}`);
-  }
+async function callLLM(provider: string, prompt: string, signal?: AbortSignal): Promise<string> {
+  const { model, endpoint, apiKey } = resolveProviderConfig(provider);
+  ensureEngine();
+  return getEngine().generate({
+    providerId: provider,
+    model,
+    prompt,
+    endpoint,
+    apiKey,
+    signal,
+  });
 }
 
 function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, string> {

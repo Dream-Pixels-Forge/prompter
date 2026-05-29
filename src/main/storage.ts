@@ -44,9 +44,9 @@ export class StorageService {
   }
 
   private persistHistory(): void {
-    const data = JSON.stringify(this.history, null, 2);
     this.enqueueWrite(() => {
       try {
+        const data = JSON.stringify(this.history, null, 2);
         fs.writeFileSync(this.historyPath, data, 'utf-8');
       } catch (err) {
         console.error('[Storage] Failed to save history:', err);
@@ -104,6 +104,16 @@ export class StorageService {
     keys[service] = encrypted.toString('base64');
 
     fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
+  }
+
+  hasApiKey(service: string): boolean {
+    try {
+      if (!fs.existsSync(this.keysPath)) return false;
+      const keys: Record<string, string> = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
+      return !!keys[service];
+    } catch {
+      return false;
+    }
   }
 
   getApiKey(service: string): string | null {

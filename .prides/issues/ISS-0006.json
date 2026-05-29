@@ -1,0 +1,22 @@
+{
+  "id": "ISS-0006",
+  "title": "Update orchestrator.ts — Dynamic provider config resolution",
+  "description": "Replace flat activeConfig fields (ollamaEndpoint, ollamaModel, etc.) with dynamic resolution from providerConfigs map. updateConfig must accept new AppSettings format. resolveProviderConfig should lookup from providerConfigs[provider] instead of switch statement. getEngine() KeyStore should work with any provider ID, not just openai/anthropic.",
+  "phase": "E",
+  "agent": "implement-coder",
+  "severity": "high",
+  "status": "closed",
+  "blocking": true,
+  "assignee": null,
+  "tags": [
+    "phase3",
+    "orchestrator",
+    "config"
+  ],
+  "created": "2026-05-28T09:28:36.523Z",
+  "updated": "2026-05-28T10:06:02.530Z",
+  "closedAt": "2026-05-28T10:06:02.530Z",
+  "closedBy": "ralph",
+  "resolution": "orchestrator.ts updated to dynamic provider config resolution. Flat activeConfig replaced with providerConfigs map, resolveProviderConfig uses lookup instead of switch, KeyStore is generic.",
+  "comments": []
+}

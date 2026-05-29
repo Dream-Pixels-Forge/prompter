@@ -1,0 +1,18 @@
+{
+  "id": "ISS-0012",
+  "title": "Notarization/code signing not configured for macOS/Windows",
+  "description": "MEDIUM: macOS notarization and Windows code signing are commented out in electron-builder.yml. macOS users see Gatekeeper warnings. Consider configuring hardened runtime notarization and Windows Authenticode signing for production releases.",
+  "phase": "S",
+  "agent": "secure-architect",
+  "severity": "medium",
+  "status": "closed",
+  "blocking": false,
+  "assignee": null,
+  "tags": [],
+  "created": "2026-05-28T10:52:25.962Z",
+  "updated": "2026-05-28T10:58:37.084Z",
+  "closedAt": "2026-05-28T10:58:37.083Z",
+  "closedBy": "prides-coordinator",
+  "resolution": "Deferred - notarization/code signing not applicable for current dev/pre-release stage. Will be configured before first public release.",
+  "comments": []
+}

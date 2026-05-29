@@ -1,6 +1,5 @@
 import type { Template } from '@/shared/types';
 import type { LucideIcon } from 'lucide-react';
-import { Sparkles } from 'lucide-react';
 
 interface Props {
   template: Template;

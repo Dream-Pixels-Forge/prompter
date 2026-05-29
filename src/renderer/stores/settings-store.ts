@@ -1,9 +1,21 @@
-import { getApiKey, saveApiKey } from '@/renderer/lib/llm';
-import type { AppSettings, ProviderType } from '@/shared/types';
+import { hasApiKey as checkKeyExists, saveApiKey } from '@/renderer/lib/llm';
+import { PROVIDER_DEFINITIONS } from '@/shared/provider-definitions';
+import type { AppSettings } from '@/shared/types';
 import { create } from 'zustand';
 
-interface SettingsStore extends AppSettings {
+interface SettingsStore {
   loaded: boolean;
+  activeProvider: string;
+  providerConfigs: Record<string, { model: string; endpoint?: string }>;
+  /** Tracks which providers have an API key configured (boolean, never the actual key) */
+  hasApiKeys: Record<string, boolean>;
+  recentProviders: string[];
+  version: number;
+  hotkeyToggle: string;
+  hotkeyMic: string;
+  launchOnStartup: boolean;
+  autoHideDelay: number;
+  theme: 'dark' | 'light' | 'system';
   ollamaAvailable: boolean;
   ollamaModels: string[];
 
@@ -11,38 +23,77 @@ interface SettingsStore extends AppSettings {
   updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
   saveSettings: () => Promise<void>;
   checkOllamaStatus: () => Promise<void>;
-  getActiveLLMConfig: () => { provider: ProviderType; model: string; baseUrl?: string; apiKey?: string };
+  saveProviderKey: (providerId: string, key: string) => Promise<void>;
 }
 
 const defaults: AppSettings = {
   activeProvider: 'ollama',
-  ollamaEndpoint: 'http://localhost:11434',
-  ollamaModel: 'llama3.2',
-  openaiModel: 'gpt-4o',
-  openaiApiKey: '',
-  anthropicModel: 'claude-sonnet-4-20250514',
-  anthropicApiKey: '',
+  providerConfigs: {
+    ollama: { model: 'llama3.2', endpoint: 'http://localhost:11434' },
+    openai: { model: 'gpt-4o' },
+    anthropic: { model: 'claude-sonnet-4-20250514' },
+  },
+  recentProviders: ['ollama', 'openai', 'anthropic'],
+  version: 1,
   hotkeyToggle: 'Alt+Space',
   hotkeyMic: 'Alt+M',
+  launchOnStartup: false,
+  autoHideDelay: 5,
+  theme: 'dark',
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
-  ...defaults,
   loaded: false,
+  activeProvider: defaults.activeProvider,
+  providerConfigs: defaults.providerConfigs,
+  hasApiKeys: {},
+  recentProviders: defaults.recentProviders,
+  version: defaults.version,
+  hotkeyToggle: defaults.hotkeyToggle,
+  hotkeyMic: defaults.hotkeyMic,
+  launchOnStartup: defaults.launchOnStartup,
+  autoHideDelay: defaults.autoHideDelay,
+  theme: defaults.theme,
   ollamaAvailable: false,
   ollamaModels: [],
 
   loadSettings: async () => {
-    const saved = await window.api.settings.get();
-    // Also load persisted API keys from encrypted storage
-    const [openaiKey, anthropicKey] = await Promise.all([getApiKey('openai'), getApiKey('anthropic')]);
-    set({
-      ...defaults,
-      ...saved,
-      openaiApiKey: openaiKey || saved.openaiApiKey || '',
-      anthropicApiKey: anthropicKey || saved.anthropicApiKey || '',
-      loaded: true,
-    });
+    try {
+      const saved = (await window.api.settings.get()) as Partial<AppSettings> & Record<string, unknown>;
+
+      // Migration is handled by the main process orchestrator — renderer just reads the result
+
+      // Version migration to v2 (new settings fields)
+      if ((saved.version as number) < 2) {
+        saved.version = 2;
+      }
+
+      // Check which providers have API keys (boolean only — actual keys never enter the renderer)
+      const keyEntries = await Promise.all(
+        PROVIDER_DEFINITIONS.map(async (def) => [def.id, await checkKeyExists(def.id)] as [string, boolean]),
+      );
+      const hasApiKeys: Record<string, boolean> = {};
+      for (const [id, exists] of keyEntries) {
+        if (exists) hasApiKeys[id] = true;
+      }
+
+      set({
+        activeProvider: (saved.activeProvider as string) || defaults.activeProvider,
+        providerConfigs: (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {},
+        hasApiKeys,
+        recentProviders: (saved.recentProviders as string[]) || defaults.recentProviders,
+        version: (saved.version as number) || 1,
+        hotkeyToggle: (saved.hotkeyToggle as string) || defaults.hotkeyToggle,
+        hotkeyMic: (saved.hotkeyMic as string) || defaults.hotkeyMic,
+        launchOnStartup: (saved.launchOnStartup as boolean) ?? defaults.launchOnStartup,
+        autoHideDelay: (saved.autoHideDelay as number) ?? defaults.autoHideDelay,
+        theme: (saved.theme as 'dark' | 'light' | 'system') ?? defaults.theme,
+        loaded: true,
+      });
+    } catch (err) {
+      console.error('[settings] Failed to load settings:', err);
+      set({ loaded: true });
+    }
   },
 
   updateSetting: (key, value) => {
@@ -50,64 +101,40 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   saveSettings: async () => {
-    const state = get();
-    const settings: AppSettings = {
-      activeProvider: state.activeProvider,
-      ollamaEndpoint: state.ollamaEndpoint,
-      ollamaModel: state.ollamaModel,
-      openaiModel: state.openaiModel,
-      openaiApiKey: state.openaiApiKey,
-      anthropicModel: state.anthropicModel,
-      anthropicApiKey: state.anthropicApiKey,
-      hotkeyToggle: state.hotkeyToggle,
-      hotkeyMic: state.hotkeyMic,
-    };
-    await window.api.settings.set(settings);
-    const keyErrors: string[] = [];
-    if (settings.openaiApiKey) {
-      try {
-        await saveApiKey('openai', settings.openaiApiKey);
-      } catch (err) {
-        keyErrors.push(`OpenAI: ${err instanceof Error ? err.message : 'save failed'}`);
-      }
-    }
-    if (settings.anthropicApiKey) {
-      try {
-        await saveApiKey('anthropic', settings.anthropicApiKey);
-      } catch (err) {
-        keyErrors.push(`Anthropic: ${err instanceof Error ? err.message : 'save failed'}`);
-      }
-    }
-    if (keyErrors.length > 0) {
-      throw new Error(`API key save failed — ${keyErrors.join('; ')}`);
+    try {
+      const state = get();
+      const settings: AppSettings = {
+        activeProvider: state.activeProvider,
+        providerConfigs: state.providerConfigs,
+        recentProviders: state.recentProviders,
+        version: state.version,
+        hotkeyToggle: state.hotkeyToggle,
+        hotkeyMic: state.hotkeyMic,
+        launchOnStartup: state.launchOnStartup,
+        autoHideDelay: state.autoHideDelay,
+        theme: state.theme,
+      };
+      await window.api.settings.set(settings);
+    } catch (err) {
+      console.error('[settings] Failed to save settings:', err);
+      throw err;
     }
   },
 
   checkOllamaStatus: async () => {
-    const result = await window.api.ollama.check();
-    set({ ollamaAvailable: result.available, ollamaModels: result.models ?? [] });
+    try {
+      const result = await window.api.ollama.check();
+      set({ ollamaAvailable: result.available, ollamaModels: result.models ?? [] });
+    } catch (err) {
+      console.warn('[settings] Failed to check Ollama status:', err);
+      set({ ollamaAvailable: false, ollamaModels: [] });
+    }
   },
 
-  getActiveLLMConfig: () => {
-    const state = get();
-    const config: { provider: ProviderType; model: string; baseUrl?: string; apiKey?: string } = {
-      provider: state.activeProvider,
-      model: '',
-    };
-    switch (state.activeProvider) {
-      case 'ollama':
-        config.model = state.ollamaModel;
-        config.baseUrl = state.ollamaEndpoint;
-        break;
-      case 'openai':
-        config.model = state.openaiModel;
-        config.apiKey = state.openaiApiKey;
-        break;
-      case 'anthropic':
-        config.model = state.anthropicModel;
-        config.apiKey = state.anthropicApiKey;
-        break;
-    }
-    return config;
+  saveProviderKey: async (providerId: string, _key: string) => {
+    await saveApiKey(providerId, _key);
+    set((state) => ({
+      hasApiKeys: { ...state.hasApiKeys, [providerId]: true },
+    }));
   },
 }));

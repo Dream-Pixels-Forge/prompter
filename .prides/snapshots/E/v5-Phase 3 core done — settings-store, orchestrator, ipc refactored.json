@@ -1,0 +1,28 @@
+{
+  "version": 5,
+  "phase": "E",
+  "label": "Phase 3 core done — settings-store, orchestrator, ipc refactored",
+  "data": {
+    "phase": "E",
+    "completed": "Phase 3 core refactor",
+    "items": {
+      "settings-store": "Dynamic provider state with migration from old flat format",
+      "orchestrator": "Dynamic provider config resolution from providerConfigs map",
+      "ipc": "OLLAMA_CHECK/STT updated for new format, PROVIDER_CHECK handler added",
+      "settings-panel": "Dynamic provider list from PROVIDER_DEFINITIONS (13 providers)"
+    },
+    "remaining": [
+      "ISS-0008: ProviderSwitcher.tsx — categorized searchable palette",
+      "ISS-0009: ProviderConfigCard.tsx — dynamic config card",
+      "ISS-0010: ProviderSettings.tsx — composed section"
+    ],
+    "verification": {
+      "typecheck": "0 errors",
+      "lint": "0 errors",
+      "tests": "25/25",
+      "build": "clean dist"
+    }
+  },
+  "created": "2026-05-28T10:05:50.376Z",
+  "immutable": true
+}

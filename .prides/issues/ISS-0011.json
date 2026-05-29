@@ -1,0 +1,18 @@
+{
+  "id": "ISS-0011",
+  "title": "ARCHITECTURAL: API keys loaded into renderer memory — replace with boolean hasKey",
+  "description": "CRITICAL: All 13 provider API keys are loaded into the renderer's Zustand store on every `loadSettings()` call via `STORE_GET_API_KEY` IPC channel. Even though keys aren't passed in the generate flow, they persist in renderer heap for the entire session.\n\nFix architecture:\n1. Add `STORE_HAS_API_KEY(service)` → boolean IPC channel (returns whether key exists without revealing the key)\n2. Change `settings-store.ts` to store `hasApiKeys: Record<string, boolean>` instead of `providerApiKeys: Record<string, string>`\n3. Update ProviderConfigCard to use `hasApiKeys` for display (masked status)\n4. Keep `STORE_SAVE_API_KEY` channel (renderer → main) for saving keys\n5. Remove `STORE_GET_API_KEY` channel entirely\n6. Remove `getActiveLLMConfig()` from store (dead code, returns the active key)\n\nRisk: Without this fix, any XSS or compromised devtools can exfiltrate all 13 API keys.",
+  "phase": "S",
+  "agent": "secure-agent",
+  "severity": "critical",
+  "status": "closed",
+  "blocking": true,
+  "assignee": null,
+  "tags": [],
+  "created": "2026-05-28T10:52:19.094Z",
+  "updated": "2026-05-28T10:58:06.490Z",
+  "closedAt": "2026-05-28T10:58:06.490Z",
+  "closedBy": "prides-coordinator",
+  "resolution": "Architectural fix applied: replaced STORE_GET_API_KEY with STORE_HAS_API_KEY (boolean). Renderer no longer receives decrypted API keys. provider-api-keys map changed to has-api-keys (boolean only). getActiveLLMConfig removed. Keys are only accessed in main process via safeStorage.",
+  "comments": []
+}
