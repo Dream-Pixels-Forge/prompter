@@ -27,6 +27,9 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+# Playwright screenshots
+.playwright-mcp/
+
 # Electron builder
 *.blockmap
 *.dmg
