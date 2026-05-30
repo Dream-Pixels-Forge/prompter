@@ -11,6 +11,10 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow: BrowserWindow | null = null;
 
+// Track whether the app is intentionally quitting (not just hiding to tray)
+// biome-ignore lint/suspicious/noExplicitAny: Electron App type omits isQuitting
+(app as any).isQuitting = false;
+
 function createWindow() {
   // Enable transparent visuals for Win/Linux (required for transparent window)
   if (process.platform === 'win32' || process.platform === 'linux') {
@@ -57,20 +61,34 @@ function createWindow() {
     return { action: 'deny' };
   });
 
+  // Hide to tray instead of closing (unless app is quitting)
+  mainWindow.on('close', (e) => {
+    // biome-ignore lint/suspicious/noExplicitAny: Electron App type omits isQuitting
+    if (!(app as any).isQuitting) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
-  // Security: enforce CSP at the session level (defense-in-depth beyond meta tag)
+  // Security: enforce CSP at the session level (defense-in-depth beyond meta tag).
+  // In dev, Vite injects inline module scripts for HMR (@react-refresh, @vite/client),
+  // so we allow 'unsafe-inline' for scripts only in dev to keep HMR working.
+  // In prod, the meta tag in index.html enforces the strict policy.
+  const csp = process.env.VITE_DEV_SERVER_URL
+    ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:*; img-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'"
+    : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'";
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
-        ],
+        'Content-Security-Policy': [csp],
       },
     });
   });
@@ -96,8 +114,16 @@ app.whenReady().then(() => {
   });
 });
 
-app.on('window-all-closed', () => {
+app.on('before-quit', () => {
+  // biome-ignore lint/suspicious/noExplicitAny: Electron App type omits isQuitting
+  (app as any).isQuitting = true;
+});
+
+app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+});
+
+app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 

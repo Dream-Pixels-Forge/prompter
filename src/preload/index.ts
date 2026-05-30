@@ -1,7 +1,7 @@
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { PrompterApi } from '../shared/api-types';
-import type { AppSettings, GenerateRequest, HistoryEntry } from '../shared/types';
+import type { AppSettings, AppTab, GenerateRequest, HistoryEntry } from '../shared/types';
 import { IPC_CHANNELS } from '../shared/types';
 
 contextBridge.exposeInMainWorld('api', {
@@ -49,6 +49,15 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.on(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
       return () => {
         ipcRenderer.removeListener(IPC_CHANNELS.HOTKEY_TRIGGERED, handler);
+      };
+    },
+  },
+  tray: {
+    onNavigate: (callback: (tab: AppTab) => void) => {
+      const handler = (_event: IpcRendererEvent, tab: AppTab) => callback(tab);
+      ipcRenderer.on(IPC_CHANNELS.TRAY_NAVIGATE, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.TRAY_NAVIGATE, handler);
       };
     },
   },

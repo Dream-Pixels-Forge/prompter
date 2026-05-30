@@ -1,0 +1,92 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prompter
+      - generic [ref=e12]: v0.1
+    - button "Close" [ref=e13]:
+      - img [ref=e14]
+  - generic [ref=e17]:
+    - button "Compose" [ref=e18]:
+      - img [ref=e19]
+      - text: Compose
+    - button "Templates" [active] [ref=e21]:
+      - img [ref=e22]
+      - text: Templates
+    - button "History" [ref=e24]:
+      - img [ref=e25]
+      - text: History
+    - button "Settings" [ref=e28]:
+      - img [ref=e29]
+      - text: Settings
+  - generic [ref=e57]:
+    - generic [ref=e58]:
+      - button "Dev" [ref=e59]
+      - button "Content" [ref=e60]
+      - button "Business" [ref=e61]
+      - button "Misc" [ref=e62]
+    - generic [ref=e63]:
+      - 'button "Select template: MCP Server Design" [ref=e64] [cursor=pointer]':
+        - generic [ref=e65]:
+          - img [ref=e67]
+          - generic [ref=e70]: MCP Server Design
+        - paragraph [ref=e71]: Specification for Model Context Protocol servers with tools, resources, and prompts
+        - generic [ref=e72]:
+          - generic [ref=e73]: developer
+          - generic [ref=e74]: karpathy
+      - 'button "Select template: Code Review Prompt" [ref=e75] [cursor=pointer]':
+        - generic [ref=e76]:
+          - img [ref=e78]
+          - generic [ref=e82]: Code Review Prompt
+        - paragraph [ref=e83]: Structured prompt for reviewing code with actionable feedback
+        - generic [ref=e84]:
+          - generic [ref=e85]: developer
+          - generic [ref=e86]: karpathy
+      - 'button "Select template: Agent Instructions" [ref=e87] [cursor=pointer]':
+        - generic [ref=e88]:
+          - img [ref=e90]
+          - generic [ref=e93]: Agent Instructions
+        - paragraph [ref=e94]: System prompt for AI agents with tools, functions, and autonomous behavior
+        - generic [ref=e95]:
+          - generic [ref=e96]: developer
+          - generic [ref=e97]: karpathy
+      - 'button "Select template: System Architecture" [ref=e98] [cursor=pointer]':
+        - generic [ref=e99]:
+          - img [ref=e101]
+          - generic [ref=e106]: System Architecture
+        - paragraph [ref=e107]: Design system architecture with components, data flow, and deployment strategy
+        - generic [ref=e108]:
+          - generic [ref=e109]: developer
+          - generic [ref=e110]: openai
+      - 'button "Select template: CLI Tool Spec" [ref=e111] [cursor=pointer]':
+        - generic [ref=e112]:
+          - img [ref=e114]
+          - generic [ref=e116]: CLI Tool Spec
+        - paragraph [ref=e117]: Specification and prompt for building command-line tools
+        - generic [ref=e118]:
+          - generic [ref=e119]: developer
+          - generic [ref=e120]: karpathy
+      - 'button "Select template: Database Schema" [ref=e121] [cursor=pointer]':
+        - generic [ref=e122]:
+          - img [ref=e124]
+          - generic [ref=e128]: Database Schema
+        - paragraph [ref=e129]: Design database schemas with tables, relationships, indexes, and migrations
+        - generic [ref=e130]:
+          - generic [ref=e131]: developer
+          - generic [ref=e132]: openai
+      - 'button "Select template: Test Plan / Cases" [ref=e133] [cursor=pointer]':
+        - generic [ref=e134]:
+          - img [ref=e136]
+          - generic [ref=e139]: Test Plan / Cases
+        - paragraph [ref=e140]: Generate comprehensive test plans and test cases from feature descriptions
+        - generic [ref=e141]:
+          - generic [ref=e142]: developer
+          - generic [ref=e143]: karpathy
+      - 'button "Select template: API Documentation" [ref=e144] [cursor=pointer]':
+        - generic [ref=e145]:
+          - img [ref=e147]
+          - generic [ref=e150]: API Documentation
+        - paragraph [ref=e151]: Comprehensive API documentation for REST/GraphQL endpoints
+        - generic [ref=e152]:
+          - generic [ref=e153]: developer
+          - generic [ref=e154]: openai

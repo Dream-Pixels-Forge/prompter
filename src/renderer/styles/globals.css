@@ -4,27 +4,25 @@
   font-family: "Inter";
   font-weight: 400;
   font-display: swap;
-  src: url("/assets/fonts/Inter-Regular.woff2") format("woff2"), url("/assets/fonts/Inter-Regular.ttf")
-    format("truetype");
+  src: url("/assets/fonts/Inter-Regular.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-weight: 500;
   font-display: swap;
-  src: url("/assets/fonts/Inter-Medium.woff2") format("woff2"), url("/assets/fonts/Inter-Medium.ttf") format("truetype");
+  src: url("/assets/fonts/Inter-Medium.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-weight: 600;
   font-display: swap;
-  src: url("/assets/fonts/Inter-SemiBold.woff2") format("woff2"), url("/assets/fonts/Inter-SemiBold.ttf")
-    format("truetype");
+  src: url("/assets/fonts/Inter-SemiBold.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-weight: 700;
   font-display: swap;
-  src: url("/assets/fonts/Inter-Bold.woff2") format("woff2"), url("/assets/fonts/Inter-Bold.ttf") format("truetype");
+  src: url("/assets/fonts/Inter-Bold.woff2") format("woff2");
 }
 
 @theme {
@@ -80,6 +78,9 @@
   --opacity-low: 0.48;
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Define white as a CSS variable so light mode can override it */
+  --color-white: #fff;
 }
 
 /* ── Base ────────────────────────────────────────────── */
@@ -87,7 +88,7 @@
 html,
 body,
 #root {
-  background: transparent;
+  background: #18161a;
 }
 
 body {
@@ -256,4 +257,50 @@ body {
 }
 .toast-exit {
   animation: toast-out 0.15s ease-in forwards;
+}
+
+/* ── Light mode overrides ───────────────────────────── */
+[data-theme="light"] {
+  --color-white: #1c1c1e;
+  --color-surface: #ffffff;
+  --color-surface-light: #f5f5f5;
+  --color-surface-lighter: #eeeeee;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-hover: rgba(0, 0, 0, 0.14);
+  --color-text: rgba(0, 0, 0, 0.92);
+  --color-text-secondary: rgba(0, 0, 0, 0.72);
+  --color-text-muted: rgba(0, 0, 0, 0.48);
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background: #ffffff;
+}
+
+[data-theme="light"] ::selection {
+  background: rgba(45, 212, 191, 0.15);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .btn-subtle:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .sub-card {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .input-base {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="light"] .input-base::placeholder {
+  color: var(--color-text-muted);
 }

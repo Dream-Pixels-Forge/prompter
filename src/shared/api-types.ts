@@ -1,4 +1,4 @@
-import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry, OllamaStatus } from './types';
+import type { AppSettings, AppTab, GenerateRequest, GenerateResponse, HistoryEntry, OllamaStatus } from './types';
 
 export interface PrompterApi {
   llm: {
@@ -41,6 +41,9 @@ export interface PrompterApi {
   };
   hotkey: {
     onTriggered: (callback: (action: string) => void) => () => void;
+  };
+  tray: {
+    onNavigate: (callback: (tab: AppTab) => void) => () => void;
   };
   app: {
     quit: () => Promise<void>;

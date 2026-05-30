@@ -1,5 +1,5 @@
 import { copyText } from '@/renderer/lib/clipboard';
-import { Check, Copy } from 'lucide-react';
+import { Check, ChevronDown, Copy } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 }
 
 export function PromptSection({ label, content }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -28,12 +29,25 @@ export function PromptSection({ label, content }: Props) {
 
   return (
     <div className="sub-card overflow-hidden">
-      {/* Section header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-white/[0.02] border-b border-white/[0.04]">
-        <span className="text-[11px] font-semibold text-white/68 uppercase tracking-wider">{label}</span>
+      <div
+        className="flex items-center justify-between px-3 py-2 bg-white/[0.02] border-b border-white/[0.04] cursor-pointer select-none"
+        onClick={() => setCollapsed(!collapsed)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setCollapsed(!collapsed);
+        }}
+      >
+        <div className="flex items-center gap-1.5">
+          <ChevronDown
+            className={`w-3 h-3 text-white/48 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+          />
+          <span className="text-[11px] font-semibold text-white/68 uppercase tracking-wider">{label}</span>
+        </div>
         <button
           type="button"
-          onClick={handleCopy}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCopy();
+          }}
           className="w-5 h-5 rounded-md flex items-center justify-center hover:bg-white/[0.08] transition-colors group"
         >
           {copied ? (
@@ -44,9 +58,11 @@ export function PromptSection({ label, content }: Props) {
         </button>
       </div>
       {/* Section content */}
-      <div className="px-3 py-2.5">
-        <p className="text-[13px] text-white/80 leading-[1.7] whitespace-pre-wrap">{content}</p>
-      </div>
+      {!collapsed && (
+        <div className="px-3 py-2.5">
+          <p className="text-[13px] text-white/80 leading-[1.7] whitespace-pre-wrap">{content}</p>
+        </div>
+      )}
     </div>
   );
 }

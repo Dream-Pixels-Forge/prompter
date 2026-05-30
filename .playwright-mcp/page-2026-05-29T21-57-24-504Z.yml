@@ -1,0 +1,105 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prompter
+      - generic [ref=e12]: v0.1
+    - button "Close" [ref=e13]:
+      - img [ref=e14]
+  - generic [ref=e17]:
+    - button "Compose" [ref=e18]:
+      - img [ref=e19]
+      - text: Compose
+    - button "Templates" [ref=e21]:
+      - img [ref=e22]
+      - text: Templates
+    - button "History" [ref=e24]:
+      - img [ref=e25]
+      - text: History
+    - button "Settings" [active] [ref=e28]:
+      - img [ref=e29]
+      - text: Settings
+  - generic [ref=e155]:
+    - generic [ref=e156]:
+      - generic [ref=e157]:
+        - img [ref=e158]
+        - generic [ref=e161]: Provider
+      - button "Ollama Local LLM server" [ref=e163]:
+        - generic [ref=e166]: Ollama
+        - generic [ref=e167]: Local LLM server
+        - img [ref=e168]
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - generic [ref=e174]: Ollama
+            - generic [ref=e175]: Active
+          - generic [ref=e176]:
+            - generic [ref=e177]: Model
+            - textbox "llama3.2" [ref=e178]
+          - generic [ref=e179]:
+            - generic [ref=e180]: Endpoint
+            - textbox [ref=e181]: http://localhost:11434
+          - generic [ref=e182]:
+            - button "Check" [ref=e183]
+            - link "ollama.ai" [ref=e184] [cursor=pointer]:
+              - /url: https://ollama.ai
+              - img [ref=e185]
+              - text: ollama.ai
+        - button "OpenAI" [ref=e189]:
+          - generic [ref=e191]: OpenAI
+          - img [ref=e192]
+        - button "Anthropic" [ref=e194]:
+          - generic [ref=e196]: Anthropic
+          - img [ref=e197]
+        - button "Groq" [ref=e199]:
+          - generic [ref=e201]: Groq
+          - img [ref=e202]
+        - button "DeepSeek" [ref=e204]:
+          - generic [ref=e206]: DeepSeek
+          - img [ref=e207]
+        - button "Together AI" [ref=e209]:
+          - generic [ref=e211]: Together AI
+          - img [ref=e212]
+        - button "Fireworks AI" [ref=e214]:
+          - generic [ref=e216]: Fireworks AI
+          - img [ref=e217]
+        - button "Perplexity" [ref=e219]:
+          - generic [ref=e221]: Perplexity
+          - img [ref=e222]
+        - button "xAI/Grok" [ref=e224]:
+          - generic [ref=e226]: xAI/Grok
+          - img [ref=e227]
+        - button "Mistral AI" [ref=e229]:
+          - generic [ref=e231]: Mistral AI
+          - img [ref=e232]
+        - button "Google Gemini" [ref=e234]:
+          - generic [ref=e236]: Google Gemini
+          - img [ref=e237]
+        - button "Cohere" [ref=e239]:
+          - generic [ref=e241]: Cohere
+          - img [ref=e242]
+        - button "OpenRouter" [ref=e244]:
+          - generic [ref=e246]: OpenRouter
+          - img [ref=e247]
+    - generic [ref=e250]:
+      - generic [ref=e252]: Hotkeys
+      - generic [ref=e253]:
+        - generic [ref=e254]: Toggle
+        - textbox [ref=e255]: Alt+Space
+      - generic [ref=e256]:
+        - generic [ref=e257]: Mic
+        - textbox [ref=e258]: Alt+M
+    - generic [ref=e260]:
+      - generic [ref=e262]: General
+      - generic [ref=e263]:
+        - generic [ref=e264]: Launch on startup
+        - checkbox "Launch on startup" [ref=e265]
+      - generic [ref=e266]:
+        - generic [ref=e267]: Auto-hide delay (5s)
+        - slider [ref=e268]: "5"
+      - generic [ref=e269]:
+        - generic [ref=e270]: Theme
+        - combobox [ref=e271]:
+          - option "Dark" [selected]
+          - option "Light"
+          - option "System"
