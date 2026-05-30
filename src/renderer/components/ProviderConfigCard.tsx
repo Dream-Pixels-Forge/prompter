@@ -23,6 +23,9 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   const config = store.providerConfigs[providerId] ?? { model: def.defaultModel, endpoint: def.defaultEndpoint };
   const hasKey = !!store.hasApiKeys[providerId];
 
+  // Use fetched Ollama models if available, otherwise fall back to definition
+  const availableModels = providerId === 'ollama' && store.ollamaModels.length > 0 ? store.ollamaModels : def.models;
+
   // Collapsed state
   if (!isActive) {
     return (
@@ -90,14 +93,14 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
       {/* Model dropdown */}
       <div className="grid grid-cols-[70px_1fr] items-center gap-2">
         <span className="text-[11px] text-white/48 font-medium">Model</span>
-        {def.models.length > 0 ? (
+        {availableModels.length > 0 ? (
           <div className="relative">
             <select
               value={config.model}
               onChange={(e) => handleModelChange(e.target.value)}
               className="input-base w-full appearance-none cursor-pointer pr-7 text-xs"
             >
-              {def.models.map((m) => (
+              {availableModels.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
