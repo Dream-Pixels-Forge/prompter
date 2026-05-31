@@ -24,12 +24,18 @@ export function OutputPanel() {
   const framework = getFramework(output.framework);
 
   const handleCopy = async () => {
-    const success = await copyText(output.raw);
+    if (!framework) return;
+    const combinedText = framework.sections
+      .map((s) => `### ${s.label}\n${output.sections[s.key] || ''}`)
+      .join('\n\n');
+    const success = await copyText(combinedText);
     if (success) {
       setCopied(true);
       showToast('Copied to clipboard');
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
       copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
+    } else {
+      showToast('Copy failed — please try again');
     }
   };
 
