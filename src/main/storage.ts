@@ -105,15 +105,6 @@ export class StorageService {
   }
 
   saveApiKey(service: string, apiKey: string): void {
-    let keys: Record<string, string> = {};
-    if (existsSync(this.keysPath)) {
-      try {
-        keys = JSON.parse(readFileSync(this.keysPath, 'utf-8'));
-      } catch {
-        keys = {};
-      }
-    }
-
     if (!this.isEncryptionAvailable()) {
       throw new Error(
         'System encryption unavailable — cannot securely store API key. ' +
@@ -121,14 +112,20 @@ export class StorageService {
       );
     }
     const encrypted = safeStorage.encryptString(apiKey);
-    keys[service] = encrypted.toString('base64');
+    const encryptedBase64 = encrypted.toString('base64');
 
     // Invalidate cache for this service
     this.keyStatusCache.set(service, true);
 
-    // Write asynchronously to avoid blocking the main process
+    // Read-then-write inside the queue to prevent race conditions
     this.enqueueWrite(async () => {
       try {
+        let keys: Record<string, string> = {};
+        if (await fs.access(this.keysPath).then(() => true).catch(() => false)) {
+          const raw = await fs.readFile(this.keysPath, 'utf-8');
+          keys = JSON.parse(raw);
+        }
+        keys[service] = encryptedBase64;
         await fs.writeFile(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
       } catch (err) {
         console.error('[Storage] Failed to save API key:', err);

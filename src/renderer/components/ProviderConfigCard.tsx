@@ -1,7 +1,6 @@
 import { PROVIDER_DEFINITIONS, getProviderDefinition } from '@/shared/provider-definitions';
-import type { ProviderConfig } from '@/shared/providers';
 import { ChevronDown, ExternalLink, Key } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAppStore } from '../stores/app-store';
 import { useSettingsStore } from '../stores/settings-store';
 
@@ -16,6 +15,7 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   const showToast = useAppStore((s) => s.showToast);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [checking, setChecking] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const def = getProviderDefinition(providerId);
   if (!def) return null;
@@ -48,23 +48,36 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   }
 
   // Expanded state (active provider)
+  const debouncedSave = () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await store.saveSettings();
+        showToast('Saved');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : 'Save failed');
+      }
+    }, 800);
+  };
+
   const handleModelChange = (model: string) => {
     const configs = { ...store.providerConfigs };
     configs[providerId] = { ...configs[providerId], model };
     store.updateSetting('providerConfigs', configs);
-    store.saveSettings().then(() => showToast('Saved'));
+    debouncedSave();
   };
 
   const handleEndpointChange = (endpoint: string) => {
     const configs = { ...store.providerConfigs };
     configs[providerId] = { ...configs[providerId], endpoint };
     store.updateSetting('providerConfigs', configs);
-    store.saveSettings().then(() => showToast('Saved'));
+    debouncedSave();
   };
 
   const handleSaveKey = async () => {
     try {
       await store.saveProviderKey(providerId, apiKeyInput);
+      setApiKeyInput(''); // Clear plaintext from renderer memory
       showToast('API key saved');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to save API key');

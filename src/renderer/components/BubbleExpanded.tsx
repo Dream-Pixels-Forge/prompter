@@ -78,7 +78,7 @@ export function BubbleExpanded() {
       ref={cardRef}
       className="fixed inset-0 glass-card
                   flex flex-col overflow-hidden z-50"
-      style={{ opacity, transition: 'opacity 0.5s ease' }}
+      style={{ opacity, transition: 'opacity 0.5s ease', pointerEvents: opacity < 0.5 ? 'none' : 'auto' }}
       onMouseEnter={resetTimer}
       onMouseMove={resetTimer}
     >

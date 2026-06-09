@@ -56,7 +56,10 @@ export function createOpenAICompatibleImpl(
 
         return content;
       } catch (err: unknown) {
-        if (err instanceof DOMException && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          throw err; // Re-throw user cancellation as-is (orchestrator handles it)
+        }
+        if (err instanceof DOMException && err.name === 'TimeoutError') {
           throw new Error(`${providerId} API error: request timed out after 60s`);
         }
         throw err;

@@ -119,6 +119,10 @@ export class SpeechRecognizer {
       this.recognition.stop();
       this.recognition = null;
     }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
+    }
   }
 
   isActive(): boolean {

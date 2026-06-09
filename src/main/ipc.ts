@@ -57,6 +57,14 @@ let settings: Partial<AppSettings> = {};
 let storage: StorageService;
 let tray: Tray | null = null;
 
+/** Get current hotkey settings (read after settings are loaded) */
+export function getHotkeys(): { toggle: string; mic: string } {
+  return {
+    toggle: (settings as AppSettings).hotkeyToggle || 'Alt+Space',
+    mic: (settings as AppSettings).hotkeyMic || 'Alt+M',
+  };
+}
+
 /**
  * Per-request abort controllers — keyed by requestId so LLM_CANCEL can target a specific
  * request instead of blindly clearing all controllers.
@@ -227,8 +235,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── STT (Whisper fallback) ──
   ipcMain.handle(IPC_CHANNELS.STT_START, async (_event, audioData: string) => {
-    const s = settings as SettingsStore;
-    const openaiApiKey = storage.getApiKey('openai') || s.providerApiKeys?.openai || '';
+    const openaiApiKey = storage.getApiKey('openai');
     if (!openaiApiKey) throw new Error('OpenAI API key not configured for STT');
     // Reject audio data larger than 25 MB (base64-encoded) to prevent memory exhaustion
     if (typeof audioData !== 'string' || audioData.length > 25 * 1024 * 1024) {
@@ -254,16 +261,26 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── History ──
   ipcMain.handle(IPC_CHANNELS.HISTORY_INSERT, (_event, entry: HistoryEntry) => {
+    // Validate entry structure to prevent data injection
+    if (!entry || typeof entry !== 'object') throw new Error('Invalid history entry');
+    if (!entry.id || typeof entry.id !== 'string') throw new Error('History entry must have a string id');
+    if (typeof entry.rawInput !== 'string') throw new Error('History entry must have rawInput string');
+    if (typeof entry.structuredOutput !== 'string') throw new Error('History entry must have structuredOutput string');
+    if (typeof entry.createdAt !== 'string') throw new Error('History entry must have createdAt string');
     storage.insertHistory(entry);
     return true;
   });
 
   ipcMain.handle(IPC_CHANNELS.HISTORY_LIST, (_event, limit = 50, offset = 0) => {
-    return storage.listHistory(limit, offset);
+    // Clamp to prevent abuse
+    const safeLimit = Math.max(0, Math.min(200, Math.floor(Number(limit) || 50)));
+    const safeOffset = Math.max(0, Math.floor(Number(offset) || 0));
+    return storage.listHistory(safeLimit, safeOffset);
   });
 
   ipcMain.handle(IPC_CHANNELS.HISTORY_SEARCH, (_event, query: string) => {
-    return storage.searchHistory(query);
+    if (typeof query !== 'string') return [];
+    return storage.searchHistory(query.slice(0, 500)); // limit query length
   });
 
   ipcMain.handle(IPC_CHANNELS.HISTORY_DELETE, (_event, id: string) => {

@@ -25,6 +25,7 @@ const activeConfig: RuntimeConfig = {
 };
 
 let engineInitialized = false;
+let legacyMigrated = false;
 
 function ensureEngine(): void {
   if (!engineInitialized) {
@@ -86,29 +87,30 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
     keysChanged = true;
   }
 
-  // Re-init engine when API keys change so the new keys take effect
-  if (keysChanged && engineInitialized) {
-    reinitEngine();
-  }
+  // Note: no reinitEngine() needed — the KeyStore closure references activeConfig
+  // by reference, so key changes are immediately visible to the engine.
 
-  // Legacy flat fields — migrate to new format
-  if (typeof c.ollamaModel === 'string') {
-    activeConfig.providerConfigs.ollama = {
-      model: c.ollamaModel as string,
-      endpoint: (c.ollamaEndpoint as string) || activeConfig.providerConfigs.ollama.endpoint,
-    };
-  }
-  if (typeof c.openaiModel === 'string') {
-    activeConfig.providerConfigs.openai = {
-      model: c.openaiModel as string,
-      endpoint: activeConfig.providerConfigs.openai.endpoint,
-    };
-  }
-  if (typeof c.anthropicModel === 'string') {
-    activeConfig.providerConfigs.anthropic = {
-      model: c.anthropicModel as string,
-      endpoint: activeConfig.providerConfigs.anthropic.endpoint,
-    };
+  // Legacy flat fields — migrate to new format (only once)
+  if (!legacyMigrated) {
+    if (typeof c.ollamaModel === 'string') {
+      activeConfig.providerConfigs.ollama = {
+        model: c.ollamaModel as string,
+        endpoint: (c.ollamaEndpoint as string) || activeConfig.providerConfigs.ollama.endpoint,
+      };
+    }
+    if (typeof c.openaiModel === 'string') {
+      activeConfig.providerConfigs.openai = {
+        model: c.openaiModel as string,
+        endpoint: activeConfig.providerConfigs.openai.endpoint,
+      };
+    }
+    if (typeof c.anthropicModel === 'string') {
+      activeConfig.providerConfigs.anthropic = {
+        model: c.anthropicModel as string,
+        endpoint: activeConfig.providerConfigs.anthropic.endpoint,
+      };
+    }
+    legacyMigrated = true;
   }
   // Active provider
   if (typeof c.activeProvider === 'string') activeConfig.activeProvider = c.activeProvider;
@@ -204,11 +206,11 @@ function parseLLMOutput(output: string, sectionKeys: string[]): Record<string, s
     ];
     for (const lookup of [...new Set(fuzzyKeys)]) {
       const escaped = lookup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`#{1,3}\\s+${escaped}[\\s\\S]*?(?=#{1,3}\\s+|$)`, 'i');
+      // Match from ### Header to next ### or #### or end — stops at ANY header boundary
+      const regex = new RegExp(`#{1,3}\\s+${escaped}\\s*\n([\\s\\S]*?)(?=\n#{1,4}\\s+|$)`, 'i');
       const match = output.match(regex);
       if (match) {
-        const content = match[0].replace(/^#{1,3}\s+.*$/m, '').trim();
-        result[key] = content;
+        result[key] = (match[1] || '').trim();
         break;
       }
     }
@@ -232,16 +234,16 @@ export function buildSectionContent(
 
 export function extractDomain(input: string): string {
   const domains: [RegExp, string][] = [
-    [/saas|software|app|platform|dashboard/i, 'SaaS/product'],
-    [/recipe|cook|kitchen|food|meal/i, 'culinary/food'],
-    [/api|endpoint|rest|graphql|sdk/i, 'API/developer'],
-    [/video|film|animation|motion|3d/i, 'video/animation'],
-    [/agent|assistant|automation|workflow/i, 'agent/AI'],
-    [/blog|article|post|content|writing/i, 'content/writing'],
-    [/support|ticket|helpdesk|customer|service/i, 'customer support'],
-    [/data|analytics|report|metric|dashboard/i, 'data/analytics'],
-    [/design|ui|ux|interface/i, 'design/UX'],
-    [/documentation|guide|manual/i, 'technical writing'],
+    [/\bsaas\b|\bsoftware\b|\bplatform\b|\bdashboard\b/i, 'SaaS/product'],
+    [/\brecipe\b|\bcook\b|\bkitchen\b|\bfood\b|\bmeal\b/i, 'culinary/food'],
+    [/\bapi\b|\bendpoint\b|\brest\b|\bgraphql\b|\bsdk\b/i, 'API/developer'],
+    [/\bvideo\b|\bfilm\b|\banimation\b|\bmotion\b|\b3d\b/i, 'video/animation'],
+    [/\bagent\b|\bassistant\b|\bautomation\b|\bworkflow\b/i, 'agent/AI'],
+    [/\bblog\b|\barticle\b|\bnewsletter\b|\bcontent\b|\bwriting\b/i, 'content/writing'],
+    [/\bsupport\b|\bticket\b|\bhelpdesk\b|\bcustomer\b/i, 'customer support'],
+    [/\bdata\b|\banalytics\b|\breport\b|\bmetric\b/i, 'data/analytics'],
+    [/\bdesign\b|\bux\b|\binterface\b/i, 'design/UX'],
+    [/\bdocumentation\b|\bguide\b|\bmanual\b/i, 'technical writing'],
   ];
 
   for (const [pattern, domain] of domains) {

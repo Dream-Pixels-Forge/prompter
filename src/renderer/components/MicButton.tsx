@@ -12,7 +12,6 @@ interface MicButtonProps {
 
 export function MicButton({ onTranscript, onInterim, disabled, large = false }: MicButtonProps) {
   const [state, setState] = useState<'idle' | 'listening' | 'processing'>('idle');
-  const [_interimText, setInterimText] = useState('');
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useAppStore((s) => s.showToast);
@@ -50,13 +49,11 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
     const recognizer = new SpeechRecognizer({
       onResult: (text, isFinal) => {
         if (isFinal) {
-          setInterimText('');
           onInterim?.('');
           setState('idle');
           clearSilenceTimeout();
           onTranscript(text);
         } else {
-          setInterimText(text);
           onInterim?.(text);
           resetSilenceTimeout();
         }
@@ -64,14 +61,12 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
       onStateChange: (newState) => {
         if (newState === 'idle') {
           setState('idle');
-          setInterimText('');
           onInterim?.('');
         }
       },
       onError: (error) => {
         showToast(error);
         setState('idle');
-        setInterimText('');
         onInterim?.('');
       },
     });

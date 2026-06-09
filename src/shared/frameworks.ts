@@ -19,9 +19,9 @@ export function getFramework(id: string): Framework | undefined {
 
 export function detectFramework(input: string): string {
   const lower = input.toLowerCase();
-  if (/(video|film|animation|3d|motion|cinematic)/.test(lower)) return 'mplct';
-  if (/(agent|assistant|tool|function|autonomous)/.test(lower)) return 'karpathy';
-  if (/(support|ticket|helpdesk|customer)/.test(lower)) return 'anthropic';
-  if (/(context|memory|knowledge|sop|retrieval)/.test(lower)) return 'context-eng';
+  if (/\b(video|film|animation|3d|motion|cinematic)\b/.test(lower)) return 'mplct';
+  if (/\b(agent|assistant|tool|function|autonomous)\b/.test(lower)) return 'karpathy';
+  if (/\b(support|ticket|helpdesk|customer)\b/.test(lower)) return 'anthropic';
+  if (/\b(context|memory|knowledge|sop|retrieval)\b/.test(lower)) return 'context-eng';
   return 'openai';
 }

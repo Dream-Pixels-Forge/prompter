@@ -71,9 +71,23 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const serviceIds = PROVIDER_DEFINITIONS.map((def) => def.id);
       const keyStatuses = await window.api.history.getKeyStatuses(serviceIds);
 
+      // Merge saved providerConfigs with defaults — saved values override defaults
+      const savedConfigs = (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {};
+      const mergedConfigs: Record<string, { model: string; endpoint?: string }> = {};
+      for (const def of PROVIDER_DEFINITIONS) {
+        mergedConfigs[def.id] = {
+          model: savedConfigs[def.id]?.model || def.defaultModel,
+          endpoint: savedConfigs[def.id]?.endpoint || def.defaultEndpoint,
+        };
+      }
+      // Add any saved providers not in definitions (custom providers)
+      for (const [id, cfg] of Object.entries(savedConfigs)) {
+        if (!mergedConfigs[id]) mergedConfigs[id] = cfg;
+      }
+
       set({
         activeProvider: (saved.activeProvider as string) || defaults.activeProvider,
-        providerConfigs: (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {},
+        providerConfigs: mergedConfigs,
         hasApiKeys: keyStatuses,
         recentProviders: (saved.recentProviders as string[]) || defaults.recentProviders,
         version: (saved.version as number) || 1,
