@@ -12,21 +12,49 @@ const ERROR_MESSAGES: Record<string, string> = {
   'service-not-allowed': 'Speech service unavailable. Try again later.',
 };
 
+/**
+ * Whisper fallback: records audio and sends to OpenAI Whisper API via IPC.
+ * Used when Web Speech API is unavailable (e.g., Linux without speech-dispatcher).
+ */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function transcribeWithWhisper(audioBlob: Blob): Promise<string> {
+  if (audioBlob.size === 0) throw new Error('No audio recorded — try again');
+  const base64 = await blobToBase64(audioBlob);
+  return window.api.stt.transcribe(base64);
+}
+
 export class SpeechRecognizer {
   private recognition: SpeechRecognition | null = null;
   private callbacks: SpeechCallbacks;
   private isListening = false;
   private permanentError = false;
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private whisperMode = false;
 
   constructor(callbacks: SpeechCallbacks) {
     this.callbacks = callbacks;
   }
 
+  /** Start with Web Speech API if available, otherwise fall back to Whisper */
   start(): void {
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognitionCtor) {
-      this.callbacks.onError('Speech recognition not supported in this browser');
+      // Web Speech API not available — use Whisper fallback
+      this.startWhisperFallback();
       return;
     }
 
@@ -93,6 +121,10 @@ export class SpeechRecognizer {
       this.recognition.stop();
       this.recognition = null;
     }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
+    }
   }
 
   isActive(): boolean {
@@ -102,5 +134,55 @@ export class SpeechRecognizer {
   destroy(): void {
     this.stop();
     this.callbacks = { onResult: () => {}, onStateChange: () => {}, onError: () => {} };
+  }
+
+  // ── Whisper fallback ─────────────────────────────────
+
+  private async startWhisperFallback(): Promise<void> {
+    this.whisperMode = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      this.mediaRecorder = recorder;
+      this.audioChunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.audioChunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (this.audioChunks.length === 0) {
+          this.callbacks.onStateChange('idle');
+          return;
+        }
+        this.callbacks.onStateChange('processing');
+        try {
+          const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+          const text = await transcribeWithWhisper(blob);
+          if (text) {
+            this.callbacks.onResult(text, true);
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Whisper transcription failed';
+          this.callbacks.onError(msg);
+        } finally {
+          this.callbacks.onStateChange('idle');
+        }
+      };
+
+      recorder.start(1000); // collect data every second
+      this.isListening = true;
+      this.callbacks.onStateChange('listening');
+    } catch (err) {
+      const msg = err instanceof DOMException && err.name === 'NotAllowedError'
+        ? ERROR_MESSAGES['not-allowed']
+        : err instanceof DOMException && err.name === 'NotFoundError'
+          ? ERROR_MESSAGES['audio-capture']
+          : err instanceof DOMException && err.name === 'NotSupportedError'
+            ? 'Audio format not supported on this platform — check browser/device capabilities'
+            : `Microphone error: ${err instanceof Error ? err.message : 'unknown'}`;
+      this.callbacks.onError(msg);
+    }
   }
 }

@@ -12,7 +12,6 @@ interface MicButtonProps {
 
 export function MicButton({ onTranscript, onInterim, disabled, large = false }: MicButtonProps) {
   const [state, setState] = useState<'idle' | 'listening' | 'processing'>('idle');
-  const [_interimText, setInterimText] = useState('');
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useAppStore((s) => s.showToast);
@@ -50,13 +49,11 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
     const recognizer = new SpeechRecognizer({
       onResult: (text, isFinal) => {
         if (isFinal) {
-          setInterimText('');
           onInterim?.('');
           setState('idle');
           clearSilenceTimeout();
           onTranscript(text);
         } else {
-          setInterimText(text);
           onInterim?.(text);
           resetSilenceTimeout();
         }
@@ -64,14 +61,12 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
       onStateChange: (newState) => {
         if (newState === 'idle') {
           setState('idle');
-          setInterimText('');
           onInterim?.('');
         }
       },
       onError: (error) => {
         showToast(error);
         setState('idle');
-        setInterimText('');
         onInterim?.('');
       },
     });
@@ -91,6 +86,8 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
         onClick={handleToggle}
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
+        aria-label={state === 'listening' ? 'Stop listening' : 'Start voice input'}
+        aria-pressed={state === 'listening'}
         className={`
           relative ${large ? 'w-16 h-16 rounded-2xl' : 'w-9 h-9 rounded-md'} flex items-center justify-center
           transition-all duration-200

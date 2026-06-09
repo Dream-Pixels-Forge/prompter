@@ -1,7 +1,6 @@
-import { PROVIDER_DEFINITIONS, getProviderDefinition } from '@/shared/provider-definitions';
-import type { ProviderConfig } from '@/shared/providers';
+import { getProviderDefinition } from '@/shared/provider-definitions';
 import { ChevronDown, ExternalLink, Key } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../stores/app-store';
 import { useSettingsStore } from '../stores/settings-store';
 
@@ -16,6 +15,14 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   const showToast = useAppStore((s) => s.showToast);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [checking, setChecking] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up debounced timer on unmount to prevent fires on unmounted component
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const def = getProviderDefinition(providerId);
   if (!def) return null;
@@ -32,6 +39,7 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
       <button
         type="button"
         onClick={onSetActive}
+        aria-label={`Select ${def.name} as active provider${hasKey ? ' (configured)' : ''}`}
         className="w-full flex items-center gap-2.5 px-3 py-2 sub-card hover:border-white/[0.1] transition-all text-left"
       >
         <div className="w-3.5 h-3.5 rounded-full border-2 border-white/15 flex items-center justify-center shrink-0" />
@@ -47,23 +55,36 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   }
 
   // Expanded state (active provider)
+  const debouncedSave = () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await store.saveSettings();
+        showToast('Saved');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : 'Save failed');
+      }
+    }, 800);
+  };
+
   const handleModelChange = (model: string) => {
     const configs = { ...store.providerConfigs };
     configs[providerId] = { ...configs[providerId], model };
     store.updateSetting('providerConfigs', configs);
-    store.saveSettings().then(() => showToast('Saved'));
+    debouncedSave();
   };
 
   const handleEndpointChange = (endpoint: string) => {
     const configs = { ...store.providerConfigs };
     configs[providerId] = { ...configs[providerId], endpoint };
     store.updateSetting('providerConfigs', configs);
-    store.saveSettings().then(() => showToast('Saved'));
+    debouncedSave();
   };
 
   const handleSaveKey = async () => {
     try {
       await store.saveProviderKey(providerId, apiKeyInput);
+      setApiKeyInput(''); // Clear plaintext from renderer memory
       showToast('API key saved');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to save API key');
@@ -98,6 +119,7 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
             <select
               value={config.model}
               onChange={(e) => handleModelChange(e.target.value)}
+              aria-label={`${def.name} model selection`}
               className="input-base w-full appearance-none cursor-pointer pr-7 text-xs"
             >
               {availableModels.map((m) => (
@@ -113,6 +135,7 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
             type="text"
             value={config.model}
             onChange={(e) => handleModelChange(e.target.value)}
+            aria-label={`${def.name} model name`}
             className="input-base w-full text-xs"
             placeholder={def.defaultModel}
           />
@@ -128,12 +151,14 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
               type="password"
               value={apiKeyInput}
               onChange={(e) => setApiKeyInput(e.target.value)}
+              aria-label={`${def.name} API key`}
               className="input-base flex-1 text-xs"
               placeholder={hasKey ? '••••••••' : 'Enter API key...'}
             />
             <button
               type="button"
               onClick={handleSaveKey}
+              aria-label="Save API key"
               className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] bg-white/[0.06] hover:bg-white/[0.1] rounded-md transition-colors text-white/68 shrink-0"
             >
               <Key className="w-3 h-3" />
@@ -151,6 +176,7 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
             type="text"
             value={config.endpoint ?? def.defaultEndpoint ?? ''}
             onChange={(e) => handleEndpointChange(e.target.value)}
+            aria-label={`${def.name} API endpoint`}
             className="input-base w-full text-xs"
           />
         </div>
@@ -158,7 +184,13 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
 
       {/* Actions row */}
       <div className="flex items-center gap-2 pt-1">
-        <button type="button" onClick={handleCheck} disabled={checking} className="btn-subtle text-[10px]">
+        <button
+          type="button"
+          onClick={handleCheck}
+          disabled={checking}
+          aria-label={`Check ${def.name} connection`}
+          className="btn-subtle text-[10px]"
+        >
           {checking ? 'Checking...' : 'Check'}
         </button>
         <a

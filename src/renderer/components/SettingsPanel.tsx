@@ -4,6 +4,28 @@ import { useAppStore } from '../stores/app-store';
 import { useSettingsStore } from '../stores/settings-store';
 import { ProviderSettings } from './ProviderSettings';
 
+/** Validate Electron accelerator format: modifier+key (e.g., Alt+Space, CommandOrControl+M) */
+function isValidAccelerator(value: string): boolean {
+  if (!value.trim()) return false;
+  const parts = value.split('+').map((p) => p.trim());
+  if (parts.length < 2) return false;
+  const modifiers = ['CommandOrControl', 'CmdOrCtrl', 'Command', 'Cmd', 'Control', 'Ctrl', 'Alt', 'Shift', 'Super'];
+  const validKeys = new Set([
+    ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+    ...'0123456789'.split(''),
+    'Space', 'Tab', 'Enter', 'Return', 'Escape', 'Backspace', 'Delete', 'Insert',
+    'Home', 'End', 'PageUp', 'PageDown', 'Up', 'Down', 'Left', 'Right',
+    'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+    'PrintScreen', 'ScrollLock', 'Pause', 'Numlock', 'Capslock',
+    'Plus', 'Minus', 'Comma', 'Period', 'Semicolon', 'Slash', 'Backslash',
+    'BracketLeft', 'BracketRight', 'Quote', 'Backquote',
+  ]);
+  const allModifiers = parts.slice(0, -1).every((p) => modifiers.includes(p));
+  const lastPart = parts[parts.length - 1];
+  const validKey = validKeys.has(lastPart) || lastPart.length === 1;
+  return allModifiers && validKey;
+}
+
 export function SettingsPanel() {
   const store = useSettingsStore();
   const loadSettings = useSettingsStore((s) => s.loadSettings);
@@ -24,6 +46,13 @@ export function SettingsPanel() {
   }, []);
 
   const handleChange = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    // Validate hotkey format before saving
+    if ((key === 'hotkeyToggle' || key === 'hotkeyMic') && typeof value === 'string') {
+      if (value && !isValidAccelerator(value)) {
+        showToast('Invalid hotkey format — use Modifier+Key (e.g., Alt+Space)');
+        return;
+      }
+    }
     store.updateSetting(key, value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
@@ -53,6 +82,7 @@ export function SettingsPanel() {
             type="text"
             value={store.hotkeyToggle}
             onChange={(e) => handleChange('hotkeyToggle', e.target.value)}
+            aria-label="Toggle window hotkey"
             className="input-base w-full text-xs"
           />
         </div>
@@ -62,6 +92,7 @@ export function SettingsPanel() {
             type="text"
             value={store.hotkeyMic}
             onChange={(e) => handleChange('hotkeyMic', e.target.value)}
+            aria-label="Toggle microphone hotkey"
             className="input-base w-full text-xs"
           />
         </div>
@@ -82,6 +113,7 @@ export function SettingsPanel() {
             type="checkbox"
             checked={store.launchOnStartup}
             onChange={(e) => handleChange('launchOnStartup', e.target.checked)}
+            aria-label="Launch on system startup"
             className="toggle"
           />
         </label>
@@ -95,6 +127,7 @@ export function SettingsPanel() {
             max={30}
             value={store.autoHideDelay}
             onChange={(e) => handleChange('autoHideDelay', Number(e.target.value))}
+            aria-label={`Auto-hide delay: ${store.autoHideDelay} seconds`}
             className="w-24"
           />
         </div>
@@ -105,6 +138,7 @@ export function SettingsPanel() {
           <select
             value={store.theme}
             onChange={(e) => handleChange('theme', e.target.value as 'dark' | 'light' | 'system')}
+            aria-label="Select color theme"
             className="input-base text-xs w-28"
           >
             <option value="dark">Dark</option>

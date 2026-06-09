@@ -1,13 +1,16 @@
 import path from 'node:path';
 import { BrowserWindow, app, globalShortcut, session, shell } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
-import { registerIpcHandlers } from './ipc';
+import { registerAllHotkeys, registerIpcHandlers } from './ipc';
 
-// Disable GPU acceleration in headless/CI environments where GPU isn't available
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('in-process-gpu');
-app.commandLine.appendSwitch('no-sandbox');
-app.commandLine.appendSwitch('disable-dev-shm-usage');
+// CI/headless: disable GPU and sandbox for environments without display
+const isCI = !!(process.env.CI || process.env.ELECTRON_DISABLE_SANDBOX || process.env.DISPLAY === '');
+if (isCI) {
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('in-process-gpu');
+  app.commandLine.appendSwitch('no-sandbox');
+  app.commandLine.appendSwitch('disable-dev-shm-usage');
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -16,10 +19,6 @@ let mainWindow: BrowserWindow | null = null;
 (app as any).isQuitting = false;
 
 function createWindow() {
-  // Enable transparent visuals for Win/Linux (required for transparent window)
-  if (process.platform === 'win32' || process.platform === 'linux') {
-    app.commandLine.appendSwitch('enable-transparent-visuals');
-  }
 
   mainWindow = new BrowserWindow({
     width: 520,
@@ -75,6 +74,11 @@ function createWindow() {
   });
 }
 
+// Enable transparent visuals for Win/Linux BEFORE app.whenReady() (required on Linux)
+if (process.platform === 'win32' || process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+}
+
 app.whenReady().then(() => {
   // Security: enforce CSP at the session level (defense-in-depth beyond meta tag).
   // In dev, Vite injects inline module scripts for HMR (@react-refresh, @vite/client),
@@ -93,25 +97,15 @@ app.whenReady().then(() => {
     });
   });
 
-  setTimeout(() => {
-    createWindow();
-    if (!mainWindow) return;
+  createWindow();
+  if (mainWindow) {
     registerIpcHandlers(mainWindow);
-  }, 0);
+  }
 
-  // Global hotkey: Alt+Space to toggle
-  globalShortcut.register('Alt+Space', () => {
-    if (mainWindow) {
-      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
-    }
-  });
-
-  // Global hotkey: Alt+M to toggle mic
-  globalShortcut.register('Alt+M', () => {
-    if (mainWindow?.isVisible()) {
-      mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGERED, 'toggle-mic');
-    }
-  });
+  // Global hotkeys — read from persisted settings, register after IPC handlers are ready
+  if (mainWindow) {
+    registerAllHotkeys(mainWindow);
+  }
 });
 
 app.on('before-quit', () => {

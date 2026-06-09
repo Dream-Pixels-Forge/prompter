@@ -1,4 +1,5 @@
 import { BubbleExpanded } from '@/renderer/components/BubbleExpanded';
+import { ErrorBoundary } from '@/renderer/components/ErrorBoundary';
 import { Toast } from '@/renderer/components/Toast';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { useEffect } from 'react';
@@ -27,9 +28,11 @@ export default function App() {
   }, []);
 
   return (
-    <div className="w-screen h-screen overflow-hidden select-none">
-      <BubbleExpanded />
-      <Toast />
-    </div>
+    <ErrorBoundary>
+      <div className="w-screen h-screen overflow-hidden select-none">
+        <BubbleExpanded />
+        <Toast />
+      </div>
+    </ErrorBoundary>
   );
 }

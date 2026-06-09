@@ -1,4 +1,5 @@
-import * as fs from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { app, safeStorage } from 'electron';
 import type { HistoryEntry } from '../shared/types';
@@ -6,6 +7,7 @@ import type { HistoryEntry } from '../shared/types';
 const HISTORY_FILE = 'prompter-history.json';
 const KEYS_FILE = 'prompter-keys.json';
 const SETTINGS_FILE = 'prompter-settings.json';
+const MAX_HISTORY = 500;
 
 export class StorageService {
   private userDataPath: string;
@@ -14,6 +16,8 @@ export class StorageService {
   private keysPath: string;
   private settingsPath: string;
   private writeQueue: Promise<void> = Promise.resolve();
+  /** In-memory cache of which services have API keys (avoids re-reading on every check) */
+  private keyStatusCache: Map<string, boolean> = new Map();
 
   constructor() {
     this.userDataPath = app.getPath('userData');
@@ -23,19 +27,23 @@ export class StorageService {
     this.loadHistory();
   }
 
-  private enqueueWrite(fn: () => void): void {
-    this.writeQueue = this.writeQueue
-      .then(fn, () => {})
-      .catch((err) => console.error('[Storage] Write queue error:', err));
+  /**
+   * Serialise writes through a promise chain so concurrent calls never interleave.
+   * Uses async fs to avoid blocking the main process event loop.
+   */
+  private enqueueWrite(fn: () => Promise<void>): Promise<void> {
+    this.writeQueue = this.writeQueue.then(fn).catch((err) => console.error('[Storage] Write queue error:', err));
+    return this.writeQueue;
   }
 
   // ── History Persistence ──────────────────────────────
 
   private loadHistory(): void {
     try {
-      if (fs.existsSync(this.historyPath)) {
-        const raw = fs.readFileSync(this.historyPath, 'utf-8');
+      if (existsSync(this.historyPath)) {
+        const raw = readFileSync(this.historyPath, 'utf-8');
         this.history = JSON.parse(raw);
+        if (!Array.isArray(this.history)) this.history = [];
       }
     } catch (err) {
       console.error('[Storage] Failed to load history:', err);
@@ -44,10 +52,10 @@ export class StorageService {
   }
 
   private persistHistory(): void {
-    this.enqueueWrite(() => {
+    this.enqueueWrite(async () => {
       try {
         const data = JSON.stringify(this.history, null, 2);
-        fs.writeFileSync(this.historyPath, data, 'utf-8');
+        await fs.writeFile(this.historyPath, data, 'utf-8');
       } catch (err) {
         console.error('[Storage] Failed to save history:', err);
       }
@@ -56,8 +64,8 @@ export class StorageService {
 
   insertHistory(entry: HistoryEntry): void {
     this.history.unshift(entry);
-    if (this.history.length > 500) {
-      this.history = this.history.slice(0, 500);
+    if (this.history.length > MAX_HISTORY) {
+      this.history = this.history.slice(0, MAX_HISTORY);
     }
     this.persistHistory();
   }
@@ -88,42 +96,108 @@ export class StorageService {
 
   // ── Encrypted API Key Storage ────────────────────────
 
-  saveApiKey(service: string, apiKey: string): void {
-    let keys: Record<string, string> = {};
-    if (fs.existsSync(this.keysPath)) {
-      keys = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
+  /** Check whether encryption is available on this platform. Cached after first call. */
+  private _encryptionAvailable: boolean | null = null;
+  private isEncryptionAvailable(): boolean {
+    if (this._encryptionAvailable === null) {
+      this._encryptionAvailable = safeStorage.isEncryptionAvailable();
     }
+    return this._encryptionAvailable;
+  }
 
-    if (!safeStorage.isEncryptionAvailable()) {
+  saveApiKey(service: string, apiKey: string): Promise<void> {
+    if (!this.isEncryptionAvailable()) {
       throw new Error(
         'System encryption unavailable — cannot securely store API key. ' +
           'Run in an environment with safeStorage support (macOS, Windows, or Linux with a keyring).',
       );
     }
     const encrypted = safeStorage.encryptString(apiKey);
-    keys[service] = encrypted.toString('base64');
+    const encryptedBase64 = encrypted.toString('base64');
 
-    fs.writeFileSync(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
+    // Read-then-write inside the queue — cache set ONLY after successful write
+    return this.enqueueWrite(async () => {
+      try {
+        let keys: Record<string, string> = {};
+        if (await fs.access(this.keysPath).then(() => true).catch(() => false)) {
+          const raw = await fs.readFile(this.keysPath, 'utf-8');
+          keys = JSON.parse(raw);
+        }
+        keys[service] = encryptedBase64;
+        await fs.writeFile(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
+        this.keyStatusCache.set(service, true);
+      } catch (err) {
+        this.keyStatusCache.set(service, false);
+        console.error('[Storage] Failed to save API key:', err);
+      }
+    });
   }
 
   hasApiKey(service: string): boolean {
+    // Check cache first
+    const cached = this.keyStatusCache.get(service);
+    if (cached !== undefined) {
+      return cached;
+    }
     try {
-      if (!fs.existsSync(this.keysPath)) return false;
-      const keys: Record<string, string> = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
-      return !!keys[service];
+      if (!existsSync(this.keysPath)) return false;
+      const keys: Record<string, string> = JSON.parse(readFileSync(this.keysPath, 'utf-8'));
+      const exists = !!keys[service];
+      this.keyStatusCache.set(service, exists);
+      return exists;
     } catch {
+      this.keyStatusCache.set(service, false);
       return false;
     }
   }
 
+  /**
+   * Batch-check which services have API keys.
+   * Returns a map of service → boolean, using the cache where possible.
+   */
+  getApiKeyStatuses(services: string[]): Record<string, boolean> {
+    const result: Record<string, boolean> = {};
+    let keysFileParsed: Record<string, string> | null = null;
+
+    // Only parse the keys file once if we need to
+    const needsFileRead = services.some((s) => !this.keyStatusCache.has(s));
+    if (needsFileRead) {
+      try {
+        if (existsSync(this.keysPath)) {
+          keysFileParsed = JSON.parse(readFileSync(this.keysPath, 'utf-8'));
+        }
+      } catch {
+        keysFileParsed = {};
+      }
+    }
+
+    for (const service of services) {
+      const cached = this.keyStatusCache.get(service);
+      if (cached !== undefined) {
+        result[service] = cached;
+      } else {
+        const exists = !!keysFileParsed?.[service];
+        this.keyStatusCache.set(service, exists);
+        result[service] = exists;
+      }
+    }
+
+    return result;
+  }
+
+  /** Invalidate the key status cache for a service (e.g. after deletion). */
+  invalidateKeyCache(service: string): void {
+    this.keyStatusCache.delete(service);
+  }
+
   getApiKey(service: string): string | null {
     try {
-      if (!fs.existsSync(this.keysPath)) return null;
-      const keys: Record<string, string> = JSON.parse(fs.readFileSync(this.keysPath, 'utf-8'));
+      if (!existsSync(this.keysPath)) return null;
+      const keys: Record<string, string> = JSON.parse(readFileSync(this.keysPath, 'utf-8'));
       const stored = keys[service];
       if (!stored) return null;
 
-      if (!safeStorage.isEncryptionAvailable()) return null;
+      if (!this.isEncryptionAvailable()) return null;
       return safeStorage.decryptString(Buffer.from(stored, 'base64'));
     } catch (err) {
       console.error('[Storage] Failed to read API key:', err);
@@ -135,8 +209,8 @@ export class StorageService {
 
   loadSettings(): Record<string, unknown> {
     try {
-      if (fs.existsSync(this.settingsPath)) {
-        const raw = fs.readFileSync(this.settingsPath, 'utf-8');
+      if (existsSync(this.settingsPath)) {
+        const raw = readFileSync(this.settingsPath, 'utf-8');
         return JSON.parse(raw);
       }
     } catch (err) {
@@ -146,9 +220,9 @@ export class StorageService {
   }
 
   saveSettings(settings: Record<string, unknown>): void {
-    this.enqueueWrite(() => {
+    this.enqueueWrite(async () => {
       try {
-        fs.writeFileSync(this.settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+        await fs.writeFile(this.settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
       } catch (err) {
         console.error('[Storage] Failed to save settings:', err);
       }
