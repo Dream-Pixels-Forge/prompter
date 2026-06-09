@@ -1,4 +1,4 @@
-import { PROVIDER_DEFINITIONS, getProviderDefinition } from '@/shared/provider-definitions';
+import { getProviderDefinition } from '@/shared/provider-definitions';
 import { ChevronDown, ExternalLink, Key } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../stores/app-store';

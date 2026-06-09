@@ -1,4 +1,3 @@
-import * as fs from 'node:fs';
 import * as fsAsync from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -9,7 +8,7 @@ import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry } fro
 import { IPC_CHANNELS } from '../shared/types';
 import { checkOllamaStatus } from './llm/implementations/ollama';
 
-import { createProviderEngine, getEngine } from './llm/index';
+import { getEngine } from './llm/index';
 import { generatePrompt, getConfig, updateConfig } from './llm/orchestrator';
 import { setWindowPosition } from './overlay';
 import { StorageService } from './storage';
@@ -45,8 +44,6 @@ function validateEndpoint(url: string): void {
     throw new Error(`Endpoint must use http or https protocol, got '${parsed.protocol}'`);
   }
 }
-
-
 
 let settings: Partial<AppSettings> = {};
 let storage: StorageService;

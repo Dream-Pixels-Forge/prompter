@@ -1,7 +1,7 @@
 import { frameworks, getFramework } from '@/renderer/lib/frameworks';
 import { analyzeIntent } from '@/renderer/lib/intent-parser';
 import { cancelGeneration, generatePrompt, insertHistory } from '@/renderer/lib/llm';
-import { getTemplate, templates } from '@/renderer/lib/templates';
+import { getTemplate } from '@/renderer/lib/templates';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { ChevronDown, RotateCcw, Send, Sparkles, Square } from 'lucide-react';
