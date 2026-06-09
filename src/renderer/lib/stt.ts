@@ -31,6 +31,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 async function transcribeWithWhisper(audioBlob: Blob): Promise<string> {
+  if (audioBlob.size === 0) throw new Error('No audio recorded — try again');
   const base64 = await blobToBase64(audioBlob);
   return window.api.stt.transcribe(base64);
 }

@@ -139,8 +139,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
   },
 
-  saveProviderKey: async (providerId: string, _key: string) => {
-    await saveApiKey(providerId, _key);
+  saveProviderKey: async (providerId: string, key: string) => {
+    await saveApiKey(providerId, key);
     set((state) => ({
       hasApiKeys: { ...state.hasApiKeys, [providerId]: true },
     }));

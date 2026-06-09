@@ -57,13 +57,11 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
   }
 
   // New format (providerApiKeys)
-  let keysChanged = false;
   if (c.providerApiKeys && typeof c.providerApiKeys === 'object') {
     const incoming = c.providerApiKeys as Record<string, string>;
     for (const [id, key] of Object.entries(incoming)) {
       if (key) {
         activeConfig.providerApiKeys[id] = key;
-        keysChanged = true;
       }
     }
   }
@@ -72,11 +70,9 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
   // Guard: empty string is treated as absent (not a valid key)
   if (typeof c.openaiApiKey === 'string' && c.openaiApiKey) {
     activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
-    keysChanged = true;
   }
   if (typeof c.anthropicApiKey === 'string' && c.anthropicApiKey) {
     activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
-    keysChanged = true;
   }
 
   // Note: no reinitEngine() needed — the KeyStore closure references activeConfig

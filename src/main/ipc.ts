@@ -3,6 +3,7 @@ import * as fsAsync from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { type BrowserWindow, Menu, Tray, app, clipboard, dialog, globalShortcut, ipcMain, nativeImage } from 'electron';
+import { getFramework } from '../shared/frameworks';
 import { PROVIDER_DEFINITIONS } from '../shared/provider-definitions';
 import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry } from '../shared/types';
 import { IPC_CHANNELS } from '../shared/types';
@@ -151,6 +152,9 @@ export function registerIpcHandlers(win: BrowserWindow) {
     if (req.template && typeof req.template !== 'string') {
       throw new Error('Invalid request: template must be a string');
     }
+    if (req.framework && !getFramework(req.framework)) {
+      throw new Error(`Invalid request: unknown framework '${req.framework}'`);
+    }
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const controller = new AbortController();
     abortControllers.set(requestId, controller);
@@ -211,6 +215,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Window resize ──
   ipcMain.on(IPC_CHANNELS.WINDOW_RESIZE, (_event, width: number, height: number) => {
+    if (typeof width !== 'number' || typeof height !== 'number' || !Number.isFinite(width) || !Number.isFinite(height)) return;
     const w = Math.max(200, Math.min(2000, Math.round(width)));
     const h = Math.max(200, Math.min(2000, Math.round(height)));
     win.setSize(w, h);

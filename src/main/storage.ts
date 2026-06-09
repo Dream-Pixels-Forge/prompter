@@ -24,23 +24,24 @@ export class StorageService {
     this.historyPath = path.join(this.userDataPath, HISTORY_FILE);
     this.keysPath = path.join(this.userDataPath, KEYS_FILE);
     this.settingsPath = path.join(this.userDataPath, SETTINGS_FILE);
-    this.loadHistoryAsync();
+    this.loadHistory();
   }
 
   /**
    * Serialise writes through a promise chain so concurrent calls never interleave.
    * Uses async fs to avoid blocking the main process event loop.
    */
-  private enqueueWrite(fn: () => Promise<void>): void {
+  private enqueueWrite(fn: () => Promise<void>): Promise<void> {
     this.writeQueue = this.writeQueue.then(fn).catch((err) => console.error('[Storage] Write queue error:', err));
+    return this.writeQueue;
   }
 
   // ── History Persistence ──────────────────────────────
 
-  private async loadHistoryAsync(): Promise<void> {
+  private loadHistory(): void {
     try {
       if (existsSync(this.historyPath)) {
-        const raw = await fs.readFile(this.historyPath, 'utf-8');
+        const raw = readFileSync(this.historyPath, 'utf-8');
         this.history = JSON.parse(raw);
         if (!Array.isArray(this.history)) this.history = [];
       }
@@ -104,7 +105,7 @@ export class StorageService {
     return this._encryptionAvailable;
   }
 
-  saveApiKey(service: string, apiKey: string): void {
+  saveApiKey(service: string, apiKey: string): Promise<void> {
     if (!this.isEncryptionAvailable()) {
       throw new Error(
         'System encryption unavailable — cannot securely store API key. ' +
@@ -115,7 +116,7 @@ export class StorageService {
     const encryptedBase64 = encrypted.toString('base64');
 
     // Read-then-write inside the queue — cache set ONLY after successful write
-    this.enqueueWrite(async () => {
+    return this.enqueueWrite(async () => {
       try {
         let keys: Record<string, string> = {};
         if (await fs.access(this.keysPath).then(() => true).catch(() => false)) {
