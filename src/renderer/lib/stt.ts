@@ -12,7 +12,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   'service-not-allowed': 'Speech service unavailable. Try again later.',
 };
 
-/** Check if Web Speech API is available in this environment */
 /**
  * Whisper fallback: records audio and sends to OpenAI Whisper API via IPC.
  * Used when Web Speech API is unavailable (e.g., Linux without speech-dispatcher).

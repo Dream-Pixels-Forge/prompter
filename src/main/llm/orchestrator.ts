@@ -25,7 +25,6 @@ const activeConfig: RuntimeConfig = {
 };
 
 let engineInitialized = false;
-let legacyMigrated = false;
 
 function ensureEngine(): void {
   if (!engineInitialized) {
@@ -66,40 +65,8 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
     }
   }
 
-  // Legacy flat fields — migrate to new format
-  // Guard: empty string is treated as absent (not a valid key)
-  if (typeof c.openaiApiKey === 'string' && c.openaiApiKey) {
-    activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
-  }
-  if (typeof c.anthropicApiKey === 'string' && c.anthropicApiKey) {
-    activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
-  }
-
   // Note: no reinitEngine() needed — the KeyStore closure references activeConfig
   // by reference, so key changes are immediately visible to the engine.
-
-  // Legacy flat fields — migrate to new format (only once)
-  if (!legacyMigrated) {
-    if (typeof c.ollamaModel === 'string') {
-      activeConfig.providerConfigs.ollama = {
-        model: c.ollamaModel as string,
-        endpoint: (c.ollamaEndpoint as string) || activeConfig.providerConfigs.ollama.endpoint,
-      };
-    }
-    if (typeof c.openaiModel === 'string') {
-      activeConfig.providerConfigs.openai = {
-        model: c.openaiModel as string,
-        endpoint: activeConfig.providerConfigs.openai.endpoint,
-      };
-    }
-    if (typeof c.anthropicModel === 'string') {
-      activeConfig.providerConfigs.anthropic = {
-        model: c.anthropicModel as string,
-        endpoint: activeConfig.providerConfigs.anthropic.endpoint,
-      };
-    }
-    legacyMigrated = true;
-  }
   // Active provider
   if (typeof c.activeProvider === 'string') activeConfig.activeProvider = c.activeProvider;
 }

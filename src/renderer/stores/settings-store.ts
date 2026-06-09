@@ -64,6 +64,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       // Version migration to v2 (new settings fields)
       if ((saved.version as number) < 2) {
         saved.version = 2;
+        // Persist immediately to avoid re-running migration on crash
+        await window.api.settings.set({
+          ...saved,
+          version: 2,
+        } as AppSettings);
       }
 
       // Batch-check which providers have API keys in a single IPC call

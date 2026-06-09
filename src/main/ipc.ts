@@ -46,10 +46,7 @@ function validateEndpoint(url: string): void {
   }
 }
 
-// Extended type to handle legacy flat fields during migration
-interface SettingsStore extends AppSettings {
-  ollamaEndpoint?: string;
-}
+
 
 let settings: Partial<AppSettings> = {};
 let storage: StorageService;
@@ -285,9 +282,8 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Ollama ──
   ipcMain.handle(IPC_CHANNELS.OLLAMA_CHECK, async () => {
-    const s = settings as SettingsStore;
-    const ollamaConfig = s.providerConfigs?.ollama;
-    const endpoint = ollamaConfig?.endpoint || s.ollamaEndpoint || 'http://localhost:11434';
+    const ollamaConfig = settings.providerConfigs?.ollama;
+    const endpoint = ollamaConfig?.endpoint || 'http://localhost:11434';
     return await checkOllamaStatus(endpoint);
   });
 
@@ -366,10 +362,10 @@ export function registerIpcHandlers(win: BrowserWindow) {
   });
 
   // ── Encrypted API Key Storage ──
-  ipcMain.handle(IPC_CHANNELS.STORE_SAVE_API_KEY, (_event, service: string, apiKey: string) => {
+  ipcMain.handle(IPC_CHANNELS.STORE_SAVE_API_KEY, async (_event, service: string, apiKey: string) => {
     validateService(service);
     validateTextLength(apiKey, 4096);
-    storage.saveApiKey(service, apiKey);
+    await storage.saveApiKey(service, apiKey);
     return true;
   });
 
