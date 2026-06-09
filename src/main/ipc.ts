@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as fsAsync from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { type BrowserWindow, Menu, Tray, app, clipboard, dialog, ipcMain, nativeImage } from 'electron';
+import { type BrowserWindow, Menu, Tray, app, clipboard, dialog, globalShortcut, ipcMain, nativeImage } from 'electron';
 import { PROVIDER_DEFINITIONS } from '../shared/provider-definitions';
 import type { AppSettings, GenerateRequest, GenerateResponse, HistoryEntry } from '../shared/types';
 import { IPC_CHANNELS } from '../shared/types';
@@ -45,12 +45,9 @@ function validateEndpoint(url: string): void {
   }
 }
 
-// Extended type to handle both new providerConfigs format and legacy flat fields during migration
+// Extended type to handle legacy flat fields during migration
 interface SettingsStore extends AppSettings {
   ollamaEndpoint?: string;
-  openaiApiKey?: string;
-  anthropicApiKey?: string;
-  providerApiKeys?: Record<string, string>;
 }
 
 let settings: Partial<AppSettings> = {};
@@ -70,6 +67,46 @@ export function getHotkeys(): { toggle: string; mic: string } {
  * request instead of blindly clearing all controllers.
  */
 const abortControllers = new Map<string, AbortController>();
+
+/** Track current hotkey accelerators so we can unregister before re-registering */
+let currentToggleHotkey: string | null = null;
+let currentMicHotkey: string | null = null;
+
+/** Register all hotkeys, unregistering old ones first */
+export function registerAllHotkeys(win: BrowserWindow): void {
+  const hotkeys = getHotkeys();
+
+  // Unregister old hotkeys if they exist
+  if (currentToggleHotkey) {
+    try { globalShortcut.unregister(currentToggleHotkey); } catch { /* ignore */ }
+  }
+  if (currentMicHotkey) {
+    try { globalShortcut.unregister(currentMicHotkey); } catch { /* ignore */ }
+  }
+
+  currentToggleHotkey = hotkeys.toggle;
+  currentMicHotkey = hotkeys.mic;
+
+  registerHotkey(hotkeys.toggle, () => {
+    if (win) {
+      win.isVisible() ? win.hide() : win.show();
+    }
+  });
+  registerHotkey(hotkeys.mic, () => {
+    if (win?.isVisible()) {
+      win.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGERED, 'toggle-mic');
+    }
+  });
+}
+
+/** Register a single global hotkey, logging failure instead of crashing */
+function registerHotkey(accelerator: string, callback: () => void): void {
+  try {
+    globalShortcut.register(accelerator, callback);
+  } catch (err) {
+    console.error(`[Hotkey] Failed to register '${accelerator}':`, err);
+  }
+}
 
 // ── Settings write debounce ────────────────────────────
 // Prevents rapid-fire settings updates from causing race conditions on disk.
@@ -104,6 +141,16 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── LLM ──
   ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (_event, req: GenerateRequest): Promise<GenerateResponse & { requestId: string }> => {
+    // Validate request shape before passing to orchestrator
+    if (!req || typeof req.input !== 'string' || !req.input.trim()) {
+      throw new Error('Invalid request: input is required');
+    }
+    if (req.framework && typeof req.framework !== 'string') {
+      throw new Error('Invalid request: framework must be a string');
+    }
+    if (req.template && typeof req.template !== 'string') {
+      throw new Error('Invalid request: template must be a string');
+    }
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const controller = new AbortController();
     abortControllers.set(requestId, controller);
@@ -147,6 +194,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
   // ── Window ──
   ipcMain.handle(IPC_CHANNELS.WINDOW_SET_BOUNDS, (_event, { x, y }: { x: number; y: number }) => {
+    if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) return false;
     setWindowPosition(win, x, y);
     return true;
   });
@@ -216,6 +264,11 @@ export function registerIpcHandlers(win: BrowserWindow) {
 
     // Debounced write to avoid race conditions from rapid settings changes
     debouncedSaveSettings(settings as Record<string, unknown>);
+
+    // Re-register hotkeys if they changed
+    if (newSettings.hotkeyToggle || newSettings.hotkeyMic) {
+      registerAllHotkeys(win);
+    }
 
     // Apply launch-on-startup setting immediately (no debounce — OS-level effect)
     if ('launchOnStartup' in newSettings) {
@@ -289,7 +342,8 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return true;
   });
 
-  ipcMain.handle(IPC_CHANNELS.HISTORY_CLEAR, () => {
+  ipcMain.handle(IPC_CHANNELS.HISTORY_CLEAR, (_event, confirmed?: boolean) => {
+    if (!confirmed) throw new Error('Confirmation required — pass confirmed: true');
     storage.clearHistory();
     return true;
   });

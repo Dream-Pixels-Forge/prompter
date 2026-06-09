@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { BrowserWindow, app, globalShortcut, session, shell } from 'electron';
 import { IPC_CHANNELS } from '../shared/types';
-import { getHotkeys, registerIpcHandlers } from './ipc';
+import { registerAllHotkeys, registerIpcHandlers } from './ipc';
 
 // CI/headless: disable GPU and sandbox for environments without display
 const isCI = !!(process.env.CI || process.env.ELECTRON_DISABLE_SANDBOX || process.env.DISPLAY === '');
@@ -103,17 +103,9 @@ app.whenReady().then(() => {
   }
 
   // Global hotkeys — read from persisted settings, register after IPC handlers are ready
-  const hotkeys = getHotkeys();
-  registerHotkey(hotkeys.toggle, () => {
-    if (mainWindow) {
-      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
-    }
-  });
-  registerHotkey(hotkeys.mic, () => {
-    if (mainWindow?.isVisible()) {
-      mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGERED, 'toggle-mic');
-    }
-  });
+  if (mainWindow) {
+    registerAllHotkeys(mainWindow);
+  }
 });
 
 app.on('before-quit', () => {
@@ -132,12 +124,3 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
-
-/** Register a single global hotkey, logging failure instead of crashing */
-function registerHotkey(accelerator: string, callback: () => void): void {
-  try {
-    globalShortcut.register(accelerator, callback);
-  } catch (err) {
-    console.error(`[Hotkey] Failed to register '${accelerator}':`, err);
-  }
-}

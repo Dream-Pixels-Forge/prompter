@@ -24,7 +24,7 @@ export class StorageService {
     this.historyPath = path.join(this.userDataPath, HISTORY_FILE);
     this.keysPath = path.join(this.userDataPath, KEYS_FILE);
     this.settingsPath = path.join(this.userDataPath, SETTINGS_FILE);
-    this.loadHistory();
+    this.loadHistoryAsync();
   }
 
   /**
@@ -37,10 +37,10 @@ export class StorageService {
 
   // ── History Persistence ──────────────────────────────
 
-  private loadHistory(): void {
+  private async loadHistoryAsync(): Promise<void> {
     try {
       if (existsSync(this.historyPath)) {
-        const raw = readFileSync(this.historyPath, 'utf-8');
+        const raw = await fs.readFile(this.historyPath, 'utf-8');
         this.history = JSON.parse(raw);
         if (!Array.isArray(this.history)) this.history = [];
       }
@@ -114,10 +114,7 @@ export class StorageService {
     const encrypted = safeStorage.encryptString(apiKey);
     const encryptedBase64 = encrypted.toString('base64');
 
-    // Invalidate cache for this service
-    this.keyStatusCache.set(service, true);
-
-    // Read-then-write inside the queue to prevent race conditions
+    // Read-then-write inside the queue — cache set ONLY after successful write
     this.enqueueWrite(async () => {
       try {
         let keys: Record<string, string> = {};
@@ -127,7 +124,9 @@ export class StorageService {
         }
         keys[service] = encryptedBase64;
         await fs.writeFile(this.keysPath, JSON.stringify(keys, null, 2), 'utf-8');
+        this.keyStatusCache.set(service, true);
       } catch (err) {
+        this.keyStatusCache.set(service, false);
         console.error('[Storage] Failed to save API key:', err);
       }
     });

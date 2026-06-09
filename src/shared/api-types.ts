@@ -33,7 +33,7 @@ export interface PrompterApi {
     list: (limit?: number, offset?: number) => Promise<HistoryEntry[]>;
     search: (query: string) => Promise<HistoryEntry[]>;
     delete: (id: string) => Promise<boolean>;
-    clear: () => Promise<boolean>;
+    clear: (confirmed?: boolean) => Promise<boolean>;
     exportAll: () => Promise<string | null>;
     /** Batch-check which services have API keys (single IPC call instead of N) */
     getKeyStatuses: (services: string[]) => Promise<Record<string, boolean>>;

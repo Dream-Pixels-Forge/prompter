@@ -36,7 +36,7 @@ contextBridge.exposeInMainWorld('api', {
     list: (limit?: number, offset?: number) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_LIST, limit, offset),
     search: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
     delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id),
-    clear: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
+    clear: (confirmed?: boolean) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR, confirmed),
     exportAll: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_EXPORT),
     /** Batch-check which services have API keys (single IPC call instead of N) */
     getKeyStatuses: (services: string[]) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_KEY_STATUS, services),

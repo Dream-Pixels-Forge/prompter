@@ -89,8 +89,9 @@ export function HistoryPanel() {
   };
 
   const handleClear = async () => {
+    if (!window.confirm('Clear all history? This cannot be undone.')) return;
     try {
-      await clearHistory();
+      await clearHistory(true);
       load();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Clear failed');

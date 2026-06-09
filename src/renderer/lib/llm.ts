@@ -34,8 +34,8 @@ export async function deleteHistory(id: string): Promise<boolean> {
   return window.api.history.delete(id);
 }
 
-export async function clearHistory(): Promise<boolean> {
-  return window.api.history.clear();
+export async function clearHistory(confirmed = false): Promise<boolean> {
+  return window.api.history.clear(confirmed);
 }
 
 export async function exportHistory(): Promise<string | null> {

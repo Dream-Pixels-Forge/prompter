@@ -10,10 +10,20 @@ function isValidAccelerator(value: string): boolean {
   const parts = value.split('+').map((p) => p.trim());
   if (parts.length < 2) return false;
   const modifiers = ['CommandOrControl', 'CmdOrCtrl', 'Command', 'Cmd', 'Control', 'Ctrl', 'Alt', 'Shift', 'Super'];
+  const validKeys = new Set([
+    ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+    ...'0123456789'.split(''),
+    'Space', 'Tab', 'Enter', 'Return', 'Escape', 'Backspace', 'Delete', 'Insert',
+    'Home', 'End', 'PageUp', 'PageDown', 'Up', 'Down', 'Left', 'Right',
+    'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+    'PrintScreen', 'ScrollLock', 'Pause', 'Numlock', 'Capslock',
+    'Plus', 'Minus', 'Comma', 'Period', 'Semicolon', 'Slash', 'Backslash',
+    'BracketLeft', 'BracketRight', 'Quote', 'Backquote',
+  ]);
   const allModifiers = parts.slice(0, -1).every((p) => modifiers.includes(p));
   const lastPart = parts[parts.length - 1];
-  // Last part must be a non-empty key name (single char or special key)
-  return allModifiers && lastPart.length > 0;
+  const validKey = validKeys.has(lastPart) || lastPart.length === 1;
+  return allModifiers && validKey;
 }
 
 export function SettingsPanel() {

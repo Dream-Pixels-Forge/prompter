@@ -1,6 +1,6 @@
 import { PROVIDER_DEFINITIONS, getProviderDefinition } from '@/shared/provider-definitions';
 import { ChevronDown, ExternalLink, Key } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../stores/app-store';
 import { useSettingsStore } from '../stores/settings-store';
 
@@ -16,6 +16,13 @@ export function ProviderConfigCard({ providerId, isActive, onSetActive }: Provid
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [checking, setChecking] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up debounced timer on unmount to prevent fires on unmounted component
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const def = getProviderDefinition(providerId);
   if (!def) return null;

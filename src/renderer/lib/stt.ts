@@ -13,23 +13,25 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 /** Check if Web Speech API is available in this environment */
-export function isWebSpeechAvailable(): boolean {
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-
 /**
  * Whisper fallback: records audio and sends to OpenAI Whisper API via IPC.
  * Used when Web Speech API is unavailable (e.g., Linux without speech-dispatcher).
  */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function transcribeWithWhisper(audioBlob: Blob): Promise<string> {
-  // Convert Blob to base64
-  const arrayBuffer = await audioBlob.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64 = btoa(binary);
+  const base64 = await blobToBase64(audioBlob);
   return window.api.stt.transcribe(base64);
 }
 
@@ -177,7 +179,9 @@ export class SpeechRecognizer {
         ? ERROR_MESSAGES['not-allowed']
         : err instanceof DOMException && err.name === 'NotFoundError'
           ? ERROR_MESSAGES['audio-capture']
-          : `Microphone error: ${err instanceof Error ? err.message : 'unknown'}`;
+          : err instanceof DOMException && err.name === 'NotSupportedError'
+            ? 'Audio format not supported on this platform — check browser/device capabilities'
+            : `Microphone error: ${err instanceof Error ? err.message : 'unknown'}`;
       this.callbacks.onError(msg);
     }
   }

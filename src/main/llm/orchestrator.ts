@@ -36,14 +36,6 @@ function ensureEngine(): void {
   }
 }
 
-export function reinitEngine(): void {
-  engineInitialized = false;
-  initEngine({
-    getApiKey: (service: string) => activeConfig.providerApiKeys[service] || null,
-  });
-  engineInitialized = true;
-}
-
 export function getConfig(): Partial<AppSettings> {
   return {
     activeProvider: activeConfig.activeProvider,
@@ -259,9 +251,9 @@ export function extractGoal(input: string): string {
 }
 
 export function extractAudienceTone(input: string): string {
-  if (/professional|enterprise|business|b2b|corporate/i.test(input)) return 'professional authority';
-  if (/casual|friendly|fun|creative|playful/i.test(input)) return 'approachable warmth';
-  if (/technical|developer|engineer|coder|api/i.test(input)) return 'technical precision';
-  if (/luxury|premium|exclusive|high.?end/i.test(input)) return 'sophisticated elegance';
+  if (/(?:^|\W)(professional|enterprise|business|b2b|corporate)(?:\W|$)/i.test(input)) return 'professional authority';
+  if (/(?:^|\W)(casual|friendly|fun|creative|playful)(?:\W|$)/i.test(input)) return 'approachable warmth';
+  if (/(?:^|\W)(technical|developer|engineer|coder|api)(?:\W|$)/i.test(input)) return 'technical precision';
+  if (/(?:^|\W)(luxury|premium|exclusive|high.?end)(?:\W|$)/i.test(input)) return 'sophisticated elegance';
   return 'clear professionalism';
 }
