@@ -3,7 +3,8 @@ import type { AppSettings, AppTab, GenerateRequest, GenerateResponse, HistoryEnt
 export interface PrompterApi {
   llm: {
     generate: (req: GenerateRequest) => Promise<GenerateResponse>;
-    cancel: () => Promise<boolean>;
+    /** Cancel a specific request by ID, or all if no ID provided */
+    cancel: (requestId?: string) => Promise<boolean>;
   };
   clipboard: {
     write: (text: string) => Promise<boolean>;
@@ -34,6 +35,8 @@ export interface PrompterApi {
     delete: (id: string) => Promise<boolean>;
     clear: () => Promise<boolean>;
     exportAll: () => Promise<string | null>;
+    /** Batch-check which services have API keys (single IPC call instead of N) */
+    getKeyStatuses: (services: string[]) => Promise<Record<string, boolean>>;
   };
   store: {
     saveApiKey: (service: string, key: string) => Promise<boolean>;
@@ -47,5 +50,6 @@ export interface PrompterApi {
   };
   app: {
     quit: () => Promise<void>;
+    getVersion: () => Promise<string>;
   };
 }

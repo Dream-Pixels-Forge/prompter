@@ -1,4 +1,6 @@
 import * as fs from 'node:fs';
+import * as fsAsync from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { type BrowserWindow, Menu, Tray, app, clipboard, dialog, ipcMain, nativeImage } from 'electron';
 import { PROVIDER_DEFINITIONS } from '../shared/provider-definitions';
@@ -30,6 +32,19 @@ function validateTextLength(text: string, max = 100000): void {
   }
 }
 
+function validateEndpoint(url: string): void {
+  if (typeof url !== 'string' || !url.trim()) return; // empty is fine (uses default)
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Invalid endpoint URL: '${url}'`);
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`Endpoint must use http or https protocol, got '${parsed.protocol}'`);
+  }
+}
+
 // Extended type to handle both new providerConfigs format and legacy flat fields during migration
 interface SettingsStore extends AppSettings {
   ollamaEndpoint?: string;
@@ -41,7 +56,28 @@ interface SettingsStore extends AppSettings {
 let settings: Partial<AppSettings> = {};
 let storage: StorageService;
 let tray: Tray | null = null;
+
+/**
+ * Per-request abort controllers — keyed by requestId so LLM_CANCEL can target a specific
+ * request instead of blindly clearing all controllers.
+ */
 const abortControllers = new Map<string, AbortController>();
+
+// ── Settings write debounce ────────────────────────────
+// Prevents rapid-fire settings updates from causing race conditions on disk.
+let settingsWriteTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSettings: Record<string, unknown> | null = null;
+
+function debouncedSaveSettings(settingsToSave: Record<string, unknown>): void {
+  pendingSettings = settingsToSave;
+  if (settingsWriteTimer) clearTimeout(settingsWriteTimer);
+  settingsWriteTimer = setTimeout(async () => {
+    if (pendingSettings) {
+      storage.saveSettings(pendingSettings);
+      pendingSettings = null;
+    }
+  }, 300);
+}
 
 export function registerIpcHandlers(win: BrowserWindow) {
   storage = new StorageService();
@@ -53,13 +89,19 @@ export function registerIpcHandlers(win: BrowserWindow) {
   // ── System Tray ──
   createTray(win);
 
+  // ── App Version ──
+  ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, () => {
+    return app.getVersion();
+  });
+
   // ── LLM ──
-  ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (_event, req: GenerateRequest): Promise<GenerateResponse> => {
+  ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (_event, req: GenerateRequest): Promise<GenerateResponse & { requestId: string }> => {
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const controller = new AbortController();
     abortControllers.set(requestId, controller);
     try {
-      return await generatePrompt(req, controller.signal);
+      const result = await generatePrompt(req, controller.signal);
+      return { ...result, requestId };
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         throw new Error('CANCELLED');
@@ -70,11 +112,21 @@ export function registerIpcHandlers(win: BrowserWindow) {
     }
   });
 
-  ipcMain.handle(IPC_CHANNELS.LLM_CANCEL, () => {
-    for (const controller of abortControllers.values()) {
-      controller.abort();
+  // Cancel a specific request by ID, or all if no ID provided (legacy compat)
+  ipcMain.handle(IPC_CHANNELS.LLM_CANCEL, (_event, requestId?: string) => {
+    if (requestId) {
+      const controller = abortControllers.get(requestId);
+      if (controller) {
+        controller.abort();
+        abortControllers.delete(requestId);
+      }
+    } else {
+      // Cancel all in-flight requests (used by global cancel button)
+      for (const controller of abortControllers.values()) {
+        controller.abort();
+      }
+      abortControllers.clear();
     }
-    abortControllers.clear();
     return true;
   });
 
@@ -143,11 +195,21 @@ export function registerIpcHandlers(win: BrowserWindow) {
         throw new Error(`Unknown setting: '${key}'`);
       }
     }
+    // Validate endpoint URLs in providerConfigs to prevent SSRF
+    if (newSettings.providerConfigs && typeof newSettings.providerConfigs === 'object') {
+      for (const [providerId, cfg] of Object.entries(newSettings.providerConfigs)) {
+        if (cfg && typeof cfg === 'object' && 'endpoint' in cfg) {
+          validateEndpoint((cfg as { endpoint?: string }).endpoint ?? '');
+        }
+      }
+    }
     settings = { ...settings, ...newSettings };
     updateConfig(settings);
-    storage.saveSettings(settings as Record<string, unknown>);
 
-    // Apply launch-on-startup setting
+    // Debounced write to avoid race conditions from rapid settings changes
+    debouncedSaveSettings(settings as Record<string, unknown>);
+
+    // Apply launch-on-startup setting immediately (no debounce — OS-level effect)
     if ('launchOnStartup' in newSettings) {
       app.setLoginItemSettings({ openAtLogin: !!newSettings.launchOnStartup });
     }
@@ -180,6 +242,14 @@ export function registerIpcHandlers(win: BrowserWindow) {
     validateService(providerId);
     const engine = getEngine();
     return await engine.check({ providerId });
+  });
+
+  // ── Batch API key status check (single IPC call instead of N calls) ──
+  ipcMain.handle(IPC_CHANNELS.HISTORY_KEY_STATUS, (_event, services: string[]) => {
+    for (const s of services) {
+      validateService(s);
+    }
+    return storage.getApiKeyStatuses(services);
   });
 
   // ── History ──
@@ -215,7 +285,7 @@ export function registerIpcHandlers(win: BrowserWindow) {
     if (result.canceled || !result.filePath) return null;
 
     const allHistory = storage.listHistory(500, 0);
-    fs.writeFileSync(result.filePath, JSON.stringify(allHistory, null, 2), 'utf-8');
+    await fsAsync.writeFile(result.filePath, JSON.stringify(allHistory, null, 2), 'utf-8');
     return result.filePath;
   });
 
@@ -241,9 +311,19 @@ function createTray(win: BrowserWindow) {
   // assets/ path works in dev (project root) and production (extraResources)
   const devPath = path.join(app.getAppPath(), 'assets/tray-icon.png');
   const prodPath = path.join(process.resourcesPath, 'assets/tray-icon.png');
-  const iconPath = fs.existsSync(devPath) ? devPath : prodPath;
-  const icon = nativeImage.createFromPath(iconPath);
-  tray = new Tray(icon);
+
+  const iconPath = existsSync(devPath) ? devPath : existsSync(prodPath) ? prodPath : null;
+
+  // Fallback: create a minimal 16x16 tray icon in memory if file is missing
+  if (!iconPath) {
+    console.warn('[Tray] tray-icon.png not found, using fallback icon');
+    const fallbackIcon = nativeImage.createEmpty();
+    tray = new Tray(fallbackIcon);
+  } else {
+    const icon = nativeImage.createFromPath(iconPath);
+    tray = new Tray(icon);
+  }
+
   tray.setToolTip('Prompter');
 
   const contextMenu = Menu.buildFromTemplate([

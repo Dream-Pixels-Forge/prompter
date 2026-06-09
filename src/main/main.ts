@@ -93,11 +93,10 @@ app.whenReady().then(() => {
     });
   });
 
-  setTimeout(() => {
-    createWindow();
-    if (!mainWindow) return;
+  createWindow();
+  if (mainWindow) {
     registerIpcHandlers(mainWindow);
-  }, 0);
+  }
 
   // Global hotkey: Alt+Space to toggle
   globalShortcut.register('Alt+Space', () => {

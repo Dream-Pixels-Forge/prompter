@@ -27,9 +27,9 @@ export function Toast() {
   if (!toastMessage) return null;
 
   return (
-    <div ref={toastRef} className="fixed z-60 right-6 top-4">
+    <div ref={toastRef} aria-live="polite" className="fixed z-60 right-6 top-4">
       <div className="flex items-center gap-2 px-3.5 py-2 bg-accent rounded-lg shadow-lg shadow-black/20">
-        <Check className="w-3.5 h-3.5 text-surface" />
+        <Check className="w-3.5 h-3.5 text-surface" aria-hidden="true" />
         <span className="text-xs text-surface font-medium">{toastMessage}</span>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { IPC_CHANNELS } from '../shared/types';
 contextBridge.exposeInMainWorld('api', {
   llm: {
     generate: (req: GenerateRequest) => ipcRenderer.invoke(IPC_CHANNELS.LLM_GENERATE, req),
-    cancel: () => ipcRenderer.invoke(IPC_CHANNELS.LLM_CANCEL),
+    cancel: (requestId?: string) => ipcRenderer.invoke(IPC_CHANNELS.LLM_CANCEL, requestId),
   },
   clipboard: {
     write: (text: string) => ipcRenderer.invoke(IPC_CHANNELS.CLIPBOARD_WRITE, text),
@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld('api', {
     delete: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id),
     clear: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
     exportAll: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_EXPORT),
+    /** Batch-check which services have API keys (single IPC call instead of N) */
+    getKeyStatuses: (services: string[]) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_KEY_STATUS, services),
   },
   store: {
     saveApiKey: (service: string, key: string) => ipcRenderer.invoke(IPC_CHANNELS.STORE_SAVE_API_KEY, service, key),
@@ -63,5 +65,6 @@ contextBridge.exposeInMainWorld('api', {
   },
   app: {
     quit: () => ipcRenderer.invoke(IPC_CHANNELS.APP_QUIT),
+    getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
   },
-});
+} satisfies PrompterApi);

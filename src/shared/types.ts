@@ -24,6 +24,8 @@ export const IPC_CHANNELS = {
   PROVIDER_CHECK: 'provider:check',
   TRAY_NAVIGATE: 'tray:navigate',
   LLM_CANCEL: 'llm:cancel',
+  APP_GET_VERSION: 'app:getVersion',
+  HISTORY_KEY_STATUS: 'history:keyStatus',
 } as const;
 
 // ── Framework Definitions ─────────────────────────────
@@ -69,6 +71,10 @@ export interface GenerateResponse {
   raw: string;
   framework: string;
   template?: string;
+  /** True if the LLM was unavailable and local template fallback was used */
+  fallbackUsed?: boolean;
+  /** Reason why fallback was used (e.g., "LLM unavailable: connection refused") */
+  fallbackReason?: string;
 }
 
 // ── LLM Orchestrator ──────────────────────────────────
@@ -115,6 +121,17 @@ export interface AppSettings {
 }
 
 // ── Window State ──────────────────────────────────────
+
+// ── IPC Payloads ─────────────────────────────────────
+
+export interface GenerateRequestWithId extends GenerateRequest {
+  requestId: string;
+}
+
+/** Response that includes the request ID for targeted cancellation */
+export interface GenerateResponseWithRequestId extends GenerateResponse {
+  requestId: string;
+}
 
 // ── UI State ──────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import { copyText } from '@/renderer/lib/clipboard';
 import { getFramework } from '@/renderer/lib/frameworks';
 import { useAppStore } from '@/renderer/stores/app-store';
 import { usePromptStore } from '@/renderer/stores/prompt-store';
-import { Check, Copy, PenLine, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Check, Copy, PenLine, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FrameworkBadge } from './FrameworkBadge';
 import { PromptSection } from './PromptSection';
@@ -23,11 +23,11 @@ export function OutputPanel() {
 
   const framework = getFramework(output.framework);
 
+  const isFallback = output.fallbackUsed === true;
+
   const handleCopy = async () => {
-    if (!framework) return;
-    const combinedText = framework.sections
-      .map((s) => `### ${s.label}\n${output.sections[s.key] || ''}`)
-      .join('\n\n');
+    if (!framework || isFallback) return;
+    const combinedText = framework.sections.map((s) => `### ${s.label}\n${output.sections[s.key] || ''}`).join('\n\n');
     const success = await copyText(combinedText);
     if (success) {
       setCopied(true);
@@ -45,11 +45,28 @@ export function OutputPanel() {
       <button
         type="button"
         onClick={clearOutput}
+        aria-label="Back to input"
         className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-hover transition-colors group"
       >
         <PenLine className="w-3 h-3" />
         <span className="font-medium">New Prompt</span>
       </button>
+
+      {/* Fallback warning banner */}
+      {isFallback && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 px-3 py-2.5 bg-amber-500/15 border border-amber-500/30 rounded-lg"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-amber-300">LLM unavailable — template fallback used</p>
+            <p className="text-[11px] text-amber-400/70 mt-0.5 leading-relaxed">
+              {output.fallbackReason || 'The LLM provider was unreachable. Output below is a local template, not AI-generated.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -61,8 +78,9 @@ export function OutputPanel() {
           <button
             type="button"
             onClick={handleCopy}
-            aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group"
+            disabled={isFallback}
+            aria-label={isFallback ? 'Copy disabled — fallback output' : copied ? 'Copied' : 'Copy to clipboard'}
+            className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors group disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-green-400" />
@@ -81,8 +99,8 @@ export function OutputPanel() {
         </div>
       </div>
 
-      {/* Sections */}
-      <div className="space-y-2">
+      {/* Sections — dimmed when fallback */}
+      <div className={`space-y-2 ${isFallback ? 'opacity-60' : ''}`}>
         {framework?.sections.map((section) => (
           <PromptSection key={section.key} label={section.label} content={output.sections[section.key] || ''} />
         ))}

@@ -91,6 +91,8 @@ export function MicButton({ onTranscript, onInterim, disabled, large = false }: 
         onClick={handleToggle}
         disabled={!canInteract}
         title={state === 'listening' ? 'Listening...' : 'Click to speak'}
+        aria-label={state === 'listening' ? 'Stop listening' : 'Start voice input'}
+        aria-pressed={state === 'listening'}
         className={`
           relative ${large ? 'w-16 h-16 rounded-2xl' : 'w-9 h-9 rounded-md'} flex items-center justify-center
           transition-all duration-200

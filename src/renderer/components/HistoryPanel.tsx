@@ -66,10 +66,12 @@ export function HistoryPanel() {
     }
   }, [page]);
 
+  // Load history on mount
   useEffect(() => {
     load();
   }, [load]);
 
+  // Debounced search — re-load when query changes
   useEffect(() => {
     const timer = setTimeout(() => load(query), 300);
     return () => clearTimeout(timer);
@@ -159,6 +161,7 @@ export function HistoryPanel() {
               handleDelete(selected.id);
               setSelected(null);
             }}
+            aria-label="Delete this history entry"
             className="flex items-center gap-1.5 px-3 py-1.5 sub-card hover:bg-error/15 hover:border-error/20 text-white/68 hover:text-error text-xs rounded-md transition-all ml-auto"
           >
             <Trash2 className="w-3 h-3" /> Delete
@@ -187,6 +190,7 @@ export function HistoryPanel() {
               setQuery('');
               load();
             }}
+            aria-label="Clear search"
             className="text-[11px] text-white/48 hover:text-white/68 transition-colors shrink-0"
           >
             Clear
@@ -211,6 +215,7 @@ export function HistoryPanel() {
                   showToast(err instanceof Error ? err.message : 'Export failed');
                 }
               }}
+              aria-label="Export history to JSON file"
               className="text-[11px] text-white/48 hover:text-white/68 transition-colors"
             >
               Export
@@ -218,6 +223,7 @@ export function HistoryPanel() {
             <button
               type="button"
               onClick={handleClear}
+              aria-label="Clear all history entries"
               className="text-[11px] text-error/50 hover:text-error transition-colors"
             >
               Clear all
@@ -272,7 +278,7 @@ export function HistoryPanel() {
                   e.stopPropagation();
                   handleDelete(entry.id);
                 }}
-                aria-label="Delete entry"
+                aria-label={`Delete entry: ${entry.rawInput.slice(0, 30)}`}
                 className="p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-error/15 transition-all shrink-0 mt-0.5"
               >
                 <Trash2 className="w-3 h-3 text-white/68 hover:text-error" />
@@ -287,6 +293,7 @@ export function HistoryPanel() {
             <button
               type="button"
               onClick={loadMore}
+              aria-label="Load more history entries"
               className="text-xs text-white/48 hover:text-white/68 transition-colors px-3 py-1.5 rounded-md hover:bg-white/[0.04]"
             >
               Load more

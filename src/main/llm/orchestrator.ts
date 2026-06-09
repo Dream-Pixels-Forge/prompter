@@ -76,11 +76,12 @@ export function updateConfig(config: Partial<AppSettings> | Record<string, unkno
   }
 
   // Legacy flat fields — migrate to new format
-  if (typeof c.openaiApiKey === 'string') {
+  // Guard: empty string is treated as absent (not a valid key)
+  if (typeof c.openaiApiKey === 'string' && c.openaiApiKey) {
     activeConfig.providerApiKeys.openai = c.openaiApiKey as string;
     keysChanged = true;
   }
-  if (typeof c.anthropicApiKey === 'string') {
+  if (typeof c.anthropicApiKey === 'string' && c.anthropicApiKey) {
     activeConfig.providerApiKeys.anthropic = c.anthropicApiKey as string;
     keysChanged = true;
   }
@@ -123,7 +124,16 @@ function resolveProviderConfig(provider: string) {
   };
 }
 
-export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal): Promise<GenerateResponse> {
+/**
+ * Extended response that includes a fallback warning flag.
+ * The renderer can use this to show a toast when local fallback was used.
+ */
+export interface GenerateResponseWithMeta extends GenerateResponse {
+  fallbackUsed?: boolean;
+  fallbackReason?: string;
+}
+
+export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal): Promise<GenerateResponseWithMeta> {
   const framework = getFramework(req.framework);
   if (!framework) throw new Error(`Unknown framework: ${req.framework}`);
 
@@ -142,8 +152,19 @@ export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal)
   } catch (err) {
     // If cancelled, propagate the error — don't fall back to local generation
     if (err instanceof Error && err.name === 'AbortError') throw err;
-    console.warn(`LLM ${provider} failed, using local fallback:`, err);
-    return { sections, raw: structuredPrompt, framework: req.framework, template: req.template };
+
+    const reason = err instanceof Error ? err.message : 'Unknown error';
+    console.warn(`[Orchestrator] LLM ${provider} failed (${reason}), using local template fallback`);
+
+    // Return local template output with fallback flag so renderer can warn the user
+    return {
+      sections,
+      raw: structuredPrompt,
+      framework: req.framework,
+      template: req.template,
+      fallbackUsed: true,
+      fallbackReason: `LLM unavailable (${provider}): ${reason}`,
+    };
   }
 
   const parsedSections = parseLLMOutput(
@@ -156,6 +177,7 @@ export async function generatePrompt(req: GenerateRequest, signal?: AbortSignal)
     raw: llmOutput,
     framework: req.framework,
     template: req.template,
+    fallbackUsed: false,
   };
 }
 

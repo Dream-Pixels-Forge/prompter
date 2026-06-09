@@ -5,7 +5,7 @@ import { usePromptStore } from '@/renderer/stores/prompt-store';
 import { useSettingsStore } from '@/renderer/stores/settings-store';
 import type { AppTab } from '@/shared/types';
 import { Clock, Layout, PenLine, Settings, Square, X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HistoryPanel } from './HistoryPanel';
 import { InputArea } from './InputArea';
 import { OutputPanel } from './OutputPanel';
@@ -29,6 +29,15 @@ export function BubbleExpanded() {
   const autoHideDelay = useSettingsStore((s) => s.autoHideDelay);
   const theme = useSettingsStore((s) => s.theme);
   const { opacity, resetTimer } = useAutoHide((autoHideDelay || 5) * 1000);
+  const [appVersion, setAppVersion] = useState('');
+
+  // Fetch app version from main process on mount
+  useEffect(() => {
+    window.api.app
+      .getVersion()
+      .then(setAppVersion)
+      .catch(() => {});
+  }, []);
 
   // Apply theme
   useEffect(() => {
@@ -82,7 +91,9 @@ export function BubbleExpanded() {
             <PenLine className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="text-sm font-semibold text-white/90 tracking-wide">Prompter</span>
-          <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v0.1</span>
+          {appVersion && (
+            <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-sm">v{appVersion}</span>
+          )}
         </div>
         <button
           type="button"
@@ -131,6 +142,7 @@ export function BubbleExpanded() {
             <button
               type="button"
               onClick={() => cancelGeneration()}
+              aria-label="Stop generation"
               className="ml-auto flex items-center gap-1.5 px-2 py-1 rounded-md
                          bg-red-500/70 hover:bg-red-500 text-white text-xs
                          transition-colors"

@@ -1,4 +1,4 @@
-import { hasApiKey as checkKeyExists, saveApiKey } from '@/renderer/lib/llm';
+import { saveApiKey } from '@/renderer/lib/llm';
 import { PROVIDER_DEFINITIONS } from '@/shared/provider-definitions';
 import type { AppSettings } from '@/shared/types';
 import { create } from 'zustand';
@@ -61,26 +61,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     try {
       const saved = (await window.api.settings.get()) as Partial<AppSettings> & Record<string, unknown>;
 
-      // Migration is handled by the main process orchestrator — renderer just reads the result
-
       // Version migration to v2 (new settings fields)
       if ((saved.version as number) < 2) {
         saved.version = 2;
       }
 
-      // Check which providers have API keys (boolean only — actual keys never enter the renderer)
-      const keyEntries = await Promise.all(
-        PROVIDER_DEFINITIONS.map(async (def) => [def.id, await checkKeyExists(def.id)] as [string, boolean]),
-      );
-      const hasApiKeys: Record<string, boolean> = {};
-      for (const [id, exists] of keyEntries) {
-        if (exists) hasApiKeys[id] = true;
-      }
+      // Batch-check which providers have API keys in a single IPC call
+      // instead of N individual calls (one per provider)
+      const serviceIds = PROVIDER_DEFINITIONS.map((def) => def.id);
+      const keyStatuses = await window.api.history.getKeyStatuses(serviceIds);
 
       set({
         activeProvider: (saved.activeProvider as string) || defaults.activeProvider,
         providerConfigs: (saved.providerConfigs as Record<string, { model: string; endpoint?: string }>) || {},
-        hasApiKeys,
+        hasApiKeys: keyStatuses,
         recentProviders: (saved.recentProviders as string[]) || defaults.recentProviders,
         version: (saved.version as number) || 1,
         hotkeyToggle: (saved.hotkeyToggle as string) || defaults.hotkeyToggle,

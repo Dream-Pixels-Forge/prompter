@@ -1,6 +1,6 @@
 {
   "name": "prompter",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "description": "Floating prompt architect widget — transforms raw intent into structured prompts",
   "author": "Dream Pixels Forge <dev@dream-pixels-forge.com>",

@@ -121,6 +121,7 @@ export function ProviderSwitcher({
             setFocusIdx(0);
           }}
           placeholder="Search providers..."
+          aria-label="Search providers"
           className="bg-transparent text-xs text-white/80 outline-none w-full placeholder:text-white/30"
         />
       </div>
