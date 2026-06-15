@@ -1,17 +1,17 @@
 # Prompter
+<img width="523" height="524" alt="Screenshot from 2026-05-25 05-45-43" src="https://github.com/user-attachments/assets/25c95814-51bf-48c0-96da-853c57e425ec" />
 
 **A floating desktop widget that transforms raw user intent into production-grade, structured prompts following best practices in prompt engineering.**
 
 Prompter is a system-level floating overlay (inspired by Wispr Flow) that accepts text or voice input and uses an LLM to restructure it into clean, structured prompts using proven frameworks from OpenAI, Anthropic, and more.
 
-<img width="523" height="524" alt="Screenshot from 2026-05-25 05-45-43" src="https://github.com/user-attachments/assets/25c95814-51bf-48c0-96da-853c57e425ec" />
-
-
-
 ![Status](https://img.shields.io/badge/status-beta-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
 [![CI](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml/badge.svg)](https://github.com/Dream-Pixels-Forge/prompter/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Dream-Pixels-Forge/prompter?include_prereleases)](https://github.com/Dream-Pixels-Forge/prompter/releases)
+
+If you find this project useful, leaving a ⭐ on the repository is the best way to support my work!
+
 
 ## Features
 
